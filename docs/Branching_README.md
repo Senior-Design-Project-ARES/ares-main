@@ -44,7 +44,7 @@ Branches should reflect the **system** and **the specific feature or problem**. 
 
 - Huge, hard-to-review merges/PRs from long-running branches
 - Merge conflicts that wasted time
-- Integration bugs that surfaced late in the build cycle (especially coming up towards competition)
+- Integration bugs that surfaced late in the build cycle
 
 Think: **"merge early, merge often"** — even partial progress can be merged if it’s tested and non-breaking.
 
