@@ -14,6 +14,6 @@ hold on
 plot(position(:,1),position(:,2),'LineWidth',1)
 scatter(position(1,1),position(2,2),'marker','x','LineWidth',1,'MarkerEdgeColor','green')
 scatter(position(end,1),position(end,2),'marker','x','LineWidth',1,'MarkerEdgeColor','red')
-title(['Pure Pursuit Trajectory, 60s, x_0=' num2str(IC(1)) ', y_0=' num2str(IC(2)) ', theta_0 =' num2str(IC(3))])
+title(['Pure Pursuit Trajectory, 60s, x_0=' num2str(IC(1)) ', y_0=' num2str(IC(2)) ', \theta_0 =' num2str(IC(3))])
 legend('Waypoints','Path','Start','End','location','southeast')
 axis equal
