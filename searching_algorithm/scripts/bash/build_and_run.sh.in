@@ -1,0 +1,87 @@
+#! /bin/bash
+
+# Make sure executable tag is passed
+if [[ $# == 0 ]]; then
+    cd ws
+    options=$(find . -maxdepth 1 -mindepth 1 -type d)
+    echo "Must pass executable tag (bash build_and_run.sh <tag>). Here are the your tag options:"
+    while IFS= read -r dir; do
+        dir_name=$(basename "$dir")
+        echo " - $dir_name"
+    done <<< "$options"
+    exit 1
+else
+    if [ -f ws/$1/IGNORE ]; then
+        echo "Found 'IGNORE' file inside directory for project '$1'. Please remove this file before calling build_and_run.sh on this project"
+        exit 1
+    fi
+fi
+
+executable="main-$1"
+
+shift
+
+use_valgrind=false
+
+# Define cmake variables
+remove_logs=OFF
+exclude_vis=OFF
+build_type=Release
+
+for arg in "$@"; do
+    case "$arg" in 
+        -r|--rebuild)
+            echo "Rebuilding from scratch..."
+            rm -rf build            
+            rm grade.sh
+            rm .env.sh
+            shift 1
+            ;;
+        -d|--debug-bt)
+            echo "Building in debug"
+            build_type=Debug
+            shift 1
+            ;;
+        -q|--quiet)
+            echo "Removing logs"
+            remove_logs=ON
+            shift 1
+            ;;
+        --exclude-vis)
+            echo "Removing visualizer"
+            exclude_vis=ON
+            shift 1
+            ;;
+        -v|--valgrind)
+            echo "Running valgrind memory checker (automatically removing visualizer, setting build type to 'Debug')"
+            use_valgrind=true
+            exclude_vis=ON
+            build_type=Debug
+            shift 1
+            ;;
+        *)
+            echo "Unknown arg '$arg'"
+            exit 1
+            ;;
+    esac
+done
+
+export @OS_LD_LIBRARY_PATH_VAR@="@AMP_OS_INSTALL_DIR@:$@OS_LD_LIBRARY_PATH_VAR@"
+echo "Library path: $@OS_LD_LIBRARY_PATH_VAR@"
+mkdir -p build && cd build
+
+architecture=$(uname -m)
+cmake ./.. -DAMP_BUILD_LIB=OFF -DCMAKE_BUILD_TYPE=${build_type} -DAMP_EXCLUDE_VIS=${exclude_vis} -DAMP_EXCLUDE_LOGS=${remove_logs} -DSYSTEM_ARCHITECTURE="${architecture}" 
+
+make
+if [ $? == 0 ]; then
+    #clear
+    cd bin
+    if [ "$use_valgrind" = "true" ]; then
+        valgrind ./"$executable"
+    else
+        ./"$executable"
+    fi
+else
+    echo "Build Failed!"
+fi

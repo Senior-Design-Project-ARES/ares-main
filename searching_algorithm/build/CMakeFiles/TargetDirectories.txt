@@ -1,0 +1,12 @@
+/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/CMakeFiles/edit_cache.dir
+/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/CMakeFiles/rebuild_cache.dir
+/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/scripts/CMakeFiles/edit_cache.dir
+/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/scripts/CMakeFiles/rebuild_cache.dir
+/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/include/public/CMakeFiles/edit_cache.dir
+/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/include/public/CMakeFiles/rebuild_cache.dir
+/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/src/public/CMakeFiles/AMPCorePublic.dir
+/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/src/public/CMakeFiles/edit_cache.dir
+/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/src/public/CMakeFiles/rebuild_cache.dir
+/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/ws/CMakeFiles/user_library.dir
+/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/ws/CMakeFiles/edit_cache.dir
+/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/ws/CMakeFiles/rebuild_cache.dir

@@ -1,0 +1,2 @@
+/usr/bin/ar qc libuser_library.a CMakeFiles/user_library.dir/shared/HelpfulClass.cpp.o CMakeFiles/user_library.dir/shared/ManipulatorSkeleton.cpp.o CMakeFiles/user_library.dir/shared/MySamplingBasedPlanners.cpp.o
+/usr/bin/ranlib libuser_library.a

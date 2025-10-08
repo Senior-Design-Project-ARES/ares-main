@@ -1,0 +1,11 @@
+{
+	"InstallScripts" : 
+	[
+		"/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/cmake_install.cmake",
+		"/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/scripts/cmake_install.cmake",
+		"/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/include/public/cmake_install.cmake",
+		"/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/src/public/cmake_install.cmake",
+		"/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/ws/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

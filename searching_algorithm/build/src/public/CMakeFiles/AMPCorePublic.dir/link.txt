@@ -1,0 +1,2 @@
+/usr/bin/ar qc libAMPCorePublic.a CMakeFiles/AMPCorePublic.dir/PythonObjects.cpp.o CMakeFiles/AMPCorePublic.dir/ScriptCaller.cpp.o CMakeFiles/AMPCorePublic.dir/Visualizer.cpp.o
+/usr/bin/ranlib libAMPCorePublic.a
