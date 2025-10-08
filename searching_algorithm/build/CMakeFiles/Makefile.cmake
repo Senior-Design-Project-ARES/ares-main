@@ -105,4 +105,5 @@ set(CMAKE_MAKEFILE_PRODUCTS
 set(CMAKE_DEPEND_INFO_FILES
   "src/public/CMakeFiles/AMPCorePublic.dir/DependInfo.cmake"
   "ws/CMakeFiles/user_library.dir/DependInfo.cmake"
+  "ws/CMakeFiles/main-ares.dir/DependInfo.cmake"
   )

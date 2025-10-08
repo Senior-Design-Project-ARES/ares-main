@@ -8,5 +8,6 @@
 /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/src/public/CMakeFiles/edit_cache.dir
 /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/src/public/CMakeFiles/rebuild_cache.dir
 /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/ws/CMakeFiles/user_library.dir
+/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/ws/CMakeFiles/main-ares.dir
 /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/ws/CMakeFiles/edit_cache.dir
 /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/ws/CMakeFiles/rebuild_cache.dir

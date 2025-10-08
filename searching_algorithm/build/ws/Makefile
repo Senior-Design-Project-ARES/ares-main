@@ -130,6 +130,68 @@ user_library/fast:
 	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/user_library.dir/build.make ws/CMakeFiles/user_library.dir/build
 .PHONY : user_library/fast
 
+# Convenience name for target.
+ws/CMakeFiles/main-ares.dir/rule:
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 ws/CMakeFiles/main-ares.dir/rule
+.PHONY : ws/CMakeFiles/main-ares.dir/rule
+
+# Convenience name for target.
+main-ares: ws/CMakeFiles/main-ares.dir/rule
+.PHONY : main-ares
+
+# fast build rule for target.
+main-ares/fast:
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/main-ares.dir/build.make ws/CMakeFiles/main-ares.dir/build
+.PHONY : main-ares/fast
+
+ares/main.o: ares/main.cpp.o
+.PHONY : ares/main.o
+
+# target to build an object file
+ares/main.cpp.o:
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/main-ares.dir/build.make ws/CMakeFiles/main-ares.dir/ares/main.cpp.o
+.PHONY : ares/main.cpp.o
+
+ares/main.i: ares/main.cpp.i
+.PHONY : ares/main.i
+
+# target to preprocess a source file
+ares/main.cpp.i:
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/main-ares.dir/build.make ws/CMakeFiles/main-ares.dir/ares/main.cpp.i
+.PHONY : ares/main.cpp.i
+
+ares/main.s: ares/main.cpp.s
+.PHONY : ares/main.s
+
+# target to generate assembly for a file
+ares/main.cpp.s:
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/main-ares.dir/build.make ws/CMakeFiles/main-ares.dir/ares/main.cpp.s
+.PHONY : ares/main.cpp.s
+
+ares/searching.o: ares/searching.cpp.o
+.PHONY : ares/searching.o
+
+# target to build an object file
+ares/searching.cpp.o:
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/main-ares.dir/build.make ws/CMakeFiles/main-ares.dir/ares/searching.cpp.o
+.PHONY : ares/searching.cpp.o
+
+ares/searching.i: ares/searching.cpp.i
+.PHONY : ares/searching.i
+
+# target to preprocess a source file
+ares/searching.cpp.i:
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/main-ares.dir/build.make ws/CMakeFiles/main-ares.dir/ares/searching.cpp.i
+.PHONY : ares/searching.cpp.i
+
+ares/searching.s: ares/searching.cpp.s
+.PHONY : ares/searching.s
+
+# target to generate assembly for a file
+ares/searching.cpp.s:
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/main-ares.dir/build.make ws/CMakeFiles/main-ares.dir/ares/searching.cpp.s
+.PHONY : ares/searching.cpp.s
+
 shared/HelpfulClass.o: shared/HelpfulClass.cpp.o
 .PHONY : shared/HelpfulClass.o
 
@@ -154,54 +216,6 @@ shared/HelpfulClass.cpp.s:
 	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/user_library.dir/build.make ws/CMakeFiles/user_library.dir/shared/HelpfulClass.cpp.s
 .PHONY : shared/HelpfulClass.cpp.s
 
-shared/ManipulatorSkeleton.o: shared/ManipulatorSkeleton.cpp.o
-.PHONY : shared/ManipulatorSkeleton.o
-
-# target to build an object file
-shared/ManipulatorSkeleton.cpp.o:
-	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/user_library.dir/build.make ws/CMakeFiles/user_library.dir/shared/ManipulatorSkeleton.cpp.o
-.PHONY : shared/ManipulatorSkeleton.cpp.o
-
-shared/ManipulatorSkeleton.i: shared/ManipulatorSkeleton.cpp.i
-.PHONY : shared/ManipulatorSkeleton.i
-
-# target to preprocess a source file
-shared/ManipulatorSkeleton.cpp.i:
-	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/user_library.dir/build.make ws/CMakeFiles/user_library.dir/shared/ManipulatorSkeleton.cpp.i
-.PHONY : shared/ManipulatorSkeleton.cpp.i
-
-shared/ManipulatorSkeleton.s: shared/ManipulatorSkeleton.cpp.s
-.PHONY : shared/ManipulatorSkeleton.s
-
-# target to generate assembly for a file
-shared/ManipulatorSkeleton.cpp.s:
-	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/user_library.dir/build.make ws/CMakeFiles/user_library.dir/shared/ManipulatorSkeleton.cpp.s
-.PHONY : shared/ManipulatorSkeleton.cpp.s
-
-shared/MySamplingBasedPlanners.o: shared/MySamplingBasedPlanners.cpp.o
-.PHONY : shared/MySamplingBasedPlanners.o
-
-# target to build an object file
-shared/MySamplingBasedPlanners.cpp.o:
-	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/user_library.dir/build.make ws/CMakeFiles/user_library.dir/shared/MySamplingBasedPlanners.cpp.o
-.PHONY : shared/MySamplingBasedPlanners.cpp.o
-
-shared/MySamplingBasedPlanners.i: shared/MySamplingBasedPlanners.cpp.i
-.PHONY : shared/MySamplingBasedPlanners.i
-
-# target to preprocess a source file
-shared/MySamplingBasedPlanners.cpp.i:
-	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/user_library.dir/build.make ws/CMakeFiles/user_library.dir/shared/MySamplingBasedPlanners.cpp.i
-.PHONY : shared/MySamplingBasedPlanners.cpp.i
-
-shared/MySamplingBasedPlanners.s: shared/MySamplingBasedPlanners.cpp.s
-.PHONY : shared/MySamplingBasedPlanners.s
-
-# target to generate assembly for a file
-shared/MySamplingBasedPlanners.cpp.s:
-	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/user_library.dir/build.make ws/CMakeFiles/user_library.dir/shared/MySamplingBasedPlanners.cpp.s
-.PHONY : shared/MySamplingBasedPlanners.cpp.s
-
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -210,16 +224,17 @@ help:
 	@echo "... depend"
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
+	@echo "... main-ares"
 	@echo "... user_library"
+	@echo "... ares/main.o"
+	@echo "... ares/main.i"
+	@echo "... ares/main.s"
+	@echo "... ares/searching.o"
+	@echo "... ares/searching.i"
+	@echo "... ares/searching.s"
 	@echo "... shared/HelpfulClass.o"
 	@echo "... shared/HelpfulClass.i"
 	@echo "... shared/HelpfulClass.s"
-	@echo "... shared/ManipulatorSkeleton.o"
-	@echo "... shared/ManipulatorSkeleton.i"
-	@echo "... shared/ManipulatorSkeleton.s"
-	@echo "... shared/MySamplingBasedPlanners.o"
-	@echo "... shared/MySamplingBasedPlanners.i"
-	@echo "... shared/MySamplingBasedPlanners.s"
 .PHONY : help
 
 

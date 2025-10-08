@@ -142,6 +142,19 @@ user_library/fast:
 	$(MAKE) $(MAKESILENT) -f ws/CMakeFiles/user_library.dir/build.make ws/CMakeFiles/user_library.dir/build
 .PHONY : user_library/fast
 
+#=============================================================================
+# Target rules for targets named main-ares
+
+# Build rule for target.
+main-ares: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 main-ares
+.PHONY : main-ares
+
+# fast build rule for target.
+main-ares/fast:
+	$(MAKE) $(MAKESILENT) -f ws/CMakeFiles/main-ares.dir/build.make ws/CMakeFiles/main-ares.dir/build
+.PHONY : main-ares/fast
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -151,6 +164,7 @@ help:
 	@echo "... edit_cache"
 	@echo "... rebuild_cache"
 	@echo "... AMPCorePublic"
+	@echo "... main-ares"
 	@echo "... user_library"
 .PHONY : help
 
