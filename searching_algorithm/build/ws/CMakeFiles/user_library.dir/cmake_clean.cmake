@@ -1,4 +1,6 @@
 file(REMOVE_RECURSE
+  "CMakeFiles/user_library.dir/shared/CSpace.cpp.o"
+  "CMakeFiles/user_library.dir/shared/CSpace.cpp.o.d"
   "CMakeFiles/user_library.dir/shared/HelpfulClass.cpp.o"
   "CMakeFiles/user_library.dir/shared/HelpfulClass.cpp.o.d"
   "libuser_library.a"

@@ -6,7 +6,7 @@ CXX_DEFINES =
 
 CXX_INCLUDES = -I/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include -I/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/include -I/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/dependencies/yaml-cpp/include -I/opt/homebrew/include/eigen3 -I/Library/Frameworks/Python.framework/Versions/3.12/include/python3.12 -I/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build -isystem /opt/homebrew/Cellar/openssl@3/3.5.2/include
 
-CXX_FLAGSarm64 = -std=gnu++20 -arch arm64
+CXX_FLAGSarm64 = -O3 -DNDEBUG -std=gnu++20 -arch arm64
 
-CXX_FLAGS = -std=gnu++20 -arch arm64
+CXX_FLAGS = -O3 -DNDEBUG -std=gnu++20 -arch arm64
 

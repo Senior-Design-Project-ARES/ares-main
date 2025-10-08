@@ -192,6 +192,30 @@ ares/searching.cpp.s:
 	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/main-ares.dir/build.make ws/CMakeFiles/main-ares.dir/ares/searching.cpp.s
 .PHONY : ares/searching.cpp.s
 
+shared/CSpace.o: shared/CSpace.cpp.o
+.PHONY : shared/CSpace.o
+
+# target to build an object file
+shared/CSpace.cpp.o:
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/user_library.dir/build.make ws/CMakeFiles/user_library.dir/shared/CSpace.cpp.o
+.PHONY : shared/CSpace.cpp.o
+
+shared/CSpace.i: shared/CSpace.cpp.i
+.PHONY : shared/CSpace.i
+
+# target to preprocess a source file
+shared/CSpace.cpp.i:
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/user_library.dir/build.make ws/CMakeFiles/user_library.dir/shared/CSpace.cpp.i
+.PHONY : shared/CSpace.cpp.i
+
+shared/CSpace.s: shared/CSpace.cpp.s
+.PHONY : shared/CSpace.s
+
+# target to generate assembly for a file
+shared/CSpace.cpp.s:
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/user_library.dir/build.make ws/CMakeFiles/user_library.dir/shared/CSpace.cpp.s
+.PHONY : shared/CSpace.cpp.s
+
 shared/HelpfulClass.o: shared/HelpfulClass.cpp.o
 .PHONY : shared/HelpfulClass.o
 
@@ -232,6 +256,9 @@ help:
 	@echo "... ares/searching.o"
 	@echo "... ares/searching.i"
 	@echo "... ares/searching.s"
+	@echo "... shared/CSpace.o"
+	@echo "... shared/CSpace.i"
+	@echo "... shared/CSpace.s"
 	@echo "... shared/HelpfulClass.o"
 	@echo "... shared/HelpfulClass.i"
 	@echo "... shared/HelpfulClass.s"
