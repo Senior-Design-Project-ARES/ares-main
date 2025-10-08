@@ -1,0 +1,2 @@
+Invoking command in '/home/blud/ares-main/build/ares-main': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/blud/ares-main/build/ares-main -- -j16 -l16
+Invoked command in '/home/blud/ares-main/build/ares-main' returned '2': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake --build /home/blud/ares-main/build/ares-main -- -j16 -l16

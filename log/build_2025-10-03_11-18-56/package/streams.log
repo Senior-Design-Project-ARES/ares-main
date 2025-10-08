@@ -1,0 +1,51 @@
+[0.023s] Invoking command in '/home/blud/ares-main/build/package': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake /home/blud/ares-main/package -DCMAKE_INSTALL_PREFIX=/home/blud/ares-main/install/package
+[0.276s] -- The C compiler identification is GNU 11.4.0
+[0.450s] -- The CXX compiler identification is GNU 11.4.0
+[0.477s] -- Detecting C compiler ABI info
+[0.666s] -- Detecting C compiler ABI info - done
+[0.682s] -- Check for working C compiler: /usr/bin/cc - skipped
+[0.684s] -- Detecting C compile features
+[0.685s] -- Detecting C compile features - done
+[0.695s] -- Detecting CXX compiler ABI info
+[0.899s] -- Detecting CXX compiler ABI info - done
+[0.917s] -- Check for working CXX compiler: /usr/bin/c++ - skipped
+[0.917s] -- Detecting CXX compile features
+[0.919s] -- Detecting CXX compile features - done
+[0.937s] -- Found ament_cmake: 1.3.12 (/opt/ros/humble/share/ament_cmake/cmake)
+[1.248s] -- Found Python3: /usr/bin/python3 (found version "3.10.12") found components: Interpreter 
+[1.482s] -- Found ament_lint_auto: 0.12.14 (/opt/ros/humble/share/ament_lint_auto/cmake)
+[1.668s] -- Added test 'cppcheck' to perform static code analysis on C / C++ code
+[1.669s] -- Configured cppcheck include dirs: $<BUILD_INTERFACE:/home/blud/ares-main/package/include>
+[1.669s] -- Configured cppcheck exclude dirs and/or files: 
+[1.670s] -- Added test 'lint_cmake' to check CMake code style
+[1.673s] -- Added test 'uncrustify' to check C / C++ code style
+[1.673s] -- Configured uncrustify additional arguments: 
+[1.674s] -- Added test 'xmllint' to check XML markup files
+[1.679s] -- Configuring done
+[1.690s] -- Generating done
+[1.695s] -- Build files have been written to: /home/blud/ares-main/build/package
+[1.708s] Invoked command in '/home/blud/ares-main/build/package' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake /home/blud/ares-main/package -DCMAKE_INSTALL_PREFIX=/home/blud/ares-main/install/package
+[1.710s] Invoking command in '/home/blud/ares-main/build/package': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/blud/ares-main/build/package -- -j16 -l16
+[1.825s] [ 50%] [32mBuilding CXX object CMakeFiles/my_node.dir/src/my_node.cpp.o[0m
+[1.903s] [100%] [32m[1mLinking CXX executable my_node[0m
+[2.014s] [100%] Built target my_node
+[2.042s] Invoked command in '/home/blud/ares-main/build/package' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/blud/ares-main/build/package -- -j16 -l16
+[2.046s] Invoking command in '/home/blud/ares-main/build/package': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --install /home/blud/ares-main/build/package
+[2.064s] -- Install configuration: ""
+[2.064s] -- Installing: /home/blud/ares-main/install/package/lib/package/my_node
+[2.065s] -- Installing: /home/blud/ares-main/install/package/share/ament_index/resource_index/package_run_dependencies/package
+[2.066s] -- Installing: /home/blud/ares-main/install/package/share/ament_index/resource_index/parent_prefix_path/package
+[2.067s] -- Installing: /home/blud/ares-main/install/package/share/package/environment/ament_prefix_path.sh
+[2.067s] -- Installing: /home/blud/ares-main/install/package/share/package/environment/ament_prefix_path.dsv
+[2.068s] -- Installing: /home/blud/ares-main/install/package/share/package/environment/path.sh
+[2.069s] -- Installing: /home/blud/ares-main/install/package/share/package/environment/path.dsv
+[2.069s] -- Installing: /home/blud/ares-main/install/package/share/package/local_setup.bash
+[2.069s] -- Installing: /home/blud/ares-main/install/package/share/package/local_setup.sh
+[2.070s] -- Installing: /home/blud/ares-main/install/package/share/package/local_setup.zsh
+[2.070s] -- Installing: /home/blud/ares-main/install/package/share/package/local_setup.dsv
+[2.071s] -- Installing: /home/blud/ares-main/install/package/share/package/package.dsv
+[2.071s] -- Installing: /home/blud/ares-main/install/package/share/ament_index/resource_index/packages/package
+[2.072s] -- Installing: /home/blud/ares-main/install/package/share/package/cmake/packageConfig.cmake
+[2.072s] -- Installing: /home/blud/ares-main/install/package/share/package/cmake/packageConfig-version.cmake
+[2.073s] -- Installing: /home/blud/ares-main/install/package/share/package/package.xml
+[2.078s] Invoked command in '/home/blud/ares-main/build/package' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --install /home/blud/ares-main/build/package

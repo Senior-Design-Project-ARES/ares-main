@@ -1,0 +1,10 @@
+[31mCMake Error at CMakeLists.txt:18 (target_compile_features):
+  Cannot specify compile features for target "my_node" which is not built by
+  this project.
+
+[0m
+[31mCMake Error at CMakeLists.txt:20 (install):
+  install TARGETS given target "my_node" which does not exist.
+
+[0m
+gmake: *** [Makefile:226: cmake_check_build_system] Error 1

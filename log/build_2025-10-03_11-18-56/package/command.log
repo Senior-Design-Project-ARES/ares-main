@@ -1,0 +1,6 @@
+Invoking command in '/home/blud/ares-main/build/package': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake /home/blud/ares-main/package -DCMAKE_INSTALL_PREFIX=/home/blud/ares-main/install/package
+Invoked command in '/home/blud/ares-main/build/package' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake /home/blud/ares-main/package -DCMAKE_INSTALL_PREFIX=/home/blud/ares-main/install/package
+Invoking command in '/home/blud/ares-main/build/package': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/blud/ares-main/build/package -- -j16 -l16
+Invoked command in '/home/blud/ares-main/build/package' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --build /home/blud/ares-main/build/package -- -j16 -l16
+Invoking command in '/home/blud/ares-main/build/package': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --install /home/blud/ares-main/build/package
+Invoked command in '/home/blud/ares-main/build/package' returned '0': CMAKE_PREFIX_PATH=/opt/ros/humble /usr/bin/cmake --install /home/blud/ares-main/build/package
