@@ -6,6 +6,7 @@
 
 #include "public/PythonObjects.h"
 #include "public/ScriptCaller.h"
+#include <cstdint>
 
 
 // Local methods for converting things to python object (not in header)
@@ -224,6 +225,11 @@ void amp::Visualizer::makeFigure(const GridCSpace2D& cspace) {
     createAxes(cspace);
 }
 
+void amp::Visualizer::makeFigure(const GridCSpace2D_T<int8_t>& cspace) {
+    newFigure();
+    createAxes(cspace);
+}
+
 void amp::Visualizer::makeFigure(const GridCSpace2D& cspace, const Path2D& path) {
     newFigure();
     createAxes(cspace);
@@ -426,6 +432,29 @@ void amp::Visualizer::createAxes(const GridCSpace2D& cspace) {
     std::unique_ptr<ampprivate::pybridge::PythonObject> data_arg = ampprivate::pybridge::makeList(std::move(data_python_object_ptrs));
 
     ampprivate::pybridge::ScriptCaller::call("VisualizeCSpace", "visualize_grid_cspace_2d", std::make_tuple(x0_cells_arg->get(), x1_cells_arg->get(), bounds_arg->get(), data_arg->get()));
+}
+
+void amp::Visualizer::createAxes(const GridCSpace2D_T<int8_t>& cspace) {
+    auto[x0_cells, x1_cells] = cspace.size();
+    std::unique_ptr<ampprivate::pybridge::PythonObject> x0_cells_arg = ampprivate::pybridge::makeLong(x0_cells);
+    std::unique_ptr<ampprivate::pybridge::PythonObject> x1_cells_arg = ampprivate::pybridge::makeLong(x1_cells);
+    
+    // Bounds
+    auto[x0_min, x0_max] = cspace.x0Bounds();
+    auto[x1_min, x1_max] = cspace.x1Bounds();
+    std::unique_ptr<ampprivate::pybridge::PythonObject> bounds_arg = workspaceBoundsToPythonObject(x0_min, x0_max, x1_min, x1_max);
+
+    // Data
+    std::vector<std::unique_ptr<ampprivate::pybridge::PythonObject>> data_python_object_ptrs;
+    const std::vector<int8_t>& data = cspace.data();
+    data_python_object_ptrs.reserve(data.size());
+    for (auto bit : data) {
+        data_python_object_ptrs.push_back(ampprivate::pybridge::makeLong(bit));
+    }
+    
+    std::unique_ptr<ampprivate::pybridge::PythonObject> data_arg = ampprivate::pybridge::makeList(std::move(data_python_object_ptrs));
+
+    ampprivate::pybridge::ScriptCaller::call("VisualizeCSpaceSpe", "visualize_grid_cspace_2d", std::make_tuple(x0_cells_arg->get(), x1_cells_arg->get(), bounds_arg->get(), data_arg->get()));
 }
 
 void amp::Visualizer::createAxes(const PotentialFunction2D& potential_function, const Problem2D& prob, std::size_t n_grid, bool vector, double u_min, double u_max) {

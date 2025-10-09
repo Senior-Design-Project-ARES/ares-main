@@ -111,6 +111,10 @@ class Visualizer {
         /// @param cspace Dense grid cspace
         static void makeFigure(const GridCSpace2D& cspace);
 
+        /// @brief Visualize a grid cspace can choose bool or not
+        /// @param cspace Dense grid cspace
+        static void makeFigure(const GridCSpace2D_T<int8_t>& cspace);
+
         /// @brief Visualize a grid cspace
         /// @param cspace Dense grid cspace
         /// @param path Path inside cspace (ManipulatorTrajectory2Link is also accepted alias of Path2D)
@@ -201,6 +205,7 @@ class Visualizer {
         static void createAxes(const std::vector<Polygon>& polygons, const std::vector<double>& heights_3d);
         static void createAxes(const LinkManipulator2D& link_manipulator, const ManipulatorState& state, double* cmap_scale = nullptr, bool colliding = false);
         static void createAxes(const GridCSpace2D& cspace);
+        static void createAxes(const GridCSpace2D_T<int8_t>& cspace);
         static void createAxes(const PotentialFunction2D& potential_function, const Problem2D& prob, std::size_t n_grid, bool vector, double u_min, double u_max);
         template <typename FXN>
         static void createAxes(const Graph<double>& map, const FXN& getCoordinateFromNode);

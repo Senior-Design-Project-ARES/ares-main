@@ -53,6 +53,10 @@ std::unique_ptr<ampprivate::pybridge::PythonObject> ampprivate::pybridge::makeLo
     return std::make_unique<ampprivate::pybridge::PythonObject>(PyLong_FromLong(integer));
 }
 
+std::unique_ptr<ampprivate::pybridge::PythonObject> ampprivate::pybridge::make8bit(int8_t integer) {
+    return std::make_unique<ampprivate::pybridge::PythonObject>(PyLong_FromLong(static_cast<long>(integer)));
+}
+
 std::unique_ptr<ampprivate::pybridge::PythonObject> ampprivate::pybridge::makeScalar(double scalar) {
     return std::make_unique<ampprivate::pybridge::PythonObject>(PyFloat_FromDouble(scalar));
 }
