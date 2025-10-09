@@ -6,7 +6,13 @@
 #include <cmath> 
 #include <typeinfo>
 #include <cstdint>
+#include <map>
+
 #include <Eigen/Dense>
+#include "tools/Logging.h"
+
+// Forward declaration so FrontExpl can hold containers of FrontNode
+class FrontNode;
 
 
 class FrontExpl
@@ -40,6 +46,10 @@ class FrontExpl
         /// \returns nothing
         void find_regions();
 
+        /// \brief Given the regions, find the centroids of each region
+        /// \returns nothing
+        void find_centroids();
+
         // /// \brief Finds the transform between the map frame and the robot's base_footprint frame
         // /// \returns nothing
         // void find_transform();
@@ -58,23 +68,55 @@ class FrontExpl
 
         /// \brief Calls all other functions to find frontier edges, regions and a goal to move to. Then uses the action server to move to that goal
         /// \returns nothing
-        std::vector<Eigen::Vector2d> get_frontiers(const Eigen::Vector2d& location);
+        std::vector<Eigen::Vector2d> run();
 
-        std::vector<Eigen::Vector2i> get_grid_frontiers() { return centroid_grid_pts; }
+        std::vector<Eigen::Vector2i> getCentroidsGrid() { return centroid_grid_pts; }
 
     private:
         const std::vector<int8_t>& FE0_map;
         Eigen::Vector2d point;
-        Eigen::Vector2d robot0_pose_;
+        // Eigen::Vector2d robot0_pose_;
         Eigen::Vector2d origin;
         std::string map0_frame = "tb3_0/map";
         std::string body0_frame = "tb3_0/base_footprint";
         std::vector<signed int> edge0_vec, neighbor0_index, neighbor0_value;
         std::vector<unsigned int> centroids0, temp_group0;
-        std::vector<double> centroid0_Xpts, centroid0_Ypts, dist0_arr, prev_cent_0x, prev_cent_0y;
+        std::vector<double> centroid0_Xpts, centroid0_Ypts, dist0_arr;
+        // std::vector<double> prev_cent_0x, prev_cent_0y;
         std::vector<Eigen::Vector2d> centroid_pts;
         std::vector<Eigen::Vector2i> centroid_grid_pts;
-        int group0_c=0, prev_group0_c=0, centroid0=0, centroid0_index=0, move_to_pt=0, map_width=0, map_height=0, mark_edge=0, edge_index=0;
+        std::vector<std::pair<std::vector<FrontNode>, bool>> frontier_regions;
+        // int group0_c=0, prev_group0_c=0;
+        int centroid0=0, centroid0_index=0, move_to_pt=0, map_width=0, map_height=0, mark_edge=0, edge_index=0;
         double smallest = 9999999.0, dist0= 0.0, resolution = 0.0;
         bool unique_flag = true;
+};
+
+class FrontNode{
+    public:
+        FrontNode(int index): index(index) {}
+
+        int getIndex() const { return index; }
+
+        bool setFrontierNeighbors(int index){
+            if (frontier_neighbors.first == 0)
+                frontier_neighbors.first = index;
+            else if (frontier_neighbors.second == 0)
+                frontier_neighbors.second = index;
+            else
+                return false;
+            return true;
+        }
+        void setFrontierNeighbors(int place, int index){
+            if (place == 1)
+                frontier_neighbors.first = index;
+            else if (place == 2)
+                frontier_neighbors.second = index;
+        }
+        // Accessor for frontier neighbors so external code can read them
+        std::pair<int,int> getFrontierNeighbors() const { return frontier_neighbors; }
+    
+    private:
+        int index;
+        std::pair<int, int> frontier_neighbors = {0, 0};
 };

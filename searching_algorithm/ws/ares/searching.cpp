@@ -2,10 +2,15 @@
 /// \brief This node causes the robot to move autonomously via Frontier Exploration
 
 #include "searching.h"
-
+#define MIN_REGION_LENGTH 1.5 // in meters
+#define ABSULUTE_MIN_REGION_LENGTH 0.5 // in meters
 
 FrontExpl::FrontExpl(int map_width, int map_height, double resolution, const Eigen::Vector2d& origin, const std::vector<int8_t>& FE0_map)
-    :map_width(map_width), map_height(map_height), FE0_map(FE0_map), resolution(resolution), origin(origin){}
+    :map_width(map_width), 
+    map_height(map_height), 
+    FE0_map(FE0_map), 
+    resolution(resolution), 
+    origin(origin){}
 
 void FrontExpl::neighborhood(int cell)
 {
@@ -27,14 +32,19 @@ void FrontExpl::neighborhood(int cell)
     neighbor0_index.erase( unique( neighbor0_index.begin(), neighbor0_index.end() ), neighbor0_index.end() );
 }
 
-
 void FrontExpl::find_all_edges()
 {
     std::cout << "Finding all the edges" << std::endl;
     
     // Starting one row up and on space in on the map so there are no indexing issues
-    for (double x = map_width + 1; x < (map_width * map_height) - map_width - 1; x++)
+    for (int x = map_width + 1; x < (map_width * map_height) - map_width - 1; x++)
     {
+        // Ignore the left and right edges of the map so there are no indexing issues
+        if (x%map_width == 0 || x%map_width == map_width - 1)
+        {
+            continue;
+        }
+
         // For all cells in the map, check if a cell is unknown
         if (FE0_map.at(x) == -1)
         {
@@ -43,9 +53,9 @@ void FrontExpl::find_all_edges()
 
             for(int i = 0; i < neighbor0_index.size(); i++) // For all neighboring cells
             {
-                if (FE0_map.at(neighbor0_index.at(i)) == 0)
+                if ((i==1||i==3||i==4||i==6) && FE0_map.at(neighbor0_index.at(i)) == 0)
                 {
-                    // If one of the neighboring cells is free, store it in the edges vector
+                    // If the top, botoom left, or right is free, store it in the edges vector
                     // FE0_map.at(neighbor0_index.at(i)) = 10; // Visualize the frontier edge cells
                     edge0_vec.push_back(neighbor0_index.at(i));
 
@@ -73,88 +83,209 @@ void FrontExpl::find_regions()
 {
     std::cout << "Finding regions" << std::endl;
 
+    std::vector<bool> visited(FE0_map.size(), false);
+
+
     for (int q = 0; q < edge0_vec.size() - 1; q++)
     {
         // For each frontier edge, check that the next value is unique and not a repeat
         unique_flag = check_edges(edge0_vec.at(q), edge0_vec.at(q+1));
 
-        if (unique_flag == true)
+        if (unique_flag == true && visited[edge0_vec.at(q)] == false)
         {
             // If we have an original frontier edge, check the neighboring cells
             neighborhood(edge0_vec.at(q));
+            std::vector<FrontNode> frontier_group;
+            bool more_than_two_neighbors = false;
+            frontier_group.push_back(FrontNode(edge0_vec.at(q)));
+            bool loop = false;
 
+            // Check if there is more than 2 frontier neighbors
             for(int i = 0; i < neighbor0_index.size(); i++)
             {
-                // For all the cells nighrboring the frontier edge, check to see if there is another frontier edge
-                if (neighbor0_index.at(i) == edge0_vec.at(q+1))
+                for (int j = 0; j < edge0_vec.size(); j++)
                 {
-                    // If a frontier edge is in the neightborhood of another frontier edge, add it to a region
-                    edge_index = edge0_vec.at(q); 
-                    temp_group0.push_back(edge0_vec.at(q));;
-
-                    sort( temp_group0.begin(), temp_group0.end() );
-                    temp_group0 .erase( unique( temp_group0.begin(), temp_group0.end() ), temp_group0.end() );
-
-                    // Increase the counter to keep track of the region's size
-                    group0_c++;
+                    if (neighbor0_index.at(i) == edge0_vec.at(j))
+                    {
+                        if (frontier_group[0].setFrontierNeighbors(neighbor0_index.at(i)) == false){
+                            more_than_two_neighbors = true;
+                            break;
+                        }
+                    }
                 }
             }
+            if (more_than_two_neighbors){
+                continue;
+            }
 
-            if (group0_c == prev_group0_c) // If we didnt any any edeges to our region, region is complete
-            {
-                if (group0_c < 5) // frontier region too small
+            // If less than 2 neighbors, continue adding to the region
+            visited[edge0_vec.at(q)] = true;
+            int previous_index = edge0_vec.at(q);
+            int index_to_check = frontier_group[0].getFrontierNeighbors().first;
+            int previous_vector_index = 0;
+            bool checking_second_direction = false;
+            
+            // Continue adding to the region until there are no more neighbors
+            while(index_to_check != 0){
+                // Mark the cell as visited
+                visited[index_to_check] = true;
+
+                // Add the cell to the region
+                frontier_group.push_back(FrontNode(index_to_check));
+
+                // Set the first neighbor to be where we came from
+                frontier_group.back().setFrontierNeighbors(previous_index);
+
+                // Get index of neighborhood of the cell
+                neighborhood(index_to_check);
+
+                // Check all the neighbors of the cell
+                for(int i = 0; i < neighbor0_index.size(); i++)
                 {
-                    // If the forntier region is smaller than 5 cells, dont use it
+                    // If the neighbour is where we came from or it is within other region, skip it
+                    if (neighbor0_index.at(i) == previous_index){
+                        continue;
+                    }
+
+                    if (neighbor0_index.at(i) == edge0_vec.at(q)){
+                        loop = true;
+                        break;
+                    }
+
+                    if (visited[neighbor0_index.at(i)] == true){
+                        continue;
+                    }
+
+                    // Go through all the frontier edges
+                    for (int j = 0; j < edge0_vec.size(); j++)
+                    {
+                        // Check if the neighbor is a frontier edge
+                        if (neighbor0_index.at(i) == edge0_vec.at(j))
+                        {
+                            previous_index = index_to_check; // consider the current cell as where we came from
+                            
+                            // If it is a frontier edge, set it as the next cell to check
+                            // Check if there is more than 2 frontier neighbors for this frontier edge
+                            // If there are more than 2 neighbors, consider this direction done
+                            // switch direction if haven't already
+                            // If already switched direction, stop
+                            if (frontier_group.back().setFrontierNeighbors(neighbor0_index.at(i)) == false){
+                                // Remove the last added cell since it has more than 2 neighbors
+                                frontier_group.back().setFrontierNeighbors(2, 0);
+
+                                // stop, and change diretion if haven't already
+                                if (!checking_second_direction){
+                                    checking_second_direction = true;
+                                    previous_index = frontier_group[0].getIndex();
+                                    index_to_check = frontier_group[0].getFrontierNeighbors().second;
+                                    break;
+                                }
+
+                                // If we already changed direction, stop
+                                index_to_check = 0;
+                                break;
+
+                                
+                            }
+                            index_to_check = neighbor0_index.at(i);
+                        }
+                    }
                 }
                 
-                else
-                {
-                    // If the frontier region is larger than 5 cells, find the regions centroid
-                    centroid0 = (temp_group0.size()) / 2;
-                    centroid0_index = temp_group0.at(centroid0);
-                    centroids0.push_back(centroid0_index);
+                if (frontier_group.back().getFrontierNeighbors().second == 0){
+                    // If no second neighbor, and we havent switched direction yet, switch direction
+                    if (!checking_second_direction){
+                        checking_second_direction = true;
+                        previous_index = frontier_group[0].getIndex();
+                        index_to_check = frontier_group[0].getFrontierNeighbors().second;
+                        continue;
+                    }
+                    // If we already changed direction, stop
+                    index_to_check = 0;
                 }
-
-                // Reset the region vector and size counter
-                group0_c = 0;
-                temp_group0.clear();
             }
 
-            else
-            {
-                // If we found a frontier edge, increase the group size
-                prev_group0_c = group0_c;
-            }
-        }
-
-        else
-        {
-            // If we got a duplicate cell, do nothing
+            frontier_regions.push_back(std::pair<std::vector<FrontNode>, bool>(frontier_group, loop));
         }
 
     }
 
 }
 
-        // /// \brief Finds the transform between the map frame and the robot's base_footprint frame
-        // /// \returns nothing
-        // void find_transform()
-        // {
-        //     // Find current location and move to the nearest centroid
-        //     // Get robot pose
-        //     transformS = tfBuffer.lookupTransform(map0_frame, body0_frame, ros::Time(0), ros::Duration(3.0));
+void FrontExpl::find_centroids(){
+    std::cout << "Finding centroids" << std::endl;
 
-        //     robot0_pose_(0) = transformS.transform.translation.x;
-        //     robot0_pose_(1) = transformS.transform.translation.y;
-        //     // robot0_pose_.position.z = 0.0;
-        //     // robot0_pose_.orientation = transformS.transform.rotation;
-        //     // robot0_pose_.orientation.y = transformS.transform.rotation.y;
-        //     // robot0_pose_.orientation.z = transformS.transform.rotation.z;
-        //     // robot0_pose_.orientation.w = transformS.transform.rotation.w;
+    // For each region, find the centroid
+    for (std::pair<std::vector<FrontNode>, bool> frountier_pair : frontier_regions)
+    {
+        double length = frountier_pair.first.size() * resolution;
 
-        //     std::cout << "Robot pose is  " << robot0_pose_(0) << " , " << robot0_pose_(1) << std::endl;
-        // }
+        if (length < ABSULUTE_MIN_REGION_LENGTH) {
+            std::cout << "Region too small, skipping" << std::endl;
+            continue;
+        }
 
+        int number_of_groups = floor(length / MIN_REGION_LENGTH);
+        int cells_per_group = floor(frountier_pair.first.size() / number_of_groups);
+        int left_over = frountier_pair.first.size() - (cells_per_group * number_of_groups);
+        if (frountier_pair.second == true){
+            for (int current_start = 0; current_start < frountier_pair.first.size(); current_start += cells_per_group)
+            {
+                if (left_over > 0){
+                    left_over -= 1;
+                    current_start += 1;
+                }
+                int centroid_index = current_start + floor(cells_per_group / 2);
+                centroids0.push_back(frountier_pair.first.at(centroid_index).getIndex());
+            }
+        }
+
+        int end_node_index = 0;
+        std::map<int, int> global_to_local_map;
+        for (int node_index = 0; node_index < frountier_pair.first.size(); node_index++)
+        {
+            global_to_local_map[frountier_pair.first[node_index].getIndex()] = node_index;
+            if(frountier_pair.first[node_index].getFrontierNeighbors().second == 0){
+                end_node_index = node_index;
+            }
+        }
+
+        int node_index = frountier_pair.first[end_node_index].getFrontierNeighbors().first;
+        int previous_index = end_node_index;
+        int cell_in_this_group = 2;
+        for (int cell_num = 1; cell_num < frountier_pair.first.size()-1; cell_num++)
+        {
+            if(cell_in_this_group == floor(cells_per_group/2)+1)
+            {
+                centroids0.push_back(frountier_pair.first.at(global_to_local_map[node_index]).getIndex());
+            }
+
+            if(left_over>0 && cell_in_this_group == cells_per_group +1)
+            {
+                cell_in_this_group = 0;
+                left_over--;
+            }
+
+            if(left_over==0 && cell_in_this_group == cells_per_group)
+            {
+                cell_in_this_group = 0;
+            }
+
+            if(frountier_pair.first.at(global_to_local_map[node_index]).getFrontierNeighbors().first != previous_index)
+            {
+                previous_index = node_index;
+                node_index = frountier_pair.first.at(global_to_local_map[node_index]).getFrontierNeighbors().first;
+            }
+            else
+            {
+                previous_index = node_index;
+                node_index = frountier_pair.first.at(global_to_local_map[node_index]).getFrontierNeighbors().second;
+            }
+            cell_in_this_group++;
+        }
+
+    }
+}
 
 void FrontExpl::centroid_index_to_point()
 {
@@ -164,16 +295,16 @@ void FrontExpl::centroid_index_to_point()
         point(0) = (centroids0.at(t) % map_width)*resolution + origin(0);
         point(1) = floor(centroids0.at(t) / map_width)*resolution + origin(1);
 
-        for (int w = 0; w < prev_cent_0x.size(); w++)
-        {
-            // Compare the previous centroids to the current calculated centroid
-            if ( (fabs( prev_cent_0x.at(w) - point(0)) < 0.01) && (fabs( prev_cent_0y.at(w) - point(1)) < 0.01) )
-            {
-                // If the current centroid is too close to a previous centroid, skip
-                std::cout << "Already went to this centroid " << prev_cent_0x.at(w) << " , " << prev_cent_0y.at(w) << std::endl;
-                goto bad_centroid;
-            }
-        }
+        // for (int w = 0; w < prev_cent_0x.size(); w++)
+        // {
+        //     // Compare the previous centroids to the current calculated centroid
+        //     if ( (fabs( prev_cent_0x.at(w) - point(0)) < 0.01) && (fabs( prev_cent_0y.at(w) - point(1)) < 0.01) )
+        //     {
+        //         // If the current centroid is too close to a previous centroid, skip
+        //         std::cout << "Already went to this centroid " << prev_cent_0x.at(w) << " , " << prev_cent_0y.at(w) << std::endl;
+        //         goto bad_centroid;
+        //     }
+        // }
 
         if((point(0) < origin(0) + 0.05) && (point(1) < origin(1) + 0.05))
         {
@@ -188,15 +319,16 @@ void FrontExpl::centroid_index_to_point()
             centroid0_Ypts.push_back(point(1));
             centroid_pts.push_back(point);
             centroid_grid_pts.push_back(Eigen::Vector2i(centroids0.at(t) % map_width, floor(centroids0.at(t) / map_width)));
+            continue;
 
-            // Determine the distance between the current centroid and the robot's position
-            double delta_x = point(0) - robot0_pose_(0); 
-            double delta_y = point(1) - robot0_pose_(1); 
-            double sum = (pow(delta_x ,2)) + (pow(delta_y ,2));
-            dist0 = pow( sum , 0.5 );
+            // // Determine the distance between the current centroid and the robot's position
+            // double delta_x = point(0) - robot0_pose_(0); 
+            // double delta_y = point(1) - robot0_pose_(1); 
+            // double sum = (pow(delta_x ,2)) + (pow(delta_y ,2));
+            // dist0 = pow( sum , 0.5 );
 
-            // Store the distance value in a vector
-            dist0_arr.push_back(dist0);
+            // // Store the distance value in a vector
+            // dist0_arr.push_back(dist0);
         }
 
         // Skip to the end of the for loop if there was an invalid centroid
@@ -205,6 +337,7 @@ void FrontExpl::centroid_index_to_point()
     }
 }
 
+/*
 void FrontExpl::find_closest_centroid()
 {
     // Set the first smallest distance to be large
@@ -233,7 +366,9 @@ void FrontExpl::find_closest_centroid()
         }
     }
 }
+*/
 
+/*
 void FrontExpl::edge_index_to_point()
 {
     for (int t = 0; t < edge0_vec.size(); t++)
@@ -258,8 +393,9 @@ void FrontExpl::edge_index_to_point()
         dist0_arr.push_back(dist0);
     }
 }
+*/
 
-std::vector<Eigen::Vector2d> FrontExpl::get_frontiers(const Eigen::Vector2d& location)
+std::vector<Eigen::Vector2d> FrontExpl::run()
 {
     std::cout << "Resetting vairbales and clearing all vectors" << std::endl;
     centroid0 = 0;
@@ -273,10 +409,10 @@ std::vector<Eigen::Vector2d> FrontExpl::get_frontiers(const Eigen::Vector2d& loc
     centroid0_Ypts.clear();
     centroid_pts.clear();
     centroid_grid_pts.clear();
+    frontier_regions.clear();
 
 
     std::cout << "Getting Frontier" << std::endl;
-    robot0_pose_ = location;
 
 
     // If there is no map data and / or start service isnt called, do nothing and instead start the loop over again
@@ -295,29 +431,28 @@ std::vector<Eigen::Vector2d> FrontExpl::get_frontiers(const Eigen::Vector2d& loc
         sort( edge0_vec.begin(), edge0_vec.end() );
         edge0_vec.erase( unique( edge0_vec.begin(), edge0_vec.end() ), edge0_vec.end() );
 
-        // Given the forntier edges, find the frontier regions and their centroids
+        // Given the forntier edges, find the frontier regions
         find_regions();
 
-        // // Find the transfrom between the map frame the base_footprint frame
-        // // in order to determine the robot's position
-        // find_transform();
+        // Given the regions, find the centroids of each region
+        find_centroids();
 
         // Given the centroid vector, convert the controids from map cells to x-y coordinates in the map frame
         // so a goal can be sent to move_base
         centroid_index_to_point();
 
         // If there are no values in the centroid x or y vectors, find the closest frontier edge to move to
-        if ( ( centroid0_Xpts.size() == 0 ) || ( centroid0_Ypts.size() == 0) )
-        {
-            centroid0_Xpts.clear();
-            centroid0_Ypts.clear();
-            dist0_arr.clear();
-            std::cout << "Couldnt find a centroid, move to closest edge instead" << std::endl;
+        // if ( ( centroid0_Xpts.size() == 0 ) || ( centroid0_Ypts.size() == 0) )
+        // {
+        //     centroid0_Xpts.clear();
+        //     centroid0_Ypts.clear();
+        //     dist0_arr.clear();
+        //     std::cout << "Couldnt find a centroid, move to closest edge instead" << std::endl;
 
-            // Given the edge vector, convert the edges from map cells to x-y coordinates in the map frame
-            // so a goal can be sent to move_base                       
-            edge_index_to_point(); 
-        }
+        //     // Given the edge vector, convert the edges from map cells to x-y coordinates in the map frame
+        //     // so a goal can be sent to move_base                       
+        //     edge_index_to_point(); 
+        // }
 
         std::cout << "" << std::endl;
     }
