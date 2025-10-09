@@ -139,6 +139,7 @@ std::vector<int8_t> MyPointAgentCSConstructor::construct1D(const amp::Environmen
 }
 
 const amp::GridCSpace2D_T<int8_t>& MyLidarEmulateConstructor::construct4point(Eigen::Vector2d location){
+    removeFrontierFromMap();
     double cell_width = (env.x_max-env.x_min)/cells_x();
     double cell_height = (env.y_max-env.y_min)/cells_y();
     check_collision_enviroument check_collision(env);
@@ -148,15 +149,17 @@ const amp::GridCSpace2D_T<int8_t>& MyLidarEmulateConstructor::construct4point(Ei
             double x_center = env.x_min+cell_width*cell_n + cell_width/2;
             double y_center = env.y_min+cell_height*cell_m + cell_height/2;
 
-            if (pow(x_center - location(0), 2) + pow(y_center - location(1), 2) < 4){
-                for(int i = 0; i < 10; i++){
-                    double random_x = x_center - cell_width/2 +(rand()%98+1)/100.0*cell_width;
-                    double random_y = y_center - cell_height/2 +(rand()%98+1)/100.0*cell_height;
-                    if (check_collision.all(Eigen::Vector2d(random_x, random_y))){
-                        map(cell_n, cell_m) = 1;
-                        break;
+            if (map(cell_n, cell_m) == -1){
+                if (pow(x_center - location(0), 2) + pow(y_center - location(1), 2) < 4){
+                    for(int i = 0; i < 10; i++){
+                        double random_x = x_center - cell_width/2 +(rand()%98+1)/100.0*cell_width;
+                        double random_y = y_center - cell_height/2 +(rand()%98+1)/100.0*cell_height;
+                        if (check_collision.all(Eigen::Vector2d(random_x, random_y))){
+                            map(cell_n, cell_m) = 1;
+                            break;
+                        }
+                        map(cell_n, cell_m) = 0;
                     }
-                    map(cell_n, cell_m) = 0;
                 }
             }
         }

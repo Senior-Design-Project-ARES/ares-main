@@ -71,7 +71,7 @@ bool FrontExpl::check_edges(int curr_cell, int next_cell)
 
 void FrontExpl::find_regions()
 {
-    std::cout << "Finding regions for tb3_0" << std::endl;
+    std::cout << "Finding regions" << std::endl;
 
     for (int q = 0; q < edge0_vec.size() - 1; q++)
     {
