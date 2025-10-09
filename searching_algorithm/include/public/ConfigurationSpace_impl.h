@@ -32,6 +32,6 @@ typename std::vector<T>::const_reference amp::DenseArray2D<T>::operator()(std::s
 }
 
 template <typename T>
-const std::vector<bool>& amp::DenseArray2D<T>::data() const {
+const std::vector<T>& amp::DenseArray2D<T>::data() const {
     return m_data;
 }

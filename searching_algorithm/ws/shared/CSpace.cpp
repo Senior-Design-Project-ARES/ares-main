@@ -1,16 +1,5 @@
 #include "CSpace.h"
 
-// Override this method for returning whether or not a point is in collision
-std::pair<std::size_t, std::size_t> MyGridCSpace2D::getCellFromPoint(double x0, double x1) const {
-    // Implment your discretization procedure here, such that the point (x0, x1) lies within the returned cell
-    double step_x = (m_x0_bounds.second-m_x0_bounds.first)/size().first;
-    double step_y = (m_x1_bounds.second-m_x1_bounds.first)/size().second;
-
-    std::size_t cell_x = (int)((x0-m_x0_bounds.first)/step_x); // x index of cell
-    std::size_t cell_y = (int)((x1-m_x1_bounds.first)/step_y); // x index of cell
-    return {cell_x, cell_y};
-}
-
 // Override this method for computing all of the boolean collision values for each cell in the cspace
 std::unique_ptr<amp::GridCSpace2D> MyManipulatorCSConstructor::construct(const amp::LinkManipulator2D& manipulator, const amp::Environment2D& env) {
     // Create an object of my custom cspace type (e.g. MyGridCSpace2D) and store it in a unique pointer. 
@@ -19,8 +8,8 @@ std::unique_ptr<amp::GridCSpace2D> MyManipulatorCSConstructor::construct(const a
     // In order to use the pointer as a regular GridCSpace2D object, we can just create a reference
     // MyGridCSpace2D& cspace = *cspace_ptr;
 
-    std::unique_ptr<MyGridCSpace2D> cspace_ptr = std::make_unique<MyGridCSpace2D>(m_cells_per_dim, m_cells_per_dim, -M_PI, M_PI, -M_PI, M_PI);
-    MyGridCSpace2D& cspace = *cspace_ptr;
+    std::unique_ptr<amp::GridCSpace2D> cspace_ptr = std::make_unique<amp::GridCSpace2D>(m_cells_per_dim, m_cells_per_dim, -M_PI, M_PI, -M_PI, M_PI);
+    amp::GridCSpace2D& cspace = *cspace_ptr;
     double step = 2*M_PI/m_cells_per_dim;
     double half_step = step/2;
     double critical = 0.01;
@@ -109,10 +98,10 @@ bool MyManipulatorCSConstructor::check_collision_between_point(const amp::Enviro
 std::unique_ptr<amp::GridCSpace2D> MyPointAgentCSConstructor::construct(const amp::Environment2D& env) {
     // Create an object of my custom cspace type (e.g. MyGridCSpace2D) and store it in a unique pointer. 
     // Pass the constructor parameters to std::make_unique()
-    std::unique_ptr<MyGridCSpace2D> cspace_ptr = std::make_unique<MyGridCSpace2D>(cells_x_dim, cells_y_dim, env.x_min, env.x_max, env.y_min, env.y_max);
+    std::unique_ptr<amp::GridCSpace2D> cspace_ptr = std::make_unique<amp::GridCSpace2D>(cells_x_dim, cells_y_dim, env.x_min, env.x_max, env.y_min, env.y_max);
     
     // In order to use the pointer as a regular GridCSpace2D object, we can just create a reference
-    MyGridCSpace2D& cspace = *cspace_ptr;
+    amp::GridCSpace2D& cspace = *cspace_ptr;
     double cell_width = (env.x_max-env.x_min)/cells_x_dim;
     double cell_height = (env.y_max-env.y_min)/cells_y_dim;
     check_collision_enviroument check_collision(env);
@@ -134,4 +123,59 @@ std::unique_ptr<amp::GridCSpace2D> MyPointAgentCSConstructor::construct(const am
     // Returning the object of type std::unique_ptr<MyGridCSpace2D> can automatically cast it to a polymorphic base-class pointer of type std::unique_ptr<amp::GridCSpace2D>.
     // The reason why this works is not super important for our purposes, but if you are curious, look up polymorphism!
     return cspace_ptr;
+}
+
+std::vector<int8_t> MyPointAgentCSConstructor::construct1D(const amp::Environment2D& env){
+    std::unique_ptr<amp::GridCSpace2D> grid_cspace_ptr = construct(env);
+    const amp::GridCSpace2D& grid_cspace = *grid_cspace_ptr;
+    std::vector<int8_t> cspace_1D;
+
+    for(int i = 0; i < cells_x_dim; i++){
+        for(int j = 0; j < cells_y_dim; j++){
+            cspace_1D.push_back(int8_t(grid_cspace(j,i)));
+        }
+    }
+    return cspace_1D;
+}
+
+const amp::GridCSpace2D_T<int8_t>& MyLidarEmulateConstructor::construct4point(Eigen::Vector2d location){
+    double cell_width = (env.x_max-env.x_min)/cells_x();
+    double cell_height = (env.y_max-env.y_min)/cells_y();
+    check_collision_enviroument check_collision(env);
+
+    for(int cell_n = 0; cell_n < cells_x(); cell_n++){
+        for(int cell_m = 0; cell_m < cells_y(); cell_m++){
+            double x_center = env.x_min+cell_width*cell_n + cell_width/2;
+            double y_center = env.y_min+cell_height*cell_m + cell_height/2;
+
+            if (pow(x_center - location(0), 2) + pow(y_center - location(1), 2) < 4){
+                for(int i = 0; i < 10; i++){
+                    double random_x = x_center - cell_width/2 +(rand()%98+1)/100.0*cell_width;
+                    double random_y = y_center - cell_height/2 +(rand()%98+1)/100.0*cell_height;
+                    if (check_collision.all(Eigen::Vector2d(random_x, random_y))){
+                        map(cell_n, cell_m) = 1;
+                        break;
+                    }
+                    map(cell_n, cell_m) = 0;
+                }
+            }
+        }
+    }
+    return map;
+}
+
+std::vector<int8_t> MyLidarEmulateConstructor::construct4point1D(Eigen::Vector2d location){
+    construct4point(location);
+    std::vector<int8_t> cspace_1D;
+
+    for(int i = 0; i < cells_x(); i++){
+        for(int j = 0; j < cells_y(); j++){
+            cspace_1D.push_back(int8_t(map(j,i)));
+        }
+    }
+    return cspace_1D;
+}
+
+const amp::GridCSpace2D_T<int8_t>& MyLidarEmulateConstructor::getMapptr(){
+    return map;
 }

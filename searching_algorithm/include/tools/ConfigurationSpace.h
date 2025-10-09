@@ -123,7 +123,7 @@ class DenseArray2D {
 
         /// @brief Read the wrapped data
         /// @return Wrapped data
-        inline const std::vector<bool>& data() const;
+        inline const std::vector<T>& data() const;
 
         /// @brief Virtual dtor
         virtual ~DenseArray2D() {}
@@ -139,11 +139,12 @@ class DenseArray2D {
 /// @brief Abstract type that can be used with the Visualizer
 /// NOTE: This class is still abstract becase the `inCollision` method has not been overridden. You will need to override `inCollision` to return the boolean collision
 /// value in the correct DenseArray2D<bool> cell.
-class GridCSpace2D : public ConfigurationSpace2D, public DenseArray2D<bool> {
+template <typename T = bool>
+class GridCSpace2D_T : public ConfigurationSpace2D, public DenseArray2D<T> {
     public:
-        GridCSpace2D(std::size_t x0_cells, std::size_t x1_cells, double x0_min, double x0_max, double x1_min, double x1_max)
+        GridCSpace2D_T(std::size_t x0_cells, std::size_t x1_cells, double x0_min, double x0_max, double x1_min, double x1_max, int default_value)
             : ConfigurationSpace2D(x0_min, x0_max, x1_min, x1_max)
-            , DenseArray2D<bool>(x0_cells, x1_cells)
+            , DenseArray2D<T>(x0_cells, x1_cells, default_value)
             {}
 
         /******* User Implemented Methods ********/
@@ -152,7 +153,15 @@ class GridCSpace2D : public ConfigurationSpace2D, public DenseArray2D<bool> {
         /// @param x0 Value of the first configuration space variable
         /// @param x1 Value of the second configuration space variable
         /// @return A pair (i, j) of indices that correspond to the cell that (x0, x1) is in
-        virtual std::pair<std::size_t, std::size_t> getCellFromPoint(double x0, double x1) const = 0;
+        virtual std::pair<std::size_t, std::size_t> getCellFromPoint(double x0, double x1) const {
+            // Implment your discretization procedure here, such that the point (x0, x1) lies within the returned cell
+            double step_x = (m_x0_bounds.second-m_x0_bounds.first)/this->size().first;
+            double step_y = (m_x1_bounds.second-m_x1_bounds.first)/this->size().second;
+
+            std::size_t cell_x = (int)((x0-m_x0_bounds.first)/step_x); // x index of cell
+            std::size_t cell_y = (int)((x1-m_x1_bounds.first)/step_y); // x index of cell
+            return {cell_x, cell_y};
+        }
 
         /*****************************************/
 
@@ -163,8 +172,18 @@ class GridCSpace2D : public ConfigurationSpace2D, public DenseArray2D<bool> {
         /// @return A pair (i, j) of indices that correspond to the cell that (x0, x1) is in
         virtual bool inCollision(double x0, double x1) const override {
             auto[i, j] = getCellFromPoint(x0, x1);
-            return operator()(i, j);
+            return this->operator()(i, j);
         }
+
+        /// @brief Virtual dtor
+        virtual ~GridCSpace2D_T() {}
+};
+
+class GridCSpace2D : public GridCSpace2D_T<bool> {
+    public:
+        GridCSpace2D(std::size_t x0_cells, std::size_t x1_cells, double x0_min, double x0_max, double x1_min, double x1_max)
+            : GridCSpace2D_T<bool>(x0_cells, x1_cells, x0_min, x0_max, x1_min, x1_max, 0)
+            {}
 
         /// @brief Virtual dtor
         virtual ~GridCSpace2D() {}
