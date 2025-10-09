@@ -47,6 +47,18 @@
         "regex": "cpp",
         "chrono": "cpp",
         "forward_list": "cpp",
-        "list": "cpp"
+        "list": "cpp",
+        "__tree": "cpp",
+        "map": "cpp",
+        "set": "cpp",
+        "valarray": "cpp",
+        "span": "cpp",
+        "unordered_set": "cpp",
+        "flat_map": "cpp",
+        "flat_set": "cpp",
+        "ranges": "cpp",
+        "stacktrace": "cpp",
+        "tuple": "cpp",
+        "memory": "cpp"
     }
 }
