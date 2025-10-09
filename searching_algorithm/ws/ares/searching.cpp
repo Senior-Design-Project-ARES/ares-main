@@ -5,7 +5,7 @@
 
 
 FrontExpl::FrontExpl(int map_width, int map_height, double resolution, const Eigen::Vector2d& origin, const std::vector<int8_t>& FE0_map)
-    :map_width(map_width), FE0_map(FE0_map), resolution(resolution), origin(origin){}
+    :map_width(map_width), map_height(map_height), FE0_map(FE0_map), resolution(resolution), origin(origin){}
 
 void FrontExpl::neighborhood(int cell)
 {
@@ -30,7 +30,7 @@ void FrontExpl::neighborhood(int cell)
 
 void FrontExpl::find_all_edges()
 {
-    std::cout << "Finding all the tb3_0 edges" << std::endl;
+    std::cout << "Finding all the edges" << std::endl;
     
     // Starting one row up and on space in on the map so there are no indexing issues
     for (double x = map_width + 1; x < (map_width * map_height) - map_width - 1; x++)
@@ -186,6 +186,8 @@ void FrontExpl::centroid_index_to_point()
             // If the centroid is valid, add its x and y values to their respective vectors
             centroid0_Xpts.push_back(point(0));
             centroid0_Ypts.push_back(point(1));
+            centroid_pts.push_back(point);
+            centroid_grid_pts.push_back(Eigen::Vector2i(centroids0.at(t) % map_width, floor(centroids0.at(t) / map_width)));
 
             // Determine the distance between the current centroid and the robot's position
             double delta_x = point(0) - robot0_pose_(0); 
@@ -243,6 +245,8 @@ void FrontExpl::edge_index_to_point()
         // Add the cells x and y values to their respective vectors
         centroid0_Xpts.push_back(point(0));
         centroid0_Ypts.push_back(point(1));
+        centroid_pts.push_back(point);
+        centroid_grid_pts.push_back(Eigen::Vector2i(centroids0.at(t) % map_width, floor(centroids0.at(t) / map_width)));
 
         // Determine the distance between the current frontier edge and the robot's position
         double delta_x = point(0) - robot0_pose_(0); 
@@ -255,8 +259,22 @@ void FrontExpl::edge_index_to_point()
     }
 }
 
-void FrontExpl::get_frontier(const Eigen::Vector2d& location)
+std::vector<Eigen::Vector2d> FrontExpl::get_frontiers(const Eigen::Vector2d& location)
 {
+    std::cout << "Resetting vairbales and clearing all vectors" << std::endl;
+    centroid0 = 0;
+    centroid0_index = 0;
+    dist0_arr.clear();
+    edge0_vec.clear();
+    neighbor0_index.clear();
+    neighbor0_value.clear();
+    centroids0.clear();
+    centroid0_Xpts.clear();
+    centroid0_Ypts.clear();
+    centroid_pts.clear();
+    centroid_grid_pts.clear();
+
+
     std::cout << "Getting Frontier" << std::endl;
     robot0_pose_ = location;
 
@@ -312,16 +330,6 @@ void FrontExpl::get_frontier(const Eigen::Vector2d& location)
 
     // Skip to the end of the loop if there are no fontier regions
     skip:
-    std::cout << "Starting loop over" << std::endl;
 
-    std::cout << "Resetting vairbales and clearing all vectors" << std::endl;
-    centroid0 = 0;
-    centroid0_index = 0;
-    dist0_arr.clear();
-    edge0_vec.clear();
-    neighbor0_index.clear();
-    neighbor0_value.clear();
-    centroids0.clear();
-    centroid0_Xpts.clear();
-    centroid0_Ypts.clear();
+    return centroid_pts;
 }

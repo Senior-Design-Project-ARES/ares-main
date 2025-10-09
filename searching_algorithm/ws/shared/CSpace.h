@@ -68,8 +68,11 @@ class MyLidarEmulateConstructor : public MyPointAgentCSConstructor{
         std::vector<int8_t> construct4point1D(Eigen::Vector2d location);
         std::vector<int8_t> getMap1D();
         const amp::GridCSpace2D_T<int8_t>& getMapptr();
+        void addFrontierToMap(const std::vector<Eigen::Vector2i>& frontier_pts);
+        void removeFrontierFromMap();
 
     private:
         const amp::Environment2D& env;
         amp::GridCSpace2D_T<int8_t> map;
+        std::vector<Eigen::Vector2i> last_frontier;
 };

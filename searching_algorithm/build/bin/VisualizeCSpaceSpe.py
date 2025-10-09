@@ -28,7 +28,17 @@ def visualize_grid_cspace_2d(x0_cells : int, x1_cells : int, bounds : list, dens
             wrapped_idx = j * x0_cells + i
             data[i][j] = dense_bits[wrapped_idx]
     
-    color_map = LinearSegmentedColormap.from_list('custom', ['darkcyan', 'indianred'], N=256)
+    vmin, vmax = -1, 2
+    colors = [
+        (vmin, 'lightgray'),
+        (0.0, 'white'),
+        (1.0, 'indianred'),
+        (vmax, 'limegreen')  # standout color; try 'lime', 'gold', 'deepskyblue', etc.
+    ]
+    norm_positions = [( (v - vmin) / (vmax - vmin), c ) for v, c in colors]
+    color_map = LinearSegmentedColormap.from_list('custom', norm_positions, N=256)
+
+    # color_map = LinearSegmentedColormap.from_list('custom', ['darkcyan', 'indianred'], N=256)
     ax = plt.gca()
     bounds[2], bounds[3] = bounds[3], bounds[2] # Make sure y-axis is increasing
     ax.imshow(data.transpose(), cmap=color_map, interpolation='none', origin='upper', extent=bounds)

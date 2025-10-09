@@ -179,3 +179,21 @@ std::vector<int8_t> MyLidarEmulateConstructor::construct4point1D(Eigen::Vector2d
 const amp::GridCSpace2D_T<int8_t>& MyLidarEmulateConstructor::getMapptr(){
     return map;
 }
+
+void MyLidarEmulateConstructor::addFrontierToMap(const std::vector<Eigen::Vector2i>& frontier_pts){
+    for (const auto& pt : frontier_pts) {
+        if (pt(0) >= 0 && pt(0) < cells_x() && pt(1) >= 0 && pt(1) < cells_y()) {
+            map(pt(0), pt(1)) = 2; // Mark as frontier
+        }
+    }
+    last_frontier = frontier_pts;
+}
+
+void MyLidarEmulateConstructor::removeFrontierFromMap(){
+    for (const auto& pt : last_frontier) {
+        if (pt(0) >= 0 && pt(0) < cells_x() && pt(1) >= 0 && pt(1) < cells_y()) {
+            map(pt(0), pt(1)) = 0; // Reset to free space
+        }
+    }
+    last_frontier.clear();
+}
