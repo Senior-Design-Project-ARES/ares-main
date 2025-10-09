@@ -8,6 +8,7 @@
 #include <array>
 #include <memory>
 #include <tuple>
+#include <cstdint>
 
 namespace ampprivate {
 namespace pybridge {
@@ -51,6 +52,7 @@ struct ListOfQuadrouples {
 
 std::unique_ptr<PythonObject> makeBool(bool boolean);
 std::unique_ptr<PythonObject> makeLong(uint64_t scalar);
+std::unique_ptr<PythonObject> make8bit(int8_t scalar);
 std::unique_ptr<PythonObject> makeScalar(double scalar);
 std::unique_ptr<PythonObject> makeString(const std::string& string);
 std::unique_ptr<PythonObject> makeList(std::vector<std::unique_ptr<PythonObject>>&& list_elements);
