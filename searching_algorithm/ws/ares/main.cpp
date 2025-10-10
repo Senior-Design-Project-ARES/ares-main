@@ -19,7 +19,7 @@ int main(int argc, char** argv){
     const int num_cells_x = (env.x_max-env.x_min)*CELL_PER_METER;
     const int num_cells_y = (env.y_max-env.y_min)*CELL_PER_METER;
 
-    Eigen::Vector2d robot_pose_1 (1.5, 5.0);
+    Eigen::Vector2d robot_pose_1 (1.5, 6.0);
     Eigen::Vector2d robot_pose_2 (2.0, 8.0);
 
     MyLidarEmulateConstructor lidar_space(num_cells_x, num_cells_y, env);
@@ -29,6 +29,7 @@ int main(int argc, char** argv){
     std::vector<Eigen::Vector2d> points = front_expl.run();
 
     std::vector<Eigen::Vector2i> grid_points = front_expl.getCentroidsGrid();
+    DEBUG(grid_points.size());
     lidar_space.addFrontierToMap(grid_points);
     
 

@@ -228,6 +228,7 @@ void FrontExpl::find_centroids(){
         int number_of_groups = floor(length / MIN_REGION_LENGTH);
         int cells_per_group = floor(frountier_pair.first.size() / number_of_groups);
         int left_over = frountier_pair.first.size() - (cells_per_group * number_of_groups);
+        // if it is a loop, just start at random place, at it is already in sequence
         if (frountier_pair.second == true){
             for (int current_start = 0; current_start < frountier_pair.first.size(); current_start += cells_per_group)
             {
@@ -242,6 +243,7 @@ void FrontExpl::find_centroids(){
 
         int end_node_index = 0;
         std::map<int, int> global_to_local_map;
+        // find the grid that touch a "wall"
         for (int node_index = 0; node_index < frountier_pair.first.size(); node_index++)
         {
             global_to_local_map[frountier_pair.first[node_index].getIndex()] = node_index;
