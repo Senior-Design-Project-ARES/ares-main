@@ -27,3 +27,10 @@ scatter(position(end,1),position(end,2),'marker','x','LineWidth',1,'MarkerEdgeCo
 title(['Stanley Trajectory, 60s, x_0=' num2str(IC(1)) ', y_0=' num2str(IC(2)) ', \theta_0 =' num2str(IC(3))])
 legend('Waypoints','Interpolated Path', 'Trajectory', 'Start','End','location','southeast')
 axis equal
+
+%desired velocity plot
+figure()
+plot(out.RefVelocities)
+xlabel("Index")
+ylabel("reference velocity (m/s)")
+title("reference velocities vs index")
