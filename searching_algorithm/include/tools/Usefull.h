@@ -21,8 +21,8 @@ class check_collision_enviroument{
         check_collision_enviroument(const amp::Environment2D& env) :
             env(env){}
 
-        inline bool all(Eigen::Vector2d point);
-        inline bool thisObstacle(int ob_idx, Eigen::Vector2d point);
+        inline bool all(const Eigen::Vector2d& point);
+        inline bool thisObstacle(int ob_idx,const Eigen::Vector2d& point);
 
     private:
         const amp::Environment2D& env;
@@ -57,7 +57,7 @@ inline bool check_collision_problem::thisObstacle(int ob_idx, Eigen::Vector2d po
     return true; // Point is inside this obstacle
 }
 
-inline bool check_collision_enviroument::all(Eigen::Vector2d point) {
+inline bool check_collision_enviroument::all(const Eigen::Vector2d& point) {
     double cross_product;
     bool possible_collision = 1;
     for (int ob_idx = 0; ob_idx < env.obstacles.size(); ++ob_idx) {
@@ -69,7 +69,7 @@ inline bool check_collision_enviroument::all(Eigen::Vector2d point) {
 }
 
 
-inline bool check_collision_enviroument::thisObstacle(int ob_idx, Eigen::Vector2d point){
+inline bool check_collision_enviroument::thisObstacle(int ob_idx,const Eigen::Vector2d& point){
     amp::Obstacle2D obstacle = env.obstacles[ob_idx];
     double cross_product;
 

@@ -68,7 +68,7 @@ class FrontExpl
 
         /// \brief Calls all other functions to find frontier edges, regions and a goal to move to. Then uses the action server to move to that goal
         /// \returns nothing
-        std::vector<Eigen::Vector2d> run();
+        std::vector<std::pair<Eigen::Vector2d, int>> run();
 
         std::vector<Eigen::Vector2i> getCentroidsGrid() { return centroid_grid_pts; }
 
@@ -83,8 +83,9 @@ class FrontExpl
         std::vector<unsigned int> centroids0, temp_group0;
         std::vector<double> centroid0_Xpts, centroid0_Ypts, dist0_arr;
         // std::vector<double> prev_cent_0x, prev_cent_0y;
-        std::vector<Eigen::Vector2d> centroid_pts;
+        std::vector<std::pair<Eigen::Vector2d, int>> centroid_pts;
         std::vector<Eigen::Vector2i> centroid_grid_pts;
+        std::vector<int> points_in_regions;
         std::vector<std::pair<std::vector<FrontNode>, bool>> frontier_regions;
         // int group0_c=0, prev_group0_c=0;
         int centroid0=0, centroid0_index=0, move_to_pt=0, map_width=0, map_height=0, mark_edge=0, edge_index=0;

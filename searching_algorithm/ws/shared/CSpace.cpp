@@ -150,7 +150,7 @@ const amp::GridCSpace2D_T<int8_t>& MyLidarEmulateConstructor::construct4point(Ei
             double y_center = env.y_min+cell_height*cell_m + cell_height/2;
 
             if (map(cell_n, cell_m) == -1){
-                if (pow(x_center - location(0), 2) + pow(y_center - location(1), 2) < 4){
+                if (pow(x_center - location(0), 2) + pow(y_center - location(1), 2) < LIDARRADIUS){
                     for(int i = 0; i < 10; i++){
                         double random_x = x_center - cell_width/2 +(rand()%98+1)/100.0*cell_width;
                         double random_y = y_center - cell_height/2 +(rand()%98+1)/100.0*cell_height;
@@ -167,16 +167,174 @@ const amp::GridCSpace2D_T<int8_t>& MyLidarEmulateConstructor::construct4point(Ei
     return map;
 }
 
-std::vector<int8_t> MyLidarEmulateConstructor::construct4point1D(Eigen::Vector2d location){
-    construct4point(location);
-    std::vector<int8_t> cspace_1D;
+const amp::GridCSpace2D_T<int8_t>& MyLidarEmulateConstructor::lidarMimicConstruct4point(Eigen::Vector2d location){
+    removeFrontierFromMap();
+    double cell_width = (env.x_max-env.x_min)/cells_x();
+    double cell_height = (env.y_max-env.y_min)/cells_y();
+    check_collision_enviroument check_collision(env);
+    std::vector<std::pair<Eigen::Vector2d, double>> obstacle_location;
+
+    Eigen::Vector2d arm = Eigen::Vector2d(0,1);
+    for(double angle = 0; angle < 2*M_PI; angle += ANGLERESOLUSION){
+        Eigen::Vector2d add_on =  (Eigen::Rotation2Dd(angle) * arm).normalized();
+
+        for(double distance = 0; distance < LIDARRADIUS; distance+=cell_height/2){
+            Eigen::Vector2d location_check = location+add_on*distance;
+
+            if(location_check(0) <= env.x_min || location_check(0) >= env.x_max ||
+               location_check(1) <= env.y_min || location_check(1) >= env.y_max){
+                continue;
+            }
+
+            if(getState(location_check) != -1){
+                continue;
+            }
+            if(checkCellCollision(location_check, check_collision)){
+                obstacle_location.push_back({location_check, distance});
+                // updateAroundPoint(location_check, 1, distance);
+                break;
+            }
+            updateAroundPoint(location_check, 0, distance);
+        }
+    }
+    for(int i = 0; i < obstacle_location.size(); i++){
+        updateAroundPoint(obstacle_location[i].first, 1, obstacle_location[i].second);
+    }
+    return map;
+}
+
+const amp::GridCSpace2D_T<int8_t>& MyLidarEmulateConstructor::lidarMimicConstruct4point2(Eigen::Vector2d location){
+    removeFrontierFromMap();
+    double cell_width = (env.x_max-env.x_min)/cells_x();
+    double cell_height = (env.y_max-env.y_min)/cells_y();
+    check_collision_enviroument check_collision(env);
+    std::vector<std::pair<Eigen::Vector2d, double>> obstacle_location;
+    Eigen::Vector2d arm = Eigen::Vector2d(0,1);
+
+    for(double angle = 0.0000001; angle < 2*M_PI*3; angle += ANGLERESOLUSION){
+        Eigen::Vector2d add_on =  (Eigen::Rotation2Dd(angle) * arm).normalized();
+        auto [i, j] = map.getCellFromPoint(location(0), location(1));
+        double nextBoundaryX = (add_on(0) > 0) 
+            ? env.x_min + (i + 1) * cell_width 
+            : env.x_min + i * cell_width;
+        double nextBoundaryY = (add_on(1) > 0) 
+            ? env.y_min + (j + 1) * cell_height 
+            : env.y_min + j * cell_height;
+
+        double tMaxX = (add_on(0) != 0)
+            ? (nextBoundaryX - location(0)) / add_on(0)
+            : std::numeric_limits<double>::infinity();
+        double tMaxY = (add_on(1) != 0)
+            ? (nextBoundaryY - location(1)) / add_on(1)
+            : std::numeric_limits<double>::infinity();
+
+        double tDeltaX = (add_on(0) != 0)
+            ? cell_width / std::abs(add_on(0))
+            : std::numeric_limits<double>::infinity();
+        double tDeltaY = (add_on(1) != 0)
+            ? cell_height / std::abs(add_on(1))
+            : std::numeric_limits<double>::infinity();
+
+        double traveled = 0.0;
+
+        while (traveled < LIDARRADIUS) {
+            Eigen::Vector2d p = location + add_on * traveled;
+
+            if (check_collision.all(p)) {
+                obstacle_location.push_back({p, traveled});
+                break;
+            } else {
+                updateAroundPoint(p, 0, traveled); // free
+            }
+
+            // Move to next boundary
+            if (tMaxX < tMaxY) {
+                i += (add_on(0) > 0) ? 1 : -1;
+                traveled = tMaxX;
+                tMaxX += tDeltaX;
+            } else {
+                j += (add_on(1) > 0) ? 1 : -1;
+                traveled = tMaxY;
+                tMaxY += tDeltaY;
+            }
+        }
+    }
+    for(int i = 0; i < obstacle_location.size(); i++){
+        updateAroundPoint(obstacle_location[i].first, 1, obstacle_location[i].second);
+    }
+    return map;
+}
+
+bool MyLidarEmulateConstructor::checkCellCollision(Eigen::Vector2d location_check, check_collision_enviroument& check_collision){
+    auto[x,y] = map.getCellFromPoint(location_check(0), location_check(1));
+    double step_x = (map.x0Bounds().second - map.x0Bounds().first)/cells_x();
+    double step_y = (map.x1Bounds().second - map.x1Bounds().first)/cells_y();
+
+    for(int i = 0; i < SAMPLE_POINT; i++){
+        for (int j = 0; j < SAMPLE_POINT; j++){
+            double random_x = map.x0Bounds().first + x*step_x + double(rand())/RAND_MAX*step_x;
+            double random_y = map.x1Bounds().first + y*step_y + double(rand())/RAND_MAX*step_y;
+            if (check_collision.all(Eigen::Vector2d(random_x, random_y))){
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void MyLidarEmulateConstructor::updateAroundPoint(const Eigen::Vector2d& location_check, int8_t value, double radius){
+    if(location_check(0) <= env.x_min || location_check(0) >= env.x_max ||
+       location_check(1) <= env.y_min || location_check(1) >= env.y_max){
+        return;
+    }
+
+    std::pair<int, int> temp = map.getCellFromPoint(location_check(0),location_check(1));
+    int cell_x = temp.first;
+    int cell_y = temp.second;
+
+    if(radius == 0){
+        map(cell_x, cell_y) = value;
+        return;
+    }
+
+    int num_point_to_change = std::ceil(radius*ANGLERESOLUSION);
+    if (num_point_to_change != 1){
+        DEBUG("num_point_to_change: " << num_point_to_change);
+    }
+
+    for (int i = 0; i < num_point_to_change/2 + 1; i++ ){
+        for(int j = 0; j < num_point_to_change/2 + 1; j++){
+            if (cell_x + i < cells_x() && cell_y + j < cells_y()) {
+                map(cell_x + i, cell_y + j) = value;
+            }
+
+            if (cell_x + i < cells_x() && cell_y - j >= 0) {
+                map(cell_x + i, cell_y - j) = value;
+            }
+
+            if (cell_x - i >= 0 && cell_y + j < cells_y()) {
+                map(cell_x - i, cell_y + j) = value;
+            }
+
+            if (cell_x - i >= 0 && cell_y - j >= 0) {
+                map(cell_x - i, cell_y - j) = value;
+            }
+        }
+    }
+}
+
+const std::vector<int8_t>& MyLidarEmulateConstructor::construct4point1D(Eigen::Vector2d location){
+    // construct4point(location);
+    // lidarMimicConstruct4point(location);
+    lidarMimicConstruct4point2(location);
+    map_1D.clear();
 
     for(int i = 0; i < cells_x(); i++){
         for(int j = 0; j < cells_y(); j++){
-            cspace_1D.push_back(int8_t(map(j,i)));
+            map_1D.push_back(int8_t(map(j,i)));
         }
     }
-    return cspace_1D;
+    return map_1D;
 }
 
 const amp::GridCSpace2D_T<int8_t>& MyLidarEmulateConstructor::getMapptr(){
@@ -199,4 +357,18 @@ void MyLidarEmulateConstructor::removeFrontierFromMap(){
         }
     }
     last_frontier.clear();
+}
+
+void MyLidarEmulateConstructor::reset(){
+    for(int i = 0; i < cells_x(); i++){
+        for(int j = 0; j < cells_y(); j ++){
+            map(i, j) = -1;
+        }
+    }
+}
+
+int MyLidarEmulateConstructor::getState(const Eigen::Vector2d& location){
+    const amp::GridCSpace2D_T<int8_t>& map = getMapptr();
+    auto[i, j] = map.getCellFromPoint(location(0), location(1));
+    return map(i, j);
 }

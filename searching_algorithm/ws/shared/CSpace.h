@@ -1,3 +1,6 @@
+/// \file CSpace.h
+/// \brief This file contains custom Lidar emulator C-space
+
 #pragma once
 
 // This includes all of the necessary header files in the toolbox
@@ -8,6 +11,11 @@
 #include "hw/HW6.h"
 #include "tools/Usefull.h"
 #include <cstdint>
+#include <Eigen/Geometry>
+
+#define LIDARRADIUS 3
+#define ANGLERESOLUSION 0.008
+#define SAMPLE_POINT 10
 
 // Derive the HW4 ManipulatorCSConstructor class and override the missing method
 class MyManipulatorCSConstructor : public amp::ManipulatorCSConstructor {
@@ -53,26 +61,86 @@ class MyPointAgentCSConstructor : public amp::PointAgentCSConstructor {
         std::size_t cells_y_dim;
 };
 
+
+/// \brief Create Lidar Emulate C-Space for point agent
+/// \param cells_x_dim: number of cells for x dim
+/// \param cells_y_dim: number of cells for y dim
+/// \param env: the original enviroument for cspace
+/// \returns constructed object
 class MyLidarEmulateConstructor : public MyPointAgentCSConstructor{
     public:
         /// \brief Create C-Space for point agent
         /// \param cells_x_dim: number of cells for x dim
         /// \param cells_y_dim: number of cells for y dim
+        /// \param env: the original enviroument for cspace
         /// \returns constructed object
         MyLidarEmulateConstructor(std::size_t cells_x_dim, std::size_t cells_y_dim, const amp::Environment2D& env) 
         : MyPointAgentCSConstructor(cells_x_dim, cells_y_dim),
         env(env),
         map(cells_x_dim, cells_y_dim, env.x_min, env.x_max, env.y_min, env.y_max, -1){}
         
+        /// \brief Update space around a radius from unknow to free or occupied and return 2D GridCSpace
+        /// \param location: the center point to update around
+        /// \returns 2D GridCSpace
         const amp::GridCSpace2D_T<int8_t>& construct4point(Eigen::Vector2d location);
-        std::vector<int8_t> construct4point1D(Eigen::Vector2d location);
-        std::vector<int8_t> getMap1D();
+
+        /// \brief Mimic Lidar scan to update space around a radius from unknow to free or occupied and return 2D GridCSpace
+        /// \param location: the center point to update around
+        /// \returns 2D GridCSpace
+        const amp::GridCSpace2D_T<int8_t>& lidarMimicConstruct4point(Eigen::Vector2d location);
+
+        /// \brief Mimic Lidar scan to update space around a radius from unknow to free or occupied and return 2D GridCSpace
+        /// \param location: the center point to update around
+        /// \returns 2D GridCSpace
+        const amp::GridCSpace2D_T<int8_t>& lidarMimicConstruct4point2(Eigen::Vector2d location);
+
+        /// \brief Update space around a radius from unknow to free or occupied and return 1D map
+        /// \param location: the center point to update around
+        /// \returns 1D map
+        const std::vector<int8_t>& construct4point1D(Eigen::Vector2d location);
+
+        /// \brief Get the current 1D map
+        /// \returns 1D map
+        const std::vector<int8_t>& getMap1D(){return map_1D;};
+
+        /// \brief Get the current 2D GridCSpace
+        /// \returns 2D GridCSpace
         const amp::GridCSpace2D_T<int8_t>& getMapptr();
+
+        /// \brief Add frontier points to map
+        /// \param frontier_pts: the frontier points to add
+        /// \returns nothing
         void addFrontierToMap(const std::vector<Eigen::Vector2i>& frontier_pts);
+
+        /// \brief Remove all frontier points from map
+        /// \returns nothing
         void removeFrontierFromMap();
+
+        /// \brief Reset the entire map to unknown
+        /// \returns nothing
+        void reset();
 
     private:
         const amp::Environment2D& env;
         amp::GridCSpace2D_T<int8_t> map;
+        std::vector<int8_t> map_1D;
         std::vector<Eigen::Vector2i> last_frontier;
+
+        /// \brief Update cells around a point within a radius to a value
+        /// \param location_check: the center point to update around
+        /// \param value: the value to set the cells to
+        /// \param radius: the radius around the center point to update
+        /// \returns nothing
+        void updateAroundPoint(const Eigen::Vector2d& location_check, int8_t value, double radius);
+
+        /// \brief Check if the cell occupied by a location is in collision
+        /// \param location_check: the location to check
+        /// \param check_collision: the collision checker
+        /// \returns true if in collision, false otherwise
+        bool checkCellCollision(Eigen::Vector2d location_check, check_collision_enviroument& check_collision);
+
+        /// \brief Get the state of a location in the map
+        /// \param location: the location to check
+        /// \returns state value
+        int getState(const Eigen::Vector2d& location);
 };

@@ -1,9 +1,9 @@
 /// \file
 /// \brief This node causes the robot to move autonomously via Frontier Exploration
 
-#include "searching.h"
-#define MIN_REGION_LENGTH 1.5 // in meters
-#define ABSULUTE_MIN_REGION_LENGTH 0.5 // in meters
+#include "frontierSearching.h"
+#define MIN_REGION_LENGTH 1.0 // in meters
+#define ABSULUTE_MIN_REGION_LENGTH 0.4 // in meters
 
 FrontExpl::FrontExpl(int map_width, int map_height, double resolution, const Eigen::Vector2d& origin, const std::vector<int8_t>& FE0_map)
     :map_width(map_width), 
@@ -225,7 +225,15 @@ void FrontExpl::find_centroids(){
             continue;
         }
 
-        int number_of_groups = floor(length / MIN_REGION_LENGTH);
+        int number_of_groups;
+        if (length < 1.4)
+        {
+            number_of_groups = 1;
+        }
+        else
+        {
+            number_of_groups = floor(length / MIN_REGION_LENGTH);
+        }
         int cells_per_group = floor(frountier_pair.first.size() / number_of_groups);
         int left_over = frountier_pair.first.size() - (cells_per_group * number_of_groups);
         // if it is a loop, just start at random place, at it is already in sequence
@@ -238,7 +246,9 @@ void FrontExpl::find_centroids(){
                 }
                 int centroid_index = current_start + floor(cells_per_group / 2);
                 centroids0.push_back(frountier_pair.first.at(centroid_index).getIndex());
+                points_in_regions.push_back(cells_per_group);
             }
+            continue;
         }
 
         int end_node_index = 0;
@@ -249,42 +259,60 @@ void FrontExpl::find_centroids(){
             global_to_local_map[frountier_pair.first[node_index].getIndex()] = node_index;
             if(frountier_pair.first[node_index].getFrontierNeighbors().second == 0){
                 end_node_index = node_index;
+                break;
             }
         }
 
-        int node_index = frountier_pair.first[end_node_index].getFrontierNeighbors().first;
-        int previous_index = end_node_index;
-        int cell_in_this_group = 2;
-        for (int cell_num = 1; cell_num < frountier_pair.first.size()-1; cell_num++)
+        if (end_node_index != 0)
         {
-            if(cell_in_this_group == floor(cells_per_group/2)+1)
-            {
-                centroids0.push_back(frountier_pair.first.at(global_to_local_map[node_index]).getIndex());
-            }
-
-            if(left_over>0 && cell_in_this_group == cells_per_group +1)
-            {
-                cell_in_this_group = 0;
-                left_over--;
-            }
-
-            if(left_over==0 && cell_in_this_group == cells_per_group)
-            {
-                cell_in_this_group = 0;
-            }
-
-            if(frountier_pair.first.at(global_to_local_map[node_index]).getFrontierNeighbors().first != previous_index)
-            {
-                previous_index = node_index;
-                node_index = frountier_pair.first.at(global_to_local_map[node_index]).getFrontierNeighbors().first;
-            }
-            else
-            {
-                previous_index = node_index;
-                node_index = frountier_pair.first.at(global_to_local_map[node_index]).getFrontierNeighbors().second;
-            }
-            cell_in_this_group++;
+            std::rotate(frountier_pair.first.begin(),frountier_pair.first.begin()+end_node_index+1, frountier_pair.first.end());
         }
+        DEBUG("size: " << frountier_pair.first.size());
+        for (int current_start = 0; current_start < frountier_pair.first.size(); current_start += cells_per_group)
+        {
+            int centroid_index = current_start + floor(cells_per_group / 2);
+            if (left_over > 0){
+                left_over -= 1;
+                current_start += 1;
+            }
+            DEBUG(centroid_index);
+            centroids0.push_back(frountier_pair.first.at(centroid_index).getIndex());
+            points_in_regions.push_back(cells_per_group);
+        }
+
+        // int node_index = frountier_pair.first[end_node_index].getFrontierNeighbors().first;
+        // int previous_index = end_node_index;
+        // int cell_in_this_group = 2;
+        // for (int cell_num = 1; cell_num < frountier_pair.first.size()-1; cell_num++)
+        // {
+        //     if(cell_in_this_group == floor(cells_per_group/2)+1)
+        //     {
+        //         centroids0.push_back(frountier_pair.first.at(global_to_local_map[node_index]).getIndex());
+        //     }
+
+        //     if(left_over>0 && cell_in_this_group == cells_per_group +1)
+        //     {
+        //         cell_in_this_group = 0;
+        //         left_over--;
+        //     }
+
+        //     if(left_over==0 && cell_in_this_group == cells_per_group)
+        //     {
+        //         cell_in_this_group = 0;
+        //     }
+
+        //     if(frountier_pair.first.at(global_to_local_map[node_index]).getFrontierNeighbors().first != previous_index)
+        //     {
+        //         previous_index = node_index;
+        //         node_index = frountier_pair.first.at(global_to_local_map[node_index]).getFrontierNeighbors().first;
+        //     }
+        //     else
+        //     {
+        //         previous_index = node_index;
+        //         node_index = frountier_pair.first.at(global_to_local_map[node_index]).getFrontierNeighbors().second;
+        //     }
+        //     cell_in_this_group++;
+        // }
 
     }
 }
@@ -319,7 +347,7 @@ void FrontExpl::centroid_index_to_point()
             // If the centroid is valid, add its x and y values to their respective vectors
             centroid0_Xpts.push_back(point(0));
             centroid0_Ypts.push_back(point(1));
-            centroid_pts.push_back(point);
+            centroid_pts.push_back({point, points_in_regions.at(t)});
             centroid_grid_pts.push_back(Eigen::Vector2i(centroids0.at(t) % map_width, floor(centroids0.at(t) / map_width)));
             continue;
 
@@ -397,8 +425,7 @@ void FrontExpl::edge_index_to_point()
 }
 */
 
-std::vector<Eigen::Vector2d> FrontExpl::run()
-{
+std::vector<std::pair<Eigen::Vector2d, int>> FrontExpl::run(){
     std::cout << "Resetting vairbales and clearing all vectors" << std::endl;
     centroid0 = 0;
     centroid0_index = 0;
@@ -412,6 +439,7 @@ std::vector<Eigen::Vector2d> FrontExpl::run()
     centroid_pts.clear();
     centroid_grid_pts.clear();
     frontier_regions.clear();
+    points_in_regions.clear();
 
 
     std::cout << "Getting Frontier" << std::endl;
