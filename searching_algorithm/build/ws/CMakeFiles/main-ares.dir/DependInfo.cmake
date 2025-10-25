@@ -8,8 +8,9 @@ set(CMAKE_DEPENDS_LANGUAGES
 
 # The set of dependency files which are needed:
 set(CMAKE_DEPENDS_DEPENDENCY_FILES
+  "/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/ares/SearchAndPlan.cpp" "ws/CMakeFiles/main-ares.dir/ares/SearchAndPlan.cpp.o" "gcc" "ws/CMakeFiles/main-ares.dir/ares/SearchAndPlan.cpp.o.d"
+  "/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/ares/frontierSearching.cpp" "ws/CMakeFiles/main-ares.dir/ares/frontierSearching.cpp.o" "gcc" "ws/CMakeFiles/main-ares.dir/ares/frontierSearching.cpp.o.d"
   "/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/ares/main.cpp" "ws/CMakeFiles/main-ares.dir/ares/main.cpp.o" "gcc" "ws/CMakeFiles/main-ares.dir/ares/main.cpp.o.d"
-  "/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/ares/searching.cpp" "ws/CMakeFiles/main-ares.dir/ares/searching.cpp.o" "gcc" "ws/CMakeFiles/main-ares.dir/ares/searching.cpp.o.d"
   )
 
 # Targets to which this target links which contain Fortran sources.

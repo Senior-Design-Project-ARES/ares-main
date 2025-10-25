@@ -144,6 +144,54 @@ main-ares/fast:
 	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/main-ares.dir/build.make ws/CMakeFiles/main-ares.dir/build
 .PHONY : main-ares/fast
 
+ares/SearchAndPlan.o: ares/SearchAndPlan.cpp.o
+.PHONY : ares/SearchAndPlan.o
+
+# target to build an object file
+ares/SearchAndPlan.cpp.o:
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/main-ares.dir/build.make ws/CMakeFiles/main-ares.dir/ares/SearchAndPlan.cpp.o
+.PHONY : ares/SearchAndPlan.cpp.o
+
+ares/SearchAndPlan.i: ares/SearchAndPlan.cpp.i
+.PHONY : ares/SearchAndPlan.i
+
+# target to preprocess a source file
+ares/SearchAndPlan.cpp.i:
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/main-ares.dir/build.make ws/CMakeFiles/main-ares.dir/ares/SearchAndPlan.cpp.i
+.PHONY : ares/SearchAndPlan.cpp.i
+
+ares/SearchAndPlan.s: ares/SearchAndPlan.cpp.s
+.PHONY : ares/SearchAndPlan.s
+
+# target to generate assembly for a file
+ares/SearchAndPlan.cpp.s:
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/main-ares.dir/build.make ws/CMakeFiles/main-ares.dir/ares/SearchAndPlan.cpp.s
+.PHONY : ares/SearchAndPlan.cpp.s
+
+ares/frontierSearching.o: ares/frontierSearching.cpp.o
+.PHONY : ares/frontierSearching.o
+
+# target to build an object file
+ares/frontierSearching.cpp.o:
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/main-ares.dir/build.make ws/CMakeFiles/main-ares.dir/ares/frontierSearching.cpp.o
+.PHONY : ares/frontierSearching.cpp.o
+
+ares/frontierSearching.i: ares/frontierSearching.cpp.i
+.PHONY : ares/frontierSearching.i
+
+# target to preprocess a source file
+ares/frontierSearching.cpp.i:
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/main-ares.dir/build.make ws/CMakeFiles/main-ares.dir/ares/frontierSearching.cpp.i
+.PHONY : ares/frontierSearching.cpp.i
+
+ares/frontierSearching.s: ares/frontierSearching.cpp.s
+.PHONY : ares/frontierSearching.s
+
+# target to generate assembly for a file
+ares/frontierSearching.cpp.s:
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/main-ares.dir/build.make ws/CMakeFiles/main-ares.dir/ares/frontierSearching.cpp.s
+.PHONY : ares/frontierSearching.cpp.s
+
 ares/main.o: ares/main.cpp.o
 .PHONY : ares/main.o
 
@@ -167,30 +215,6 @@ ares/main.s: ares/main.cpp.s
 ares/main.cpp.s:
 	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/main-ares.dir/build.make ws/CMakeFiles/main-ares.dir/ares/main.cpp.s
 .PHONY : ares/main.cpp.s
-
-ares/searching.o: ares/searching.cpp.o
-.PHONY : ares/searching.o
-
-# target to build an object file
-ares/searching.cpp.o:
-	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/main-ares.dir/build.make ws/CMakeFiles/main-ares.dir/ares/searching.cpp.o
-.PHONY : ares/searching.cpp.o
-
-ares/searching.i: ares/searching.cpp.i
-.PHONY : ares/searching.i
-
-# target to preprocess a source file
-ares/searching.cpp.i:
-	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/main-ares.dir/build.make ws/CMakeFiles/main-ares.dir/ares/searching.cpp.i
-.PHONY : ares/searching.cpp.i
-
-ares/searching.s: ares/searching.cpp.s
-.PHONY : ares/searching.s
-
-# target to generate assembly for a file
-ares/searching.cpp.s:
-	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/main-ares.dir/build.make ws/CMakeFiles/main-ares.dir/ares/searching.cpp.s
-.PHONY : ares/searching.cpp.s
 
 shared/CSpace.o: shared/CSpace.cpp.o
 .PHONY : shared/CSpace.o
@@ -240,6 +264,30 @@ shared/HelpfulClass.cpp.s:
 	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/user_library.dir/build.make ws/CMakeFiles/user_library.dir/shared/HelpfulClass.cpp.s
 .PHONY : shared/HelpfulClass.cpp.s
 
+shared/MySamplingBasedPlanners.o: shared/MySamplingBasedPlanners.cpp.o
+.PHONY : shared/MySamplingBasedPlanners.o
+
+# target to build an object file
+shared/MySamplingBasedPlanners.cpp.o:
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/user_library.dir/build.make ws/CMakeFiles/user_library.dir/shared/MySamplingBasedPlanners.cpp.o
+.PHONY : shared/MySamplingBasedPlanners.cpp.o
+
+shared/MySamplingBasedPlanners.i: shared/MySamplingBasedPlanners.cpp.i
+.PHONY : shared/MySamplingBasedPlanners.i
+
+# target to preprocess a source file
+shared/MySamplingBasedPlanners.cpp.i:
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/user_library.dir/build.make ws/CMakeFiles/user_library.dir/shared/MySamplingBasedPlanners.cpp.i
+.PHONY : shared/MySamplingBasedPlanners.cpp.i
+
+shared/MySamplingBasedPlanners.s: shared/MySamplingBasedPlanners.cpp.s
+.PHONY : shared/MySamplingBasedPlanners.s
+
+# target to generate assembly for a file
+shared/MySamplingBasedPlanners.cpp.s:
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build && $(MAKE) $(MAKESILENT) -f ws/CMakeFiles/user_library.dir/build.make ws/CMakeFiles/user_library.dir/shared/MySamplingBasedPlanners.cpp.s
+.PHONY : shared/MySamplingBasedPlanners.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -250,18 +298,24 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... main-ares"
 	@echo "... user_library"
+	@echo "... ares/SearchAndPlan.o"
+	@echo "... ares/SearchAndPlan.i"
+	@echo "... ares/SearchAndPlan.s"
+	@echo "... ares/frontierSearching.o"
+	@echo "... ares/frontierSearching.i"
+	@echo "... ares/frontierSearching.s"
 	@echo "... ares/main.o"
 	@echo "... ares/main.i"
 	@echo "... ares/main.s"
-	@echo "... ares/searching.o"
-	@echo "... ares/searching.i"
-	@echo "... ares/searching.s"
 	@echo "... shared/CSpace.o"
 	@echo "... shared/CSpace.i"
 	@echo "... shared/CSpace.s"
 	@echo "... shared/HelpfulClass.o"
 	@echo "... shared/HelpfulClass.i"
 	@echo "... shared/HelpfulClass.s"
+	@echo "... shared/MySamplingBasedPlanners.o"
+	@echo "... shared/MySamplingBasedPlanners.i"
+	@echo "... shared/MySamplingBasedPlanners.s"
 .PHONY : help
 
 

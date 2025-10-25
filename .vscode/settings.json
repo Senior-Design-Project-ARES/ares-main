@@ -59,6 +59,16 @@
         "ranges": "cpp",
         "stacktrace": "cpp",
         "tuple": "cpp",
-        "memory": "cpp"
+        "memory": "cpp",
+        "charconv": "cpp",
+        "complex": "cpp",
+        "fstream": "cpp",
+        "iomanip": "cpp",
+        "sstream": "cpp",
+        "typeindex": "cpp",
+        "type_traits": "cpp",
+        "utility": "cpp",
+        "ostream": "cpp",
+        "cinttypes": "cpp"
     }
 }

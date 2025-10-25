@@ -1353,7 +1353,8 @@ ws/CMakeFiles/main-ares.dir/ares/main.cpp.o: \
   /Library/Frameworks/Python.framework/Versions/3.12/include/python3.12/tracemalloc.h \
   /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/public/ScriptCaller.h \
   /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/public/ScriptCaller_impl.h \
-  /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/ares/searching.h \
+  /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/ares/SearchAndPlan.h \
+  /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/ares/frontierSearching.h \
   /opt/homebrew/include/eigen3/Eigen/Dense \
   /opt/homebrew/include/eigen3/Eigen/LU \
   /opt/homebrew/include/eigen3/Eigen/src/misc/Kernel.h \
@@ -1421,4 +1422,8 @@ ws/CMakeFiles/main-ares.dir/ares/main.cpp.o: \
   /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/public/HW4_impl.h \
   /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/hw/HW6.h \
   /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/public/HW6_impl.h \
-  /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/tools/Usefull.h
+  /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/tools/Usefull.h \
+  /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/shared/MySamplingBasedPlanners.h \
+  /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/shared/HelpfulClass.h \
+  /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/hw/HW7.h \
+  /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/public/HW7_impl.h

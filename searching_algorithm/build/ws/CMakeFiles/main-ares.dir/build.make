@@ -72,10 +72,38 @@ include ws/CMakeFiles/main-ares.dir/flags.make
 ws/CMakeFiles/main-ares.dir/codegen:
 .PHONY : ws/CMakeFiles/main-ares.dir/codegen
 
+ws/CMakeFiles/main-ares.dir/ares/SearchAndPlan.cpp.o: ws/CMakeFiles/main-ares.dir/flags.make
+ws/CMakeFiles/main-ares.dir/ares/SearchAndPlan.cpp.o: /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/ares/SearchAndPlan.cpp
+ws/CMakeFiles/main-ares.dir/ares/SearchAndPlan.cpp.o: ws/CMakeFiles/main-ares.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object ws/CMakeFiles/main-ares.dir/ares/SearchAndPlan.cpp.o"
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/ws && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT ws/CMakeFiles/main-ares.dir/ares/SearchAndPlan.cpp.o -MF CMakeFiles/main-ares.dir/ares/SearchAndPlan.cpp.o.d -o CMakeFiles/main-ares.dir/ares/SearchAndPlan.cpp.o -c /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/ares/SearchAndPlan.cpp
+
+ws/CMakeFiles/main-ares.dir/ares/SearchAndPlan.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/main-ares.dir/ares/SearchAndPlan.cpp.i"
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/ws && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/ares/SearchAndPlan.cpp > CMakeFiles/main-ares.dir/ares/SearchAndPlan.cpp.i
+
+ws/CMakeFiles/main-ares.dir/ares/SearchAndPlan.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/main-ares.dir/ares/SearchAndPlan.cpp.s"
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/ws && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/ares/SearchAndPlan.cpp -o CMakeFiles/main-ares.dir/ares/SearchAndPlan.cpp.s
+
+ws/CMakeFiles/main-ares.dir/ares/frontierSearching.cpp.o: ws/CMakeFiles/main-ares.dir/flags.make
+ws/CMakeFiles/main-ares.dir/ares/frontierSearching.cpp.o: /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/ares/frontierSearching.cpp
+ws/CMakeFiles/main-ares.dir/ares/frontierSearching.cpp.o: ws/CMakeFiles/main-ares.dir/compiler_depend.ts
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object ws/CMakeFiles/main-ares.dir/ares/frontierSearching.cpp.o"
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/ws && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT ws/CMakeFiles/main-ares.dir/ares/frontierSearching.cpp.o -MF CMakeFiles/main-ares.dir/ares/frontierSearching.cpp.o.d -o CMakeFiles/main-ares.dir/ares/frontierSearching.cpp.o -c /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/ares/frontierSearching.cpp
+
+ws/CMakeFiles/main-ares.dir/ares/frontierSearching.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/main-ares.dir/ares/frontierSearching.cpp.i"
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/ws && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/ares/frontierSearching.cpp > CMakeFiles/main-ares.dir/ares/frontierSearching.cpp.i
+
+ws/CMakeFiles/main-ares.dir/ares/frontierSearching.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/main-ares.dir/ares/frontierSearching.cpp.s"
+	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/ws && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/ares/frontierSearching.cpp -o CMakeFiles/main-ares.dir/ares/frontierSearching.cpp.s
+
 ws/CMakeFiles/main-ares.dir/ares/main.cpp.o: ws/CMakeFiles/main-ares.dir/flags.make
 ws/CMakeFiles/main-ares.dir/ares/main.cpp.o: /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/ares/main.cpp
 ws/CMakeFiles/main-ares.dir/ares/main.cpp.o: ws/CMakeFiles/main-ares.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_1) "Building CXX object ws/CMakeFiles/main-ares.dir/ares/main.cpp.o"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object ws/CMakeFiles/main-ares.dir/ares/main.cpp.o"
 	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/ws && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT ws/CMakeFiles/main-ares.dir/ares/main.cpp.o -MF CMakeFiles/main-ares.dir/ares/main.cpp.o.d -o CMakeFiles/main-ares.dir/ares/main.cpp.o -c /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/ares/main.cpp
 
 ws/CMakeFiles/main-ares.dir/ares/main.cpp.i: cmake_force
@@ -86,30 +114,18 @@ ws/CMakeFiles/main-ares.dir/ares/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/main-ares.dir/ares/main.cpp.s"
 	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/ws && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/ares/main.cpp -o CMakeFiles/main-ares.dir/ares/main.cpp.s
 
-ws/CMakeFiles/main-ares.dir/ares/searching.cpp.o: ws/CMakeFiles/main-ares.dir/flags.make
-ws/CMakeFiles/main-ares.dir/ares/searching.cpp.o: /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/ares/searching.cpp
-ws/CMakeFiles/main-ares.dir/ares/searching.cpp.o: ws/CMakeFiles/main-ares.dir/compiler_depend.ts
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --progress-dir=/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object ws/CMakeFiles/main-ares.dir/ares/searching.cpp.o"
-	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/ws && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -MD -MT ws/CMakeFiles/main-ares.dir/ares/searching.cpp.o -MF CMakeFiles/main-ares.dir/ares/searching.cpp.o.d -o CMakeFiles/main-ares.dir/ares/searching.cpp.o -c /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/ares/searching.cpp
-
-ws/CMakeFiles/main-ares.dir/ares/searching.cpp.i: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Preprocessing CXX source to CMakeFiles/main-ares.dir/ares/searching.cpp.i"
-	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/ws && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/ares/searching.cpp > CMakeFiles/main-ares.dir/ares/searching.cpp.i
-
-ws/CMakeFiles/main-ares.dir/ares/searching.cpp.s: cmake_force
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green "Compiling CXX source to assembly CMakeFiles/main-ares.dir/ares/searching.cpp.s"
-	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/ws && /usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/ares/searching.cpp -o CMakeFiles/main-ares.dir/ares/searching.cpp.s
-
 # Object files for target main-ares
 main__ares_OBJECTS = \
-"CMakeFiles/main-ares.dir/ares/main.cpp.o" \
-"CMakeFiles/main-ares.dir/ares/searching.cpp.o"
+"CMakeFiles/main-ares.dir/ares/SearchAndPlan.cpp.o" \
+"CMakeFiles/main-ares.dir/ares/frontierSearching.cpp.o" \
+"CMakeFiles/main-ares.dir/ares/main.cpp.o"
 
 # External object files for target main-ares
 main__ares_EXTERNAL_OBJECTS =
 
+bin/main-ares: ws/CMakeFiles/main-ares.dir/ares/SearchAndPlan.cpp.o
+bin/main-ares: ws/CMakeFiles/main-ares.dir/ares/frontierSearching.cpp.o
 bin/main-ares: ws/CMakeFiles/main-ares.dir/ares/main.cpp.o
-bin/main-ares: ws/CMakeFiles/main-ares.dir/ares/searching.cpp.o
 bin/main-ares: ws/CMakeFiles/main-ares.dir/build.make
 bin/main-ares: src/public/libAMPCorePublic.a
 bin/main-ares: ws/libuser_library.a
@@ -118,7 +134,7 @@ bin/main-ares: /Library/Frameworks/Python.framework/Versions/3.12/lib/libpython3
 bin/main-ares: /opt/homebrew/Cellar/openssl@3/3.5.2/lib/libssl.dylib
 bin/main-ares: /opt/homebrew/Cellar/openssl@3/3.5.2/lib/libcrypto.dylib
 bin/main-ares: ws/CMakeFiles/main-ares.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_3) "Linking CXX executable ../bin/main-ares"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --green --bold --progress-dir=/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/CMakeFiles --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX executable ../bin/main-ares"
 	cd /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/build/ws && $(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/main-ares.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

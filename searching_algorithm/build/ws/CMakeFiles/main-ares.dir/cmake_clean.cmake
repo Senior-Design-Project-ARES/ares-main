@@ -1,10 +1,12 @@
 file(REMOVE_RECURSE
   "../bin/main-ares"
   "../bin/main-ares.pdb"
+  "CMakeFiles/main-ares.dir/ares/SearchAndPlan.cpp.o"
+  "CMakeFiles/main-ares.dir/ares/SearchAndPlan.cpp.o.d"
+  "CMakeFiles/main-ares.dir/ares/frontierSearching.cpp.o"
+  "CMakeFiles/main-ares.dir/ares/frontierSearching.cpp.o.d"
   "CMakeFiles/main-ares.dir/ares/main.cpp.o"
   "CMakeFiles/main-ares.dir/ares/main.cpp.o.d"
-  "CMakeFiles/main-ares.dir/ares/searching.cpp.o"
-  "CMakeFiles/main-ares.dir/ares/searching.cpp.o.d"
 )
 
 # Per-language clean rules from dependency scanning.
