@@ -5,7 +5,7 @@ the desired rover speed and rover anglular speed.
 
 Inputs: 
     -speed: the desired speed of the rover
-    -phi_dot: the desired angular rotation of the rover
+    -phi_dot: the desired angular rxotation of the rover
     -state: the current state values of the rover (current speed and current
     angular velocity)
     -constants: the constant values of the rover (wheel radius, moment arm
@@ -62,7 +62,7 @@ Mz = MOI_rover*(phi_dot_new - phi_dot_current)/timestep; %the body fixed moment 
 
 %frictional forces
 Ffr_left = (Fx*(dw_1-dw_2)-2*Mz) / (2*(dw_1+dw_2+dw_3+dw_4)); %the left side frictional force
-Ffr_right = (Mz + Ffr_left*(dw_3_dw_4)) / (dw_1 +dw_2); %the right side frictional force
+Ffr_right = (Mz + Ffr_left*(dw_3-dw_4)) / (dw_1 + dw_2); %the right side frictional force
 
 %Moments of wheels (about axel)
 M_w1 = Ffr_right*radius_w1*MOI_w1/mass_w1;
