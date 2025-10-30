@@ -1,5 +1,20 @@
 # ares-main
 
+Install Ros2 Humble from https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html assuming you are using Ubuntu 22.04, if you are on another OS you can find other install instructions from that same link.
+
+once you have ros2 installed then you can run,  
+```bash
+colcon build 
+```
+To build the project. next run
+```bash
+source install/local_setup.bash
+```
+to source the project. Finally to run the project run
+```bash
+ros2 run ares_main main_node
+```
+
 ---
 ## Intro to Github
 

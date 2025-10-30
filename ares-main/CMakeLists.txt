@@ -7,9 +7,13 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
+find_package(ros_gz_bridge REQUIRED)
+find_package(ros_gz_sim REQUIRED)
+find_package(robot_state_publisher REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
 # find_package(<dependency> REQUIRED)
+
 
 add_executable(main_node src/main_node.cpp)
 target_include_directories(main_node PUBLIC
@@ -19,6 +23,12 @@ target_compile_features(main_node PUBLIC c_std_99 cxx_std_17)  # Require C99 and
 
 install(TARGETS main_node
   DESTINATION lib/${PROJECT_NAME})
+
+install(DIRECTORY
+  launch
+  robot
+  sim_worlds
+  DESTINATION share/${PROJECT_NAME})
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
