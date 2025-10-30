@@ -1,8 +1,0 @@
-source;share/ares-main/hook/cmake_prefix_path.ps1
-source;share/ares-main/hook/cmake_prefix_path.dsv
-source;share/ares-main/hook/cmake_prefix_path.sh
-source;share/ares-main/local_setup.bash
-source;share/ares-main/local_setup.dsv
-source;share/ares-main/local_setup.ps1
-source;share/ares-main/local_setup.sh
-source;share/ares-main/local_setup.zsh
