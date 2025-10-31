@@ -7,7 +7,7 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(ros_ign_bridge REQUIRED)
+find_package(ros_gz_bridge REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(robot_state_publisher REQUIRED)
@@ -22,7 +22,7 @@ ament_target_dependencies(main_node
   rclcpp
   sensor_msgs
   robot_state_publisher
-  ros_ign_bridge
+  ros_gz_bridge
 )
 
 install(TARGETS main_node
