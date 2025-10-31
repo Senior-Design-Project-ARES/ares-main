@@ -23,7 +23,12 @@ to source the project. Finally run the launch file which sets up the gazebo simu
 
 ```bash
 ros2 launch ares-main sim.launch.py
+ros2 launch fast_lio mapping.launch.py use_sim_time:=true config_file:=test.yaml
+ros2 run pc_modifier modifier
+ign topic -t "/cmd_vel" -m ignition.msgs.Twist -p "linear: {x: 0.5}, angular: {z: 0.1}"
 ```
+
+
 
 ---
 ## Intro to Github
