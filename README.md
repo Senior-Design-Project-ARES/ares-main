@@ -19,10 +19,10 @@ To build the project. next run
 source install/local_setup.bash
 ```
 
-to source the project. Finally to run the project run
+to source the project. Finally run the launch file which sets up the gazebo simulation and runs the ros2 code.
 
 ```bash
-ros2 run ares_main main_node
+ros2 launch ares-main sim.launch.py
 ```
 
 ---

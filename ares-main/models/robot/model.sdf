@@ -65,6 +65,13 @@
             <visualize>true</visualize>
         </sensor>
 
+        <sensor name="imu_sensor" type="imu">
+            <always_on>1</always_on>
+            <update_rate>100</update_rate>
+            <visualize>true</visualize>
+            <topic>imu</topic>
+        </sensor>
+
     </link>
 
     <!--let's build the left wheel-->
