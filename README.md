@@ -1,14 +1,15 @@
 # ares-main
 
-Install Ros2 Humble from https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html assuming you are using Ubuntu 22.04, if you are on another OS you can find other install instructions from that same link.
+Install ROS2 Humble from https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html assuming you are using Ubuntu 22.04, if you are on another OS you can find other install instructions from that same link.
 
 When installing make sure to not install both the Base install and the Desktop install only do the Desktop install. Also make sure to get the Dev tools as they will be needed to build our package.
 
 once you have ros2 installed then you can run,  
 
 ```bash
+sudo apt-get install ros-humble-ros-gz
 sudo apt install ros-humble-ros-gz-bridge
-sudo apt install ros-humble-ros-gz
+source /opt/ros/humble/setup.bash
 colcon build 
 ```
 

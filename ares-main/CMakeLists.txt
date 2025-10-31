@@ -7,8 +7,9 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-find_package(ros_gz_bridge REQUIRED)
-find_package(ros_gz_sim REQUIRED)
+find_package(ros_ign_bridge REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(sensor_msgs REQUIRED)
 find_package(robot_state_publisher REQUIRED)
 # uncomment the following section in order to fill in
 # further dependencies manually.
@@ -16,17 +17,20 @@ find_package(robot_state_publisher REQUIRED)
 
 
 add_executable(main_node src/main_node.cpp)
-target_include_directories(main_node PUBLIC
-  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-  $<INSTALL_INTERFACE:include>)
-target_compile_features(main_node PUBLIC c_std_99 cxx_std_17)  # Require C99 and C++17
+target_compile_features(main_node PUBLIC c_std_99 cxx_std_17)
+ament_target_dependencies(main_node
+  rclcpp
+  sensor_msgs
+  robot_state_publisher
+  ros_ign_bridge
+)
 
 install(TARGETS main_node
   DESTINATION lib/${PROJECT_NAME})
 
 install(DIRECTORY
   launch
-  robot
+  models
   sim_worlds
   DESTINATION share/${PROJECT_NAME})
 

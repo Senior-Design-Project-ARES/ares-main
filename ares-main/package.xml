@@ -11,8 +11,10 @@
   <buildtool_depend>ament_cmake</buildtool_depend>
 
   <!-- <depend>ros_gz</depend> -->
-  <depend>ros_gz_bridge</depend>
+  <depend>ros_ign_bridge</depend>
   <depend>ros2launch</depend>
+  <depend>rclcpp</depend>
+  <depend>sensor_msgs</depend>
   <depend>robot_state_publisher</depend>
 
   <test_depend>ament_lint_auto</test_depend>
