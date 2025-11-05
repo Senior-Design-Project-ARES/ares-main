@@ -3769,15 +3769,19 @@ ws/CMakeFiles/main-ares.dir/ares/main.cpp.o: /Users/RunOutOfName/Documents/VS_CO
   /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/dependencies/yaml-cpp/include/yaml-cpp/traits.h \
   /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/dependencies/yaml-cpp/include/yaml-cpp/yaml.h \
   /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/AMPCore.h \
+  /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/hw/HW2.h \
   /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/hw/HW4.h \
   /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/hw/HW6.h \
   /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/hw/HW7.h \
+  /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/hw/HW8.h \
   /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/public/ConfigurationSpace_impl.h \
   /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/public/GraphContainers.h \
   /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/public/Graph_impl.h \
+  /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/public/HW2_impl.h \
   /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/public/HW4_impl.h \
   /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/public/HW6_impl.h \
   /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/public/HW7_impl.h \
+  /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/public/HW8_impl.h \
   /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/public/Path_impl.h \
   /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/public/PythonObjects.h \
   /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/public/ScriptCaller.h \
@@ -3996,6 +4000,10 @@ ws/CMakeFiles/main-ares.dir/ares/main.cpp.o: /Users/RunOutOfName/Documents/VS_CO
   /opt/homebrew/include/eigen3/Eigen/src/misc/RealSvd2x2.h
 
 
+/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/hw/HW8.h:
+
+/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/hw/HW2.h:
+
 /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/ares/frontierSearching.cpp:
 
 /opt/homebrew/include/eigen3/Eigen/src/misc/Kernel.h:
@@ -4003,6 +4011,8 @@ ws/CMakeFiles/main-ares.dir/ares/main.cpp.o: /Users/RunOutOfName/Documents/VS_CO
 /opt/homebrew/include/eigen3/Eigen/src/SVD/JacobiSVD.h:
 
 /opt/homebrew/include/eigen3/Eigen/src/QR/HouseholderQR.h:
+
+/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/public/HW2_impl.h:
 
 /opt/homebrew/include/eigen3/Eigen/src/QR/FullPivHouseholderQR.h:
 
@@ -4541,6 +4551,8 @@ ws/CMakeFiles/main-ares.dir/ares/main.cpp.o: /Users/RunOutOfName/Documents/VS_CO
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/runetype.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/pthread/sched.h:
+
+/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/public/HW8_impl.h:
 
 /Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include/pthread/qos.h:
 

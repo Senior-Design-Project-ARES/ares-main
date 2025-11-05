@@ -70,5 +70,6 @@
         "utility": "cpp",
         "ostream": "cpp",
         "cinttypes": "cpp"
-    }
+    },
+    "cmake.sourceDirectory": "/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm"
 }

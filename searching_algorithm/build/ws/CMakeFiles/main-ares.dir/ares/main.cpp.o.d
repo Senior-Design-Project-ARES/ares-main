@@ -1426,4 +1426,8 @@ ws/CMakeFiles/main-ares.dir/ares/main.cpp.o: \
   /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/shared/MySamplingBasedPlanners.h \
   /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/ws/shared/HelpfulClass.h \
   /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/hw/HW7.h \
-  /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/public/HW7_impl.h
+  /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/public/HW7_impl.h \
+  /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/hw/HW2.h \
+  /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/public/HW2_impl.h \
+  /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/hw/HW8.h \
+  /Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/include/public/HW8_impl.h
