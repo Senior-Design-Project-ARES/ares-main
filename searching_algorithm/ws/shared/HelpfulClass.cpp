@@ -82,6 +82,27 @@ bool Point2DCollisionCheckerGrid::isCollide2P(const Eigen::VectorXd& point1_, co
     return false;
 }
 
+bool MultiAgentPoint2DCollisionCheckerGrid::isCollide(int agent_idx_, const Eigen::VectorXd& point_){
+    return(maps[agent_idx_].inCollision(point_(0), point_(1)));
+}
+
+bool MultiAgentPoint2DCollisionCheckerGrid::isCollide2P(int agent_idx_, const Eigen::VectorXd& point1_, const Eigen::VectorXd& point2_){
+    Eigen::VectorXd one_2_two = point2_ - point1_;
+    double distance = one_2_two.norm();
+    int sec_num = 1;
+    while(distance/sec_num > GAP){
+        for(int i = 0; i < sec_num; i++){
+            Eigen::VectorXd check_location = point1_ + one_2_two*(1+2*i)/(sec_num*2);
+            if (isCollide(agent_idx_, check_location))
+            {
+                return true;
+            }
+        }
+        sec_num = sec_num * 2;
+    }
+    return false;
+}
+
 MultiAgentDisk2DCollisionChecker::MultiAgentDisk2DCollisionChecker(const amp::MultiAgentProblem2D& problem_)
 : problem(problem_){
     std::vector<std::pair<double,double>> bounds;

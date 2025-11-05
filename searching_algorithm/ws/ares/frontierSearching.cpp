@@ -3,7 +3,7 @@
 
 #include "frontierSearching.h"
 #define MIN_REGION_LENGTH 1.0 // in meters
-#define ABSULUTE_MIN_REGION_LENGTH 0.4 // in meters
+#define ABSULUTE_MIN_REGION_LENGTH 0.1 // in meters
 
 FrontExpl::FrontExpl(int map_width, int map_height, double resolution, const Eigen::Vector2d& origin, const std::vector<int8_t>& FE0_map)
     :map_width(map_width), 
@@ -267,7 +267,7 @@ void FrontExpl::find_centroids(){
         {
             std::rotate(frountier_pair.first.begin(),frountier_pair.first.begin()+end_node_index+1, frountier_pair.first.end());
         }
-        DEBUG("size: " << frountier_pair.first.size());
+        // DEBUG("size: " << frountier_pair.first.size());
         for (int current_start = 0; current_start < frountier_pair.first.size(); current_start += cells_per_group)
         {
             int centroid_index = current_start + floor(cells_per_group / 2);
@@ -275,7 +275,7 @@ void FrontExpl::find_centroids(){
                 left_over -= 1;
                 current_start += 1;
             }
-            DEBUG(centroid_index);
+            // DEBUG(centroid_index);
             centroids0.push_back(frountier_pair.first.at(centroid_index).getIndex());
             points_in_regions.push_back(cells_per_group);
         }

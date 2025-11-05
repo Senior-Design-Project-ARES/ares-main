@@ -41,6 +41,18 @@ class Point2DCollisionCheckerGrid : public BaseCollisionChecker<Eigen::VectorXd>
         const amp::GridCSpace2D_T<int8_t>& map;
 };
 
+class MultiAgentPoint2DCollisionCheckerGrid{
+    public:
+        MultiAgentPoint2DCollisionCheckerGrid(const std::vector<amp::GridCSpace2D_T<int8_t>>& maps_)
+        : maps(maps_){}
+
+        bool isCollide(int agent_idx_, const Eigen::VectorXd& point_);
+        bool isCollide2P(int agent_idx_, const Eigen::VectorXd& point1_, const Eigen::VectorXd& point2_);
+
+    private:
+        const std::vector<amp::GridCSpace2D_T<int8_t>>& maps;
+};
+
 class MultiAgentDisk2DCollisionChecker : public BaseCollisionChecker<Eigen::VectorXd>{
     public:
         MultiAgentDisk2DCollisionChecker(const amp::MultiAgentProblem2D& problem);

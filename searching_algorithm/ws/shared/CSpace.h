@@ -81,23 +81,28 @@ class MyLidarEmulateConstructor : public MyPointAgentCSConstructor{
         
         /// \brief Update space around a radius from unknow to free or occupied and return 2D GridCSpace
         /// \param location: the center point to update around
+        /// \returns nothing
+        void constructMapAroundPoint(const Eigen::Vector2d& location);
+
+        /// \brief Update space around a radius from unknow to free or occupied and return 2D GridCSpace
+        /// \param location: the center point to update around
         /// \returns 2D GridCSpace
-        const amp::GridCSpace2D_T<int8_t>& construct4point(Eigen::Vector2d location);
+        const amp::GridCSpace2D_T<int8_t>& construct4point(const Eigen::Vector2d& location);
 
         /// \brief Mimic Lidar scan to update space around a radius from unknow to free or occupied and return 2D GridCSpace
         /// \param location: the center point to update around
         /// \returns 2D GridCSpace
-        const amp::GridCSpace2D_T<int8_t>& lidarMimicConstruct4point(Eigen::Vector2d location);
+        const amp::GridCSpace2D_T<int8_t>& lidarMimicConstruct4point(const Eigen::Vector2d& location);
 
         /// \brief Mimic Lidar scan to update space around a radius from unknow to free or occupied and return 2D GridCSpace
         /// \param location: the center point to update around
         /// \returns 2D GridCSpace
-        const amp::GridCSpace2D_T<int8_t>& lidarMimicConstruct4point2(Eigen::Vector2d location);
+        const amp::GridCSpace2D_T<int8_t>& lidarMimicConstruct4point2(const Eigen::Vector2d& location);
 
         /// \brief Update space around a radius from unknow to free or occupied and return 1D map
         /// \param location: the center point to update around
         /// \returns 1D map
-        const std::vector<int8_t>& construct4point1D(Eigen::Vector2d location);
+        const std::vector<int8_t>& construct4point1D(const Eigen::Vector2d& location);
 
         /// \brief Get the current 1D map
         /// \returns 1D map
@@ -143,4 +148,44 @@ class MyLidarEmulateConstructor : public MyPointAgentCSConstructor{
         /// \param location: the location to check
         /// \returns state value
         int getState(const Eigen::Vector2d& location);
+};
+
+class MyDiskAgentCS : public MyLidarEmulateConstructor {
+    public:
+        MyDiskAgentCS(std::size_t cells_x_dim, std::size_t cells_y_dim, const amp::Environment2D& env, double robot_radius) :
+        env(env),
+        MyLidarEmulateConstructor(cells_x_dim, cells_y_dim, env), robot_radius(robot_radius),
+        cs_for_disk(cells_x_dim, cells_y_dim, env.x_min, env.x_max, env.y_min, env.y_max, -1)
+        {}
+
+        /// \brief Create CS for disk agent with lidar emulate
+        /// \param location: the center point to update around
+        /// \returns nithing
+        void UpdateDiskMapAroundPoint(const Eigen::Vector2d& location);
+
+        /// \brief Create CS for disk agent with lidar emulate and return 1D map
+        /// \param location: the center point to update around
+        /// \returns 1D map
+        const std::vector<int8_t>& UpdateDiskMapAroundPoint1D(const Eigen::Vector2d& location);
+
+        /// \brief Create CS for disk agent with lidar emulate and return 2D GridCSpace
+        /// \param location: the center point to update around
+        /// \returns 2D GridCSpace
+        const amp::GridCSpace2D_T<int8_t>& UpdateDiskMapAroundPoint2D(const Eigen::Vector2d& location);
+
+        /// \brief return 1d cspace for disk agent
+        /// \returns 1D map
+        const std::vector<int8_t>& getDiskMap1D(){return cs_for_disk_1D;};
+
+        /// \brief return 2d cspace for disk agent
+        /// \returns 2D GridCSpace
+        const amp::GridCSpace2D_T<int8_t>& getDiskMapptr(){return cs_for_disk;};
+
+    private:
+        const amp::Environment2D& env;
+        double robot_radius;
+        amp::GridCSpace2D_T<int8_t> cs_for_disk;
+        std::vector<int8_t> cs_for_disk_1D;
+        bool IsSerroundingFree(const amp::GridCSpace2D_T<int8_t>& map, int i , int j);
+        bool IsSerroundingAllFree(const amp::GridCSpace2D_T<int8_t>& map, int i , int j);
 };

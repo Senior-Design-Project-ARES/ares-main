@@ -138,7 +138,7 @@ std::vector<int8_t> MyPointAgentCSConstructor::construct1D(const amp::Environmen
     return cspace_1D;
 }
 
-const amp::GridCSpace2D_T<int8_t>& MyLidarEmulateConstructor::construct4point(Eigen::Vector2d location){
+void MyLidarEmulateConstructor::constructMapAroundPoint(const Eigen::Vector2d& location){
     removeFrontierFromMap();
     double cell_width = (env.x_max-env.x_min)/cells_x();
     double cell_height = (env.y_max-env.y_min)/cells_y();
@@ -164,10 +164,22 @@ const amp::GridCSpace2D_T<int8_t>& MyLidarEmulateConstructor::construct4point(Ei
             }
         }
     }
+
+    map_1D.clear();
+
+    for(int i = 0; i < cells_x(); i++){
+        for(int j = 0; j < cells_y(); j++){
+            map_1D.push_back(int8_t(map(j,i)));
+        }
+    }
+}
+
+const amp::GridCSpace2D_T<int8_t>& MyLidarEmulateConstructor::construct4point(const Eigen::Vector2d& location){
+    constructMapAroundPoint(location);
     return map;
 }
 
-const amp::GridCSpace2D_T<int8_t>& MyLidarEmulateConstructor::lidarMimicConstruct4point(Eigen::Vector2d location){
+const amp::GridCSpace2D_T<int8_t>& MyLidarEmulateConstructor::lidarMimicConstruct4point(const Eigen::Vector2d& location){
     removeFrontierFromMap();
     double cell_width = (env.x_max-env.x_min)/cells_x();
     double cell_height = (env.y_max-env.y_min)/cells_y();
@@ -203,7 +215,7 @@ const amp::GridCSpace2D_T<int8_t>& MyLidarEmulateConstructor::lidarMimicConstruc
     return map;
 }
 
-const amp::GridCSpace2D_T<int8_t>& MyLidarEmulateConstructor::lidarMimicConstruct4point2(Eigen::Vector2d location){
+const amp::GridCSpace2D_T<int8_t>& MyLidarEmulateConstructor::lidarMimicConstruct4point2(const Eigen::Vector2d& location){
     removeFrontierFromMap();
     double cell_width = (env.x_max-env.x_min)/cells_x();
     double cell_height = (env.y_max-env.y_min)/cells_y();
@@ -261,6 +273,14 @@ const amp::GridCSpace2D_T<int8_t>& MyLidarEmulateConstructor::lidarMimicConstruc
     }
     for(int i = 0; i < obstacle_location.size(); i++){
         updateAroundPoint(obstacle_location[i].first, 1, obstacle_location[i].second);
+    }
+
+    map_1D.clear();
+
+    for(int i = 0; i < cells_y(); i++){
+        for(int j = 0; j < cells_x(); j++){
+            map_1D.push_back(int8_t(map(j,i)));
+        }
     }
     return map;
 }
@@ -323,17 +343,8 @@ void MyLidarEmulateConstructor::updateAroundPoint(const Eigen::Vector2d& locatio
     }
 }
 
-const std::vector<int8_t>& MyLidarEmulateConstructor::construct4point1D(Eigen::Vector2d location){
-    // construct4point(location);
-    // lidarMimicConstruct4point(location);
+const std::vector<int8_t>& MyLidarEmulateConstructor::construct4point1D(const Eigen::Vector2d& location){
     lidarMimicConstruct4point2(location);
-    map_1D.clear();
-
-    for(int i = 0; i < cells_x(); i++){
-        for(int j = 0; j < cells_y(); j++){
-            map_1D.push_back(int8_t(map(j,i)));
-        }
-    }
     return map_1D;
 }
 
@@ -371,4 +382,122 @@ int MyLidarEmulateConstructor::getState(const Eigen::Vector2d& location){
     const amp::GridCSpace2D_T<int8_t>& map = getMapptr();
     auto[i, j] = map.getCellFromPoint(location(0), location(1));
     return map(i, j);
+}
+
+void MyDiskAgentCS::UpdateDiskMapAroundPoint(const Eigen::Vector2d& location){
+    lidarMimicConstruct4point2(location);
+    const amp::GridCSpace2D_T<int8_t>& map = getMapptr();
+
+    for(int i = 0; i < map.size().first; i++){
+        for(int j = 0; j < map.size().second; j ++){
+            cs_for_disk(i, j) = map(i, j);
+        }
+    }
+
+    std::vector<std::pair<int, int>> unknow_to_blow_up;
+    std::vector<std::pair<int, int>> obstacle_to_blow_up;
+    double radius_in_cells = robot_radius * 1.2 / ((env.x_max - env.x_min) / cells_x());
+
+    for(int i = 0; i < cells_x(); i++){
+        for(int j = 0; j < cells_y(); j++){
+            // find unknow cells that are serrounded by free cells
+            if (map(i, j) == -1 && IsSerroundingFree(map, i, j)){
+                if (IsSerroundingAllFree(map, i, j)){
+                    cs_for_disk(i, j) = 0;
+                    continue;
+                }
+                unknow_to_blow_up.push_back({i, j}); // find unknow cells that are serrounded by free cells
+            }
+            else if (map(i, j) == 1 && IsSerroundingFree(map, i, j)){
+                obstacle_to_blow_up.push_back({i, j}); // find obstacle cells that are serrounded by free cells
+            }
+        }
+    }
+
+    // Blow up unknow cells to size of disk
+    for(int i = 0; i < unknow_to_blow_up.size(); i++){
+        int cell_x = unknow_to_blow_up[i].first;
+        int cell_y = unknow_to_blow_up[i].second;
+        for(int dx = - ceil(radius_in_cells); dx <= ceil(radius_in_cells); dx++){
+            for(int dy = - ceil(radius_in_cells); dy <= ceil(radius_in_cells); dy++){
+                double distance = sqrt(dx*dx + dy*dy);
+                if (distance <= ceil(radius_in_cells)){
+                    int new_x = cell_x + dx;
+                    int new_y = cell_y + dy;
+                    if(new_x >= 0 && new_x < cells_x() && new_y >= 0 && new_y < cells_y()){
+                        cs_for_disk(new_x, new_y) = -1;
+                    }
+                }
+            }
+        }
+    }
+
+    // Blow up obstacle cells to size of disk
+    for(int i = 0; i < obstacle_to_blow_up.size(); i++){
+        int cell_x = obstacle_to_blow_up[i].first;;
+        int cell_y = obstacle_to_blow_up[i].second;
+        for(int dx = - ceil(radius_in_cells); dx <= ceil(radius_in_cells); dx++){
+            for(int dy = - ceil(radius_in_cells); dy <= ceil(radius_in_cells); dy++){
+                double distance = sqrt(dx*dx + dy*dy);
+                if (distance <= ceil(radius_in_cells)){
+                    int new_x = cell_x + dx;
+                    int new_y = cell_y + dy;
+                    if(new_x >= 0 && new_x < cells_x() && new_y >= 0 && new_y < cells_y()){
+                        cs_for_disk(new_x, new_y) = 1;
+                    }
+                }
+            }
+        }
+    }
+
+    cs_for_disk_1D.clear();
+    for(int i = 0; i < cells_y(); i++){
+        for(int j = 0; j < cells_x(); j++){
+            cs_for_disk_1D.push_back(int8_t(cs_for_disk(j,i)));
+        }
+    }
+}
+
+const std::vector<int8_t>& MyDiskAgentCS::UpdateDiskMapAroundPoint1D(const Eigen::Vector2d& location){
+    UpdateDiskMapAroundPoint(location);
+    return cs_for_disk_1D;
+}
+
+const amp::GridCSpace2D_T<int8_t>& MyDiskAgentCS::UpdateDiskMapAroundPoint2D(const Eigen::Vector2d& location){
+    UpdateDiskMapAroundPoint(location);
+    return cs_for_disk;
+}
+
+bool MyDiskAgentCS::IsSerroundingFree(const amp::GridCSpace2D_T<int8_t>& map, int i , int j){
+    for(int dx = -1; dx <= 1; dx++){
+        for(int dy = -1; dy <= 1; dy++){
+            if(dx == 0 && dy == 0) continue; // Skip the center cell
+            int new_x = i + dx;
+            int new_y = j + dy;
+            if(new_x < 0 || new_x >= cells_x() || new_y < 0 || new_y >= cells_y()){
+                continue; // Out of bounds
+            }
+            if(map(new_x, new_y) == 0){
+                return true; // At least one surrounding cell is free
+            }
+        }
+    }
+    return false; // All surrounding cells are free
+}
+
+bool MyDiskAgentCS::IsSerroundingAllFree(const amp::GridCSpace2D_T<int8_t>& map, int i , int j){
+    for(int dx = -1; dx <= 1; dx++){
+        for(int dy = -1; dy <= 1; dy++){
+            if(dx == 0 && dy == 0) continue; // Skip the center cell
+            int new_x = i + dx;
+            int new_y = j + dy;
+            if(new_x < 0 || new_x >= cells_x() || new_y < 0 || new_y >= cells_y()){
+                continue; // Out of bounds
+            }
+            if(map(new_x, new_y) != 0){
+                return false; // At least one surrounding cell is not free
+            }
+        }
+    }
+    return true; // All surrounding cells are free
 }

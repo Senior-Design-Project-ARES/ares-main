@@ -242,7 +242,9 @@ amp::Path MyGenericRRT::planND(Eigen::VectorXd init_, Eigen::VectorXd goal_, Bas
     // LOG(temp);
 
     amp::Path path;
+    path.valid = false;
     if(success){
+        path.valid = true;
         path.waypoints.push_back(goal_);
         amp::Node current_node = (graphPtr->parents(nodes.size()-1))[0];
         while(current_node != 0){

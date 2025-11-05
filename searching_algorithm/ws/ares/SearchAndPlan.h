@@ -7,20 +7,35 @@
 
 class SearchAndPlan{
     public:
-        SearchAndPlan(const amp::Problem2D& problem_, const int num_rover_);
+        SearchAndPlan(const amp::MultiAgentProblem2D& problem_, const int num_rover_);
+        amp::MultiAgentPath2D runSingle(int rover_id);
         amp::MultiAgentPath2D run();
-        Eigen::Vector2d nextPoint(std::vector<std::pair<Eigen::Vector2d, int>> point_of_interest, Eigen::Vector2d location);
+        Eigen::Vector2d nextPoint(std::vector<std::pair<Eigen::Vector2d, int>>& point_of_interest, Eigen::Vector2d location);
         const amp::GridCSpace2D_T<int8_t>& getMapptr(){
-            return lidar_space.getMapptr();
+            return C_space.getMapptr();
+        };
+        const amp::GridCSpace2D_T<int8_t>& getDiskMapptr(){
+            return C_space.getDiskMapptr();
         };
         int state(Eigen::Vector2d);
 
     private:
-        const amp::Problem2D& problem;
+        const amp::MultiAgentProblem2D& problem;
         const int num_rover;
         const int num_cells_x;
         const int num_cells_y;
-        MyLidarEmulateConstructor lidar_space;
+        bool target_found = false;
+        bool no_frountier_left = false;
+        // MyLidarEmulateConstructor lidar_space;
+        MyDiskAgentCS C_space;
+        // const std::vector<int8_t>& map_1d;
+        amp::MultiAgentPath2D rovers_paths;
+        amp::MultiAgentPath2D frontier_paths;
+        amp::MultiAgentPath2D active_paths;
+        FrontExpl front_expl;
+        // Point2DCollisionCheckerGrid collision_checker;
+        std::vector<amp::GridCSpace2D_T<int8_t>*> multi_maps;
+        std::vector<Point2DCollisionCheckerGrid*> multi_collision_checker;
 
         /// \brief Convert Eigen::VectorXd to Eigen::Vector2d
         /// \param vec: the Eigen::VectorXd to convert
@@ -31,4 +46,6 @@ class SearchAndPlan{
             vec_xd(1) = vec(1);
             return vec_xd;
         }
+
+        void updateMultiMap(int rover_id);
 };
