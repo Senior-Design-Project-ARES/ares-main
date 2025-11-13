@@ -35,7 +35,7 @@ amp::MultiAgentPath2D SearchAndPlan::runSingle(int rover_id){
 
     MyGenericRRT my_rrt(0.05, 7500, 0.3);
 
-    amp::Visualizer::makeFigure(problem, rovers_paths);
+    // amp::Visualizer::makeFigure(problem, rovers_paths);
     updateMultiMap(rover_id);
 
     LOG("Searching frontier for rover " << rover_id << "....");
@@ -214,15 +214,21 @@ amp::MultiAgentPath2D SearchAndPlan::run(){
             active_paths.agent_paths[rover_id] = single_rover_path.agent_paths[0];
             current_waypoint_indexs[rover_id] = 0;
 
-            amp::Visualizer::makeFigure(problem, active_paths);
-            amp::Visualizer::saveFigures(true, "ares");
+            // amp::Visualizer::makeFigure(problem, active_paths);
             // single_rover_path.agent_paths[1];
         }
+        amp::MultiAgentPath2D current_location(num_rover);
+        for(int rover_id = 0; rover_id < num_rover; rover_id++){
+            current_location.agent_paths[rover_id].waypoints.push_back(rovers_paths.agent_paths[rover_id].waypoints.back());
+        }
+        amp::Visualizer::makeFigure(C_space.getMapptr(), current_location);
+        
         // amp::Visualizer::makeFigure(C_space.getMapptr());
-        // amp::Visualizer::makeFigure(C_space.getDiskMapptr());
+        amp::Visualizer::makeFigure(C_space.getDiskMapptr());
         // amp::Visualizer::makeFigure(problem, rovers_paths);
-        // amp::Visualizer::saveFigures(true, "ARES");
+        amp::Visualizer::saveFigures(true, "ares");
     }
+    // amp::Visualizer::saveFigures(false, "DR2");
 
     amp::MultiAgentPath2D rovers_and_frountier_path(num_rover*2);
     for(int rover_id = 0; rover_id < num_rover; rover_id++){
@@ -236,7 +242,7 @@ void SearchAndPlan::updateMultiMap(int rover_id){
     amp::GridCSpace2D_T<int8_t>* map_ptr = multi_maps[rover_id];
     const amp::GridCSpace2D_T<int8_t>& disk_map = C_space.getDiskMapptr();
 
-    amp::Visualizer::makeFigure(disk_map);
+    // amp::Visualizer::makeFigure(disk_map);
 
     double radius = problem.agent_properties[rover_id].radius;
 
@@ -288,6 +294,6 @@ void SearchAndPlan::updateMultiMap(int rover_id){
         }
 
     }
-    amp::Visualizer::makeFigure(*map_ptr);
+    // amp::Visualizer::makeFigure(*map_ptr);
     // amp::Visualizer::saveFigures(true, "ares");
 }

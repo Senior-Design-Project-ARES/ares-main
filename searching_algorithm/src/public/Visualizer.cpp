@@ -230,6 +230,15 @@ void amp::Visualizer::makeFigure(const GridCSpace2D_T<int8_t>& cspace) {
     createAxes(cspace);
 }
 
+void amp::Visualizer::makeFigure(const GridCSpace2D_T<int8_t>& cspace, const MultiAgentPath2D& ma_path) {
+    newFigure();
+    createAxes(cspace);
+
+    for(std::size_t i = 0; i < ma_path.numAgents(); ++i) {
+        createAxes(0.15, ma_path.agent_paths[i], false);
+    }
+}
+
 void amp::Visualizer::makeFigure(const GridCSpace2D& cspace, const Path2D& path) {
     newFigure();
     createAxes(cspace);
@@ -257,14 +266,14 @@ void amp::Visualizer::makeFigure(const Problem2D& prob, const Path2D& path, cons
 void amp::Visualizer::saveFigures(bool show, const std::string& directory, const std::string& format) {
     std::unique_ptr<ampprivate::pybridge::PythonObject> directory_arg = ampprivate::pybridge::makeString(directory);
     std::unique_ptr<ampprivate::pybridge::PythonObject> format_arg = ampprivate::pybridge::makeString(format);
-    ampprivate::pybridge::ScriptCaller::call("FigureHandler", "save_figures", std::make_tuple(directory_arg->get(), format_arg->get()));
+    ampprivate::pybridge::ScriptCaller::call("FigureHandlerSpe", "save_figures", std::make_tuple(directory_arg->get(), format_arg->get()));
     if (show) {
-        ampprivate::pybridge::ScriptCaller::call("FigureHandler", "show_figure", std::make_tuple());
+        ampprivate::pybridge::ScriptCaller::call("FigureHandlerSpe", "show_figure", std::make_tuple());
     }
 }
 
 void amp::Visualizer::newFigure() {
-    ampprivate::pybridge::ScriptCaller::call("FigureHandler", "new_figure", std::make_tuple());
+    ampprivate::pybridge::ScriptCaller::call("FigureHandlerSpe", "new_figure", std::make_tuple());
 }
 
 void amp::Visualizer::createAxes(const Environment2D& env) {

@@ -312,8 +312,9 @@ void MyLidarEmulateConstructor::updateAroundPoint(const Eigen::Vector2d& locatio
     int cell_x = temp.first;
     int cell_y = temp.second;
 
+    map(cell_x, cell_y) = value;
     if(radius == 0){
-        map(cell_x, cell_y) = value;
+        // map(cell_x, cell_y) = value;
         return;
     }
 
@@ -421,7 +422,7 @@ void MyDiskAgentCS::UpdateDiskMapAroundPoint(const Eigen::Vector2d& location){
         for(int dx = - ceil(radius_in_cells); dx <= ceil(radius_in_cells); dx++){
             for(int dy = - ceil(radius_in_cells); dy <= ceil(radius_in_cells); dy++){
                 double distance = sqrt(dx*dx + dy*dy);
-                if (distance <= ceil(radius_in_cells)){
+                if (distance < ceil(radius_in_cells)){
                     int new_x = cell_x + dx;
                     int new_y = cell_y + dy;
                     if(new_x >= 0 && new_x < cells_x() && new_y >= 0 && new_y < cells_y()){
@@ -500,4 +501,22 @@ bool MyDiskAgentCS::IsSerroundingAllFree(const amp::GridCSpace2D_T<int8_t>& map,
         }
     }
     return true; // All surrounding cells are free
+}
+
+void MyDiskAgentCS::addFrontierToCS(const std::vector<Eigen::Vector2i>& frontier_pts){
+    for (const auto& pt : frontier_pts) {
+        if (pt(0) >= 0 && pt(0) < cells_x() && pt(1) >= 0 && pt(1) < cells_y()) {
+            cs_for_disk(pt(0), pt(1)) = 2; // Mark as frontier
+        }
+    }
+    last_frontier = frontier_pts;
+}
+
+void MyDiskAgentCS::removeFrontierFromCS(){
+    for (const auto& pt : last_frontier) {
+        if (pt(0) >= 0 && pt(0) < cells_x() && pt(1) >= 0 && pt(1) < cells_y()) {
+            cs_for_disk(pt(0), pt(1)) = 0; // Reset to free space
+        }
+    }
+    last_frontier.clear();
 }

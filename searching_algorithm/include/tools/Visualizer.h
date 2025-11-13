@@ -115,6 +115,11 @@ class Visualizer {
         /// @param cspace Dense grid cspace
         static void makeFigure(const GridCSpace2D_T<int8_t>& cspace);
 
+        /// @brief Visualize a grid cspace can choose bool or not
+        /// @param cspace Dense grid cspace
+        /// @param ma_path Multi-agent path to display
+        static void makeFigure(const GridCSpace2D_T<int8_t>& cspace, const MultiAgentPath2D& ma_path);
+
         /// @brief Visualize a grid cspace
         /// @param cspace Dense grid cspace
         /// @param path Path inside cspace (ManipulatorTrajectory2Link is also accepted alias of Path2D)

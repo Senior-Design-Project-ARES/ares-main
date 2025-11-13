@@ -181,11 +181,21 @@ class MyDiskAgentCS : public MyLidarEmulateConstructor {
         /// \returns 2D GridCSpace
         const amp::GridCSpace2D_T<int8_t>& getDiskMapptr(){return cs_for_disk;};
 
+        /// \brief Add frontier points to map
+        /// \param frontier_pts: the frontier points to add
+        /// \returns nothing
+        void addFrontierToCS(const std::vector<Eigen::Vector2i>& frontier_pts);
+
+        /// \brief Remove all frontier points from map
+        /// \returns nothing
+        void removeFrontierFromCS();
+
     private:
         const amp::Environment2D& env;
         double robot_radius;
         amp::GridCSpace2D_T<int8_t> cs_for_disk;
         std::vector<int8_t> cs_for_disk_1D;
+        std::vector<Eigen::Vector2i> last_frontier;
         bool IsSerroundingFree(const amp::GridCSpace2D_T<int8_t>& map, int i , int j);
         bool IsSerroundingAllFree(const amp::GridCSpace2D_T<int8_t>& map, int i , int j);
 };

@@ -8,15 +8,20 @@
 class SearchAndPlan{
     public:
         SearchAndPlan(const amp::MultiAgentProblem2D& problem_, const int num_rover_);
+
         amp::MultiAgentPath2D runSingle(int rover_id);
         amp::MultiAgentPath2D run();
+
         Eigen::Vector2d nextPoint(std::vector<std::pair<Eigen::Vector2d, int>>& point_of_interest, Eigen::Vector2d location);
+
         const amp::GridCSpace2D_T<int8_t>& getMapptr(){
             return C_space.getMapptr();
         };
+
         const amp::GridCSpace2D_T<int8_t>& getDiskMapptr(){
             return C_space.getDiskMapptr();
         };
+        
         int state(Eigen::Vector2d);
 
     private:
