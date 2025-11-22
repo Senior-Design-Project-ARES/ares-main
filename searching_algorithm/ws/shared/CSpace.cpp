@@ -285,6 +285,80 @@ const amp::GridCSpace2D_T<int8_t>& MyLidarEmulateConstructor::lidarMimicConstruc
     return map;
 }
 
+const amp::GridCSpace2D_T<int8_t>& MyLidarEmulateConstructor::lidarMimicConstruct4point3(const Eigen::Vector2d& location){
+    removeFrontierFromMap();
+    double cell_width = (env.x_max-env.x_min)/cells_x();
+    double cell_height = (env.y_max-env.y_min)/cells_y();
+    check_collision_enviroument check_collision(env);
+    std::vector<std::pair<Eigen::Vector2d, double>> obstacle_location;
+    Eigen::Vector2d arm = Eigen::Vector2d(0,1);
+
+    for(double angle = M_PI*0.000001; angle < 2*M_PI*3; angle += ANGLERESOLUSION){
+        Eigen::Vector2d add_on =  (Eigen::Rotation2Dd(angle) * arm).normalized();
+
+        Eigen::Vector2d closest_collision = check_collision.firstCollisionPoint(location, add_on);
+        double distance;
+        if(closest_collision.isZero() || (closest_collision - location).norm() > LIDARRADIUS){
+            distance = LIDARRADIUS;
+        }else{
+            distance = (closest_collision - location).norm();
+            obstacle_location.push_back({closest_collision, distance});
+        }
+
+        auto[i, j] = map.getCellFromPoint(location(0), location(1));
+        double nextBoundaryX = (add_on(0) > 0) 
+            ? env.x_min + (i + 1) * cell_width 
+            : env.x_min + i * cell_width;
+        double nextBoundaryY = (add_on(1) > 0) 
+            ? env.y_min + (j + 1) * cell_height 
+            : env.y_min + j * cell_height;
+
+        double tMaxX = (add_on(0) != 0)
+            ? (nextBoundaryX - location(0)) / add_on(0)
+            : std::numeric_limits<double>::infinity();
+        double tMaxY = (add_on(1) != 0)
+            ? (nextBoundaryY - location(1)) / add_on(1)
+            : std::numeric_limits<double>::infinity();
+
+        double tDeltaX = (add_on(0) != 0)
+            ? cell_width / std::abs(add_on(0))
+            : std::numeric_limits<double>::infinity();
+        double tDeltaY = (add_on(1) != 0)
+            ? cell_height / std::abs(add_on(1))
+            : std::numeric_limits<double>::infinity();
+        
+        double traveled = 0.0;
+        while (traveled < distance) {
+            Eigen::Vector2d p = location + add_on * traveled;
+            updateAroundPoint(p, 0, traveled); // free
+
+            // Move to next boundary
+            if (tMaxX < tMaxY) {
+                i += (add_on(0) > 0) ? 1 : -1;
+                traveled = tMaxX;
+                tMaxX += tDeltaX;
+            } else {
+                j += (add_on(1) > 0) ? 1 : -1;
+                traveled = tMaxY;
+                tMaxY += tDeltaY;
+            }
+        }
+    }
+
+    for(int i = 0; i < obstacle_location.size(); i++){
+        updateAroundPoint(obstacle_location[i].first, 1, obstacle_location[i].second);
+    }
+
+    map_1D.clear();
+
+    for(int i = 0; i < cells_y(); i++){
+        for(int j = 0; j < cells_x(); j++){
+            map_1D.push_back(int8_t(map(j,i)));
+        }
+    }
+    return map;
+}
+
 bool MyLidarEmulateConstructor::checkCellCollision(Eigen::Vector2d location_check, check_collision_enviroument& check_collision){
     auto[x,y] = map.getCellFromPoint(location_check(0), location_check(1));
     double step_x = (map.x0Bounds().second - map.x0Bounds().first)/cells_x();
@@ -312,7 +386,9 @@ void MyLidarEmulateConstructor::updateAroundPoint(const Eigen::Vector2d& locatio
     int cell_x = temp.first;
     int cell_y = temp.second;
 
-    map(cell_x, cell_y) = value;
+    if(map(cell_x, cell_y) != 1){
+        map(cell_x, cell_y) = value;
+    }
     if(radius == 0){
         // map(cell_x, cell_y) = value;
         return;
@@ -326,18 +402,30 @@ void MyLidarEmulateConstructor::updateAroundPoint(const Eigen::Vector2d& locatio
     for (int i = 0; i < num_point_to_change/2 + 1; i++ ){
         for(int j = 0; j < num_point_to_change/2 + 1; j++){
             if (cell_x + i < cells_x() && cell_y + j < cells_y()) {
+                if (map(cell_x + i, cell_y + j) == 1){
+                    continue;
+                }
                 map(cell_x + i, cell_y + j) = value;
             }
 
             if (cell_x + i < cells_x() && cell_y - j >= 0) {
+                if (map(cell_x + i, cell_y - j) == 1){
+                    continue;
+                }
                 map(cell_x + i, cell_y - j) = value;
             }
 
             if (cell_x - i >= 0 && cell_y + j < cells_y()) {
+                if (map(cell_x - i, cell_y + j) == 1){
+                    continue;
+                }
                 map(cell_x - i, cell_y + j) = value;
             }
 
             if (cell_x - i >= 0 && cell_y - j >= 0) {
+                if (map(cell_x - i, cell_y - j) == 1){
+                    continue;
+                }
                 map(cell_x - i, cell_y - j) = value;
             }
         }
@@ -345,7 +433,7 @@ void MyLidarEmulateConstructor::updateAroundPoint(const Eigen::Vector2d& locatio
 }
 
 const std::vector<int8_t>& MyLidarEmulateConstructor::construct4point1D(const Eigen::Vector2d& location){
-    lidarMimicConstruct4point2(location);
+    lidarMimicConstruct4point3(location);
     return map_1D;
 }
 
@@ -386,7 +474,7 @@ int MyLidarEmulateConstructor::getState(const Eigen::Vector2d& location){
 }
 
 void MyDiskAgentCS::UpdateDiskMapAroundPoint(const Eigen::Vector2d& location){
-    lidarMimicConstruct4point2(location);
+    lidarMimicConstruct4point3(location);
     const amp::GridCSpace2D_T<int8_t>& map = getMapptr();
 
     for(int i = 0; i < map.size().first; i++){
@@ -397,7 +485,7 @@ void MyDiskAgentCS::UpdateDiskMapAroundPoint(const Eigen::Vector2d& location){
 
     std::vector<std::pair<int, int>> unknow_to_blow_up;
     std::vector<std::pair<int, int>> obstacle_to_blow_up;
-    double radius_in_cells = robot_radius * 1.2 / ((env.x_max - env.x_min) / cells_x());
+    double radius_in_cells = robot_radius * 1.5 / ((env.x_max - env.x_min) / cells_x());
 
     for(int i = 0; i < cells_x(); i++){
         for(int j = 0; j < cells_y(); j++){

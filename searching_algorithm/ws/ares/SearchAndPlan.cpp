@@ -221,12 +221,13 @@ amp::MultiAgentPath2D SearchAndPlan::run(){
         for(int rover_id = 0; rover_id < num_rover; rover_id++){
             current_location.agent_paths[rover_id].waypoints.push_back(rovers_paths.agent_paths[rover_id].waypoints.back());
         }
-        amp::Visualizer::makeFigure(C_space.getMapptr(), current_location);
+        // amp::Visualizer::makeFigure(C_space.getMapptr(), current_location);
         
         // amp::Visualizer::makeFigure(C_space.getMapptr());
-        amp::Visualizer::makeFigure(C_space.getDiskMapptr());
+        // amp::Visualizer::makeFigure(C_space.getDiskMapptr());
         // amp::Visualizer::makeFigure(problem, rovers_paths);
-        amp::Visualizer::saveFigures(true, "ares");
+        // amp::Visualizer::makeFigure(problem, frontier_paths);
+        // amp::Visualizer::saveFigures(true, "ares");
     }
     // amp::Visualizer::saveFigures(false, "DR2");
 
@@ -277,7 +278,7 @@ void SearchAndPlan::updateMultiMap(int rover_id){
         if(other_id == rover_id) continue;
         double total_radius = radius + problem.agent_properties[other_id].radius;
         for(const auto& point : rovers_current_path[other_id]){
-            int radius_in_cell = ceil(total_radius*1.1 /((problem.x_max - problem.x_min) / num_cells_x));
+            int radius_in_cell = ceil(total_radius*1.5 /((problem.x_max - problem.x_min) / num_cells_x));
             for(int dx = -radius_in_cell; dx <= radius_in_cell; dx++){
                 for(int dy = -radius_in_cell; dy <= radius_in_cell; dy++){
                     int cell_x, cell_y;
@@ -286,7 +287,7 @@ void SearchAndPlan::updateMultiMap(int rover_id){
                     int new_y = cell_y + dy;
                     if(new_x < 0 || new_x >= num_cells_x || new_y < 0 || new_y >= num_cells_y) continue;
                     double dist = sqrt(dx*dx + dy*dy) * ((problem.x_max - problem.x_min) / num_cells_x);
-                    if(dist <= total_radius*1.1 && (*map_ptr)(new_x, new_y) != -1){
+                    if(dist <= total_radius*1.5 && (*map_ptr)(new_x, new_y) != -1){
                         (*map_ptr)(new_x, new_y) = 1;
                     }
                 }

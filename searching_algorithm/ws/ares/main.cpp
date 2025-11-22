@@ -9,6 +9,7 @@
 
 int main(int argc, char** argv){
     amp::RNG::seed(amp::RNG::randiUnbounded());
+    std::srand(static_cast<unsigned int>(std::time(0)));
 
     // generate enviroument
     amp::Random2DEnvironmentSpecification spec;
@@ -32,8 +33,8 @@ int main(int argc, char** argv){
     amp::Deserializer dszr("../../in/problem.yaml");
     problem.deserialize(dszr);
     
-    amp::Visualizer::makeFigure(problem);
-    amp::Visualizer::saveFigures(true, "ares");
+    // amp::Visualizer::makeFigure(problem);
+    // amp::Visualizer::saveFigures(true, "ares");
 
     // return 0;
     
@@ -98,6 +99,13 @@ int main(int argc, char** argv){
         frontier_path.agent_paths.insert(frontier_path.agent_paths.begin(), rovers_path.agent_paths.back());
         rovers_path.agent_paths.pop_back();
     }
+
+
+    amp::Visualizer::makeFigure(search_plan_algo.getMapptr());
+    // amp::Visualizer::makeFigure(search_plan_algo.getDiskMapptr());
+    amp::Visualizer::makeFigure(multi_problem, rovers_path);
+    amp::Visualizer::makeFigure(multi_problem, frontier_path);
+    amp::Visualizer::saveFigures(true, "ARES");
 
     
 

@@ -99,6 +99,11 @@ class MyLidarEmulateConstructor : public MyPointAgentCSConstructor{
         /// \returns 2D GridCSpace
         const amp::GridCSpace2D_T<int8_t>& lidarMimicConstruct4point2(const Eigen::Vector2d& location);
 
+        /// \brief Mimic Lidar scan to update space around a radius from unknow to free or occupied and return 2D GridCSpace
+        /// \param location: the center point to update around
+        /// \returns 2D GridCSpace
+        const amp::GridCSpace2D_T<int8_t>& lidarMimicConstruct4point3(const Eigen::Vector2d& location);
+
         /// \brief Update space around a radius from unknow to free or occupied and return 1D map
         /// \param location: the center point to update around
         /// \returns 1D map

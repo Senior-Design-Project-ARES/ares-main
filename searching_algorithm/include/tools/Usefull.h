@@ -23,6 +23,7 @@ class check_collision_enviroument{
 
         inline bool all(const Eigen::Vector2d& point);
         inline bool thisObstacle(int ob_idx,const Eigen::Vector2d& point);
+        inline Eigen::Vector2d firstCollisionPoint(const Eigen::Vector2d& start, const Eigen::Vector2d& direction);
 
     private:
         const amp::Environment2D& env;
@@ -55,6 +56,54 @@ inline bool check_collision_problem::thisObstacle(int ob_idx, Eigen::Vector2d po
         }
     }
     return true; // Point is inside this obstacle
+}
+
+inline Eigen::Vector2d check_collision_enviroument::firstCollisionPoint(const Eigen::Vector2d& v1, const Eigen::Vector2d& v2Mv1){
+    Eigen::Vector2d v2 = v1 + v2Mv1;
+    std::vector<Eigen::Vector2d> collision_points;
+
+    for(int obstacle_idx = 0; obstacle_idx < env.obstacles.size(); ++obstacle_idx){
+        const amp::Obstacle2D& obstacle = env.obstacles[obstacle_idx];
+        int n = obstacle.verticesCCW().size();
+        for(int vertices_idx = 0; vertices_idx < n; ++vertices_idx){
+            const Eigen::Vector2d& v3 = obstacle.verticesCCW()[vertices_idx];
+            const Eigen::Vector2d& v4 = obstacle.verticesCCW()[(vertices_idx + 1) % n];
+
+            double denom = (v1(0) - v2(0)) * (v3(1) - v4(1)) - (v1(1) - v2(1)) * (v3(0) - v4(0));
+            if(std::abs(denom) < 1e-10) continue; // Parallel lines
+
+            double x = ((v1(0)*v2(1) - v1(1)*v2(0)) * (v3(0) - v4(0)) - (v1(0) - v2(0)) * (v3(0)*v4(1) - v3(1)*v4(0))) / denom;
+            double y = ((v1(0)*v2(1) - v1(1)*v2(0)) * (v3(1) - v4(1)) - (v1(1) - v2(1)) * (v3(0)*v4(1) - v3(1)*v4(0))) / denom;
+
+            Eigen::Vector2d intersection_point = Eigen::Vector2d(x, y);
+            Eigen::Vector2d edge_dir = intersection_point - v1;
+            edge_dir.normalize();
+            double dot_product = edge_dir.dot(v2Mv1);
+
+            if(dot_product < 0) continue; // Intersection is in the opposite direction
+
+            if(thisObstacle(obstacle_idx, intersection_point+ edge_dir * 1e-6)){
+                collision_points.push_back(intersection_point);
+            }
+            
+        }
+    }
+
+    if(collision_points.empty()){
+        return Eigen::Vector2d::Zero(); // No collision
+    }
+
+    double min_distance = std::numeric_limits<double>::infinity();
+    Eigen::Vector2d closest_point;
+    for(const auto& point : collision_points){
+        double distance = (point - v1).norm();
+        if(distance < min_distance){
+            min_distance = distance;
+            closest_point = point;
+        }
+    }
+    return closest_point;
+
 }
 
 inline bool check_collision_enviroument::all(const Eigen::Vector2d& point) {
