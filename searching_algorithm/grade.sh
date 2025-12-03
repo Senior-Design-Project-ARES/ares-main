@@ -1,6 +1,6 @@
 #! /bin/bash
 
-export DYLD_LIBRARY_PATH="/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/install/macos_arm64/lib:$DYLD_LIBRARY_PATH"
+export LD_LIBRARY_PATH="/home/sam/ares-main/searching_algorithm/install/ubuntu22/lib:$LD_LIBRARY_PATH"
 
 # Make sure executable tag is passed
 if [[ $# == 0 ]]; then

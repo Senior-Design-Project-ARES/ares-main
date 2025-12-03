@@ -66,8 +66,8 @@ for arg in "$@"; do
     esac
 done
 
-export DYLD_LIBRARY_PATH="/Users/RunOutOfName/Documents/VS_CODE/ares-main/searching_algorithm/install/macos_arm64/lib:$DYLD_LIBRARY_PATH"
-echo "Library path: $DYLD_LIBRARY_PATH"
+export LD_LIBRARY_PATH="/home/sam/ares-main/searching_algorithm/install/ubuntu22/lib:$LD_LIBRARY_PATH"
+echo "Library path: $LD_LIBRARY_PATH"
 mkdir -p build && cd build
 
 architecture=$(uname -m)
