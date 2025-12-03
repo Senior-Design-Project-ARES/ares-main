@@ -5,3 +5,4 @@ searching_algorithm/grade.sh
 build/
 install/
 log/
+searching_algorithm/.DS_Store
