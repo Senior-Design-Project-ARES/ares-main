@@ -1,0 +1,7 @@
+searching_algorithm/build/
+searching_algorithm/build_and_run.sh
+searching_algorithm/.env.sh
+searching_algorithm/grade.sh
+build/
+install/
+log/

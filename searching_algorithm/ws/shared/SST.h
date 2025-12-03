@@ -12,7 +12,7 @@ struct StateAndControl {
     bool active = true;
 };
 
-struct neighborhood {
+struct Neighborhood {
     Eigen::VectorXd center;
     std::vector<amp::Node> nodes_in_neighborhood;
 };
@@ -20,17 +20,14 @@ struct neighborhood {
 class SST {
     public:
         SST(double delta_bn_, double delta_s_);
-        amp::Path planND(Eigen::VectorXd init_, Eigen::VectorXd goal_, BaseCollisionChecker<Eigen::VectorXd>& collision_checker_);
+        amp::Path planND(Eigen::VectorXd init_, Eigen::VectorXd goal_);
 
     private:
         std::shared_ptr<amp::Graph<double>> graphPtr = std::make_shared<amp::Graph<double>>();
         std::map<amp::Node, StateAndControl> nodes;
-        std::vector<neighborhood> neighborhoods;
-        Eigen::VectorXd generatePoint(const std::vector<std::pair<double, double>>& bounds);
-        amp::Node closestPoint(const Eigen::VectorXd& point);
-        Eigen::VectorXd extendSST(const Eigen::VectorXd& point, BaseCollisionChecker<Eigen::VectorXd>& collision_checker_);
-        bool checkDistance(Eigen::VectorXd direction, double requirement);
-        double magnitude(Eigen::VectorXd vec);
+        std::vector<Neighborhood> neighborhoods;
+        amp::Node bestFirstSelection(const Eigen::Vector2d& point, const std::map<amp::Node, StateAndControl>& nodes);
+        StateAndControl extendSST(const amp::Node node);
         double delta_bn;
         double delta_s;
         int iteration = 10000;

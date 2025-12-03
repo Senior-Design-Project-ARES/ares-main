@@ -5,16 +5,15 @@ amp::Path SST::planND(Eigen::VectorXd init_, Eigen::VectorXd goal_) {
     int num_states = 3;
     // Add initial node as active to the graph
     nodes[0] = {init_, Eigen::VectorXd::Zero(num_control_inputs), 0.0};
-    graphPtr->addNode(0);
     int node_count = 1;
     // Create new neighborhood at initial point
-    neighborhoods.push_back({init_, {0}});
+    neighborhoods.push_back(Neighborhood{init_, {0}});
 
     // Main SST loop
     for (int i = 0; i < iteration; i++) {
         // Sample random point in the space
-        double x = amp::RNG::randd(problem.x_min, problem.x_max);
-        double y = amp::RNG::randd(problem.y_min, problem.y_max);
+        double x = amp::RNG::randd(/*problem.x_min, problem.x_max*/0.0, 10.0);
+        double y = amp::RNG::randd(/*problem.y_min, problem.y_max*/0.0, 10.0);
         Eigen::Vector2d random_point = Eigen::Vector2d(x, y);
 
         // Find lowest cost node in delta_bn neighborhood
@@ -40,7 +39,6 @@ amp::Path SST::planND(Eigen::VectorXd init_, Eigen::VectorXd goal_) {
                         if (new_cost < existing_cost) {
                             // Add new point to graph
                             nodes[node_count] = new_point;
-                            graphPtr->addNode(node_count);
                             graphPtr->connect(nearest_node, node_count++, 1);
                             neighborhood.nodes_in_neighborhood.push_back(node_count);
                             // Make existing node inactive
@@ -56,7 +54,7 @@ amp::Path SST::planND(Eigen::VectorXd init_, Eigen::VectorXd goal_) {
             }
             if (!in_neighborhood) {
                 // Add new neighborhood
-                neighborhoods.push_back({new_point, {node_count}});
+                neighborhoods.push_back(Neighborhood{new_point.state.head(2), {node_count}});
             }
         }
     }
@@ -83,10 +81,10 @@ amp::Path SST::planND(Eigen::VectorXd init_, Eigen::VectorXd goal_) {
                 printf("Error: Exceeded maximum iterations while extracting path\n");
                 break;
             }
-            path.waypoints.push_back(node_positions[current_node].state);
-            path.controls.push_back(node_positions[current_node].control);
-            path.durations.push_back(m_time_step_size);
-            std::vector<amp::Node> parents = graph->parents(current_node);
+            path.waypoints.push_back(nodes[current_node].state);
+            path.controls.push_back(nodes[current_node].control);
+            path.durations.push_back(0.1);
+            std::vector<amp::Node> parents = graphPtr->parents(current_node);
             if (parents.size() != 1) {
                 printf("Error: SST tree structure invalid, size %d\n", parents.size());
                 break;
@@ -94,13 +92,13 @@ amp::Path SST::planND(Eigen::VectorXd init_, Eigen::VectorXd goal_) {
             current_node = parents.front(); // Move to parent
             // printf("Current node in path extraction: %d, pos: (%f, %f)\n", current_node, node_positions[current_node].x(), node_positions[current_node].y());
         }
-        path.waypoints.push_back(problem.q_init);
+        path.waypoints.push_back(init_);
         std::reverse(path.waypoints.begin(), path.waypoints.end());
         double path_length = 0.0;
         double path_duration = 0.0;
         for (size_t i = 1; i < path.waypoints.size(); ++i) {
             path_length += (path.waypoints[i] - path.waypoints[i - 1]).norm();
-            path_duration += m_time_step_size;
+            path_duration += 0.1;
         }
         printf("Path found in SST with length: %f and duration: %f\n", path_length, path_duration);
 
@@ -146,7 +144,7 @@ StateAndControl SST::extendSST(const amp::Node node){
 
     // use random time step and propagate dynamics
     double time_step = amp::RNG::randd(0.1, 0.5);
-    Eigen::VectorXd new_state = node_positions[node] /* dynamics.step(node_positions[node].state, control_input, time_step)*/; // Placeholder for dynamics propagation
+    Eigen::VectorXd new_state = nodes[node].state /* dynamics.step(node_positions[node].state, control_input, time_step)*/; // Placeholder for dynamics propagation
     double new_cost = nodes[node].cost + time_step; // Placeholder for cost calculation
     return {new_state, control_input, new_cost};
 }
