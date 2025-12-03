@@ -6,3 +6,4 @@ build/
 install/
 log/
 searching_algorithm/.DS_Store
+searching_algorithm/figures

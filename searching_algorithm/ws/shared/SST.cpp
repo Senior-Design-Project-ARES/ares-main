@@ -5,7 +5,7 @@ amp::Path SST::planND(Eigen::VectorXd init_, Eigen::VectorXd goal_) {
     int num_states = 3;
     // Add initial node as active to the graph
     nodes[0] = {init_, Eigen::VectorXd::Zero(num_control_inputs), 0.0};
-    int node_count = 1;
+    uint32_t node_count = 1;
     // Create new neighborhood at initial point
     neighborhoods.push_back(Neighborhood{init_, {0}});
 
@@ -86,7 +86,7 @@ amp::Path SST::planND(Eigen::VectorXd init_, Eigen::VectorXd goal_) {
             path.durations.push_back(0.1);
             std::vector<amp::Node> parents = graphPtr->parents(current_node);
             if (parents.size() != 1) {
-                printf("Error: SST tree structure invalid, size %d\n", parents.size());
+                printf("Error: SST tree structure invalid, size %ld\n", parents.size());
                 break;
             }
             current_node = parents.front(); // Move to parent
