@@ -20,28 +20,28 @@ struct MyEdge {
     double dt;
 };
 
-class MyKinoRRT : public amp::KinodynamicRRT {
-    public:
-        MyKinoRRT(int max_iterations_, int control_sample_size_);
-        virtual amp::KinoPath plan(const amp::KinodynamicProblem2D& problem, amp::DynamicAgent& agent) override;
+// class MyKinoRRT : public amp::KinodynamicRRT {
+//     public:
+//         MyKinoRRT(int max_iterations_, int control_sample_size_);
+//         virtual amp::KinoPath plan(const amp::KinodynamicProblem2D& problem, amp::DynamicAgent& agent) override;
 
-    private:
-        std::shared_ptr<amp::Graph<MyEdge>> graphPtr = std::make_shared<amp::Graph<MyEdge>>();
-        std::map<amp::Node, Eigen::VectorXd> nodes;
-        const int max_iterations;
-        const int control_sample_size;
-        Eigen::VectorXd extendRRT(const amp::KinodynamicProblem2D& problem, Point2DCollisionChecker& checker, amp::DynamicAgent& agent, Eigen::VectorXd& rand_x);
-        double distance(const amp::AgentType& agent_type, const Eigen::VectorXd& state1, const Eigen::VectorXd& state2);
-        amp::KinoPath get_pre_plan_path();
+//     private:
+//         std::shared_ptr<amp::Graph<MyEdge>> graphPtr = std::make_shared<amp::Graph<MyEdge>>();
+//         std::map<amp::Node, Eigen::VectorXd> nodes;
+//         const int max_iterations;
+//         const int control_sample_size;
+//         Eigen::VectorXd extendRRT(const amp::KinodynamicProblem2D& problem, Point2DCollisionChecker& checker, amp::DynamicAgent& agent, Eigen::VectorXd& rand_x);
+//         double distance(const amp::AgentType& agent_type, const Eigen::VectorXd& state1, const Eigen::VectorXd& state2);
+//         amp::KinoPath get_pre_plan_path();
 
-        Eigen::Vector2d arm;
-        Eigen::Vector2d to_center;
-        Eigen::Rotation2D<double> rot1;
-        Eigen::Rotation2D<double> rot2;
-        Eigen::Rotation2D<double> rot3;
-        Eigen::Rotation2D<double> rot4;
-        // amp::KinoPath parking_path;
-};  
+//         Eigen::Vector2d arm;
+//         Eigen::Vector2d to_center;
+//         Eigen::Rotation2D<double> rot1;
+//         Eigen::Rotation2D<double> rot2;
+//         Eigen::Rotation2D<double> rot3;
+//         Eigen::Rotation2D<double> rot4;
+//         // amp::KinoPath parking_path;
+// };  
 
 class MyDynamicAgent : public amp::DynamicAgent {
     public:
