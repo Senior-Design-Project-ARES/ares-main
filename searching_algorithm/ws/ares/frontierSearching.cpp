@@ -277,7 +277,8 @@ void FrontExpl::find_centroids(){
             }
             // DEBUG(centroid_index);
             centroids0.push_back(frountier_pair.first.at(centroid_index).getIndex());
-            points_in_regions.push_back(cells_per_group);
+            // points_in_regions.push_back(cells_per_group);
+            points_in_regions.push_back(frountier_pair.first.size()/number_of_groups);
         }
 
         // int node_index = frountier_pair.first[end_node_index].getFrontierNeighbors().first;

@@ -13,6 +13,8 @@ class SearchAndPlan{
         amp::MultiAgentPath2D run();
 
         Eigen::Vector2d nextPoint(std::vector<std::pair<Eigen::Vector2d, int>>& point_of_interest, Eigen::Vector2d location);
+        Eigen::Vector2d nextPoint_closest(std::vector<std::pair<Eigen::Vector2d, int>>& point_of_interest, Eigen::Vector2d location);
+        Eigen::Vector2d nextPoint_largestFrontier(std::vector<std::pair<Eigen::Vector2d, int>>& point_of_interest, Eigen::Vector2d location);
 
         const amp::GridCSpace2D_T<int8_t>& getMapptr(){
             return C_space.getMapptr();
