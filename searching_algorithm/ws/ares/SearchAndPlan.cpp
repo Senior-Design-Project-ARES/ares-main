@@ -38,6 +38,8 @@ amp::MultiAgentPath2D SearchAndPlan::runSingle(int rover_id){
 
     // amp::Visualizer::makeFigure(problem, rovers_paths);
     updateMultiMap(rover_id);
+    std::pair<std::size_t, std::size_t> cell = multi_maps[rover_id]->getCellFromPoint(current_location(0), current_location(1));
+    multi_maps[rover_id]->operator()(cell.first, cell.second) = 0;
 
     LOG("Searching frontier for rover " << rover_id << "....");
     std::vector<std::pair<Eigen::Vector2d, int>> points = front_expl.run();
@@ -136,6 +138,33 @@ Eigen::Vector2d SearchAndPlan::nextPoint(std::vector<std::pair<Eigen::Vector2d, 
     return return_point;
 }
 
+Eigen::Vector2d SearchAndPlan::nextPoint_closest(std::vector<std::pair<Eigen::Vector2d, int>>& point_of_interest, Eigen::Vector2d location){
+    double distance = (location - point_of_interest[0].first).norm();
+    int nextPoint = 0;
+    for(int i = 1; i < point_of_interest.size(); i++){
+        double temp_distance = (location - point_of_interest[i].first).norm();
+        if(temp_distance < distance){
+            nextPoint = i;
+            distance = temp_distance;
+        }
+    }
+    Eigen::Vector2d return_point = point_of_interest[nextPoint].first;
+    point_of_interest.erase(point_of_interest.begin() + nextPoint);
+    return return_point;
+}
+
+Eigen::Vector2d SearchAndPlan::nextPoint_largestFrontier(std::vector<std::pair<Eigen::Vector2d, int>>& point_of_interest, Eigen::Vector2d location){
+    int nextPoint = 0;
+    for(int i = 1; i < point_of_interest.size(); i++){
+        if(point_of_interest[i].second > point_of_interest[nextPoint].second){
+            nextPoint = i;
+        }
+    }
+    Eigen::Vector2d return_point = point_of_interest[nextPoint].first;
+    point_of_interest.erase(point_of_interest.begin() + nextPoint);
+    return return_point;
+}
+
 int SearchAndPlan::state(Eigen::Vector2d location){
     const amp::GridCSpace2D_T<int8_t>& map = getDiskMapptr();
     auto[i, j] = map.getCellFromPoint(location(0), location(1));
@@ -169,6 +198,7 @@ amp::MultiAgentPath2D SearchAndPlan::run(){
                     continue;
                 }
                 if((active_paths.agent_paths[rover_id].waypoints[current_waypoint_indexs[rover_id]] - problem.agent_properties[rover_id].q_goal).norm() < 0.1){
+                    frontier_paths.agent_paths[rover_id].waypoints.push_back(problem.agent_properties[rover_id].q_goal);
                     target_reached = true;
                 }
             }
@@ -217,6 +247,7 @@ amp::MultiAgentPath2D SearchAndPlan::run(){
             current_waypoint_indexs[rover_id] = 0;
 
             // amp::Visualizer::makeFigure(problem, active_paths);
+            // amp::Visualizer::makeFigure(getMapptr());
             // single_rover_path.agent_paths[1];
             break;
         }
