@@ -41,7 +41,7 @@ int main(int argc, char** argv){
     if(true){
         multi_problem.x_max = problem.x_max;
         multi_problem.y_max = problem.y_max;
-        multi_problem.obstacles = problem.obstacles;
+        // multi_problem.obstacles = problem.obstacles;
 
         agent.radius = 0.15;
         agent.q_init = problem.q_init;

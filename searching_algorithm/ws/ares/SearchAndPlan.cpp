@@ -34,6 +34,7 @@ amp::MultiAgentPath2D SearchAndPlan::runSingle(int rover_id){
     // frontier_path.waypoints.push_back(current_location);
 
     MyGenericRRT my_rrt(0.05, 7500, 0.3);
+    SST my_sst(0.2, 0.1);
 
     // amp::Visualizer::makeFigure(problem, rovers_paths);
     updateMultiMap(rover_id);
@@ -68,7 +69,8 @@ amp::MultiAgentPath2D SearchAndPlan::runSingle(int rover_id){
     raw_path.valid = false;
     while(points.size() != 0){
         LOG("Planning path....");
-        raw_path = my_rrt.planND(eigen2dToEigenXd(current_location), eigen2dToEigenXd(next_point), *multi_collision_checker[rover_id]);
+        // raw_path = my_rrt.planND(eigen2dToEigenXd(current_location), eigen2dToEigenXd(next_point), *multi_collision_checker[rover_id]);
+        raw_path = my_sst.planND(eigen2dToEigenXd(current_location), eigen2dToEigenXd(next_point), C_space.getDiskMapptr());
         if(raw_path.valid){
             break;
         }
@@ -166,7 +168,7 @@ amp::MultiAgentPath2D SearchAndPlan::run(){
                 if(active_paths.agent_paths[rover_id].waypoints.size() == 0){
                     continue;
                 }
-                if((active_paths.agent_paths[rover_id].waypoints[current_waypoint_indexs[rover_id]] - problem.agent_properties[rover_id].q_goal).norm() < 1e-3){
+                if((active_paths.agent_paths[rover_id].waypoints[current_waypoint_indexs[rover_id]] - problem.agent_properties[rover_id].q_goal).norm() < 0.1){
                     target_reached = true;
                 }
             }
@@ -216,11 +218,14 @@ amp::MultiAgentPath2D SearchAndPlan::run(){
 
             // amp::Visualizer::makeFigure(problem, active_paths);
             // single_rover_path.agent_paths[1];
+            break;
         }
         amp::MultiAgentPath2D current_location(num_rover);
         for(int rover_id = 0; rover_id < num_rover; rover_id++){
             current_location.agent_paths[rover_id].waypoints.push_back(rovers_paths.agent_paths[rover_id].waypoints.back());
+            break;
         }
+        break;
         // amp::Visualizer::makeFigure(C_space.getMapptr(), current_location);
         
         // amp::Visualizer::makeFigure(C_space.getMapptr());
