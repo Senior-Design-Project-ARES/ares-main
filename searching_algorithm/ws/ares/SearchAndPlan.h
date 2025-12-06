@@ -11,6 +11,7 @@ class SearchAndPlan{
 
         amp::MultiAgentPath2D runSingle(int rover_id);
         amp::MultiAgentPath2D run();
+        std::pair<amp::MultiAgentPath2D, std::vector<double>> runWithTime();
 
         Eigen::Vector2d nextPoint(std::vector<std::pair<Eigen::Vector2d, int>>& point_of_interest, Eigen::Vector2d location);
         Eigen::Vector2d nextPoint_closest(std::vector<std::pair<Eigen::Vector2d, int>>& point_of_interest, Eigen::Vector2d location);
