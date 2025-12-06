@@ -35,6 +35,8 @@ amp::MultiAgentPath2D SearchAndPlan::runSingle(int rover_id){
     // frontier_path.waypoints.push_back(current_location);
 
     MyGenericRRT my_rrt(0.05, 7500, 0.3);
+    SST my_sst(0.2, 0.1);
+    MyKinoRRT my_kinorrt(10000, 10);
 
     // amp::Visualizer::makeFigure(problem, rovers_paths);
     updateMultiMap(rover_id);
@@ -76,6 +78,27 @@ amp::MultiAgentPath2D SearchAndPlan::runSingle(int rover_id){
     while(points.size() != 0){
         LOG("Planning path....");
         raw_path = my_rrt.planND(eigen2dToEigenXd(current_location), eigen2dToEigenXd(next_point), *multi_collision_checker[rover_id]);
+        // raw_path = my_sst.planND(eigen2dToEigenXd(current_location), eigen2dToEigenXd(next_point), C_space.getDiskMapptr());
+
+        // MyFirstOrderUnicycle car_agent = MyFirstOrderUnicycle();
+        // amp::KinodynamicProblem2D kino_problem;
+        // kino_problem.obstacles = problem.obstacles;
+        // kino_problem.agent_type = amp::AgentType::FirstOrderUnicycle;
+        // kino_problem.q_init = eigen2dToEigenXd(current_location);
+        // kino_problem.q_goal.resize(2);
+        // kino_problem.q_goal[0] = std::make_pair(next_point(0)-0.1, next_point(0)+0.1);
+        // kino_problem.q_goal[1] = std::make_pair(next_point(1)-0.1, next_point(1)+0.1);
+        // kino_problem.q_bounds.resize(2);
+        // kino_problem.q_bounds[0] = std::make_pair(problem.x_min, problem.x_max);
+        // kino_problem.q_bounds[1] = std::make_pair(problem.y_min, problem.y_max);
+        // kino_problem.u_bounds.resize(2);
+        // kino_problem.u_bounds[0] = std::make_pair(-1.0, 1.0); // linear velocity
+        // kino_problem.u_bounds[1] = std::make_pair(-M_PI/2, M_PI/2); // angular velocity
+        // kino_problem.dt_bounds = std::make_pair(0.0, 0.5);
+        // kino_problem.agent_dim.length = 0.5;
+        // kino_problem.agent_dim.width = 0.3;
+        // raw_path = my_kinorrt.plan(kino_problem, car_agent);
+        // printf("Raw path valid: %d\n", raw_path.valid);
         // if (target_found && raw_path.valid){
         //     amp::Visualizer::makeFigure(*multi_maps[rover_id]);
         //     amp::Visualizer::makeFigure(problem, rovers_paths);
@@ -211,7 +234,7 @@ amp::MultiAgentPath2D SearchAndPlan::run(){
                 if(active_paths.agent_paths[rover_id].waypoints.size() == 0){
                     continue;
                 }
-                if((active_paths.agent_paths[rover_id].waypoints[current_waypoint_indexs[rover_id]] - problem.agent_properties[rover_id].q_goal).norm() < 1e-3){
+                if((active_paths.agent_paths[rover_id].waypoints[current_waypoint_indexs[rover_id]] - problem.agent_properties[rover_id].q_goal).norm() < 0.1){
                     frontier_paths.agent_paths[rover_id].waypoints.push_back(problem.agent_properties[rover_id].q_goal);
                     target_reached = true;
                 }
@@ -263,11 +286,14 @@ amp::MultiAgentPath2D SearchAndPlan::run(){
             // amp::Visualizer::makeFigure(problem, active_paths);
             // amp::Visualizer::makeFigure(getMapptr());
             // single_rover_path.agent_paths[1];
+            // break;
         }
         amp::MultiAgentPath2D current_location(num_rover);
         for(int rover_id = 0; rover_id < num_rover; rover_id++){
             current_location.agent_paths[rover_id].waypoints.push_back(rovers_paths.agent_paths[rover_id].waypoints.back());
+            // break;
         }
+        // break;
         // amp::Visualizer::makeFigure(C_space.getMapptr(), current_location);
         
         // amp::Visualizer::makeFigure(C_space.getMapptr());

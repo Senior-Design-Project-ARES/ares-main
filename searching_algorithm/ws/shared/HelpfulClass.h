@@ -1,3 +1,4 @@
+#pragma once
 #include "AMPCore.h"
 #include <cstdint>
 // #include <cmath>

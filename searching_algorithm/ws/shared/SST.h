@@ -4,6 +4,8 @@
 #include "HelpfulClass.h"
 #include <time.h>
 #include <cmath>
+#include "MyKinoRRT.h"
+#include "tools/Usefull.h"
 
 struct StateAndControl {
     Eigen::VectorXd state;
@@ -19,16 +21,17 @@ struct Neighborhood {
 
 class SST {
     public:
-        SST(double delta_bn_, double delta_s_);
-        amp::Path planND(Eigen::VectorXd init_, Eigen::VectorXd goal_);
+        SST(double delta_bn_, double delta_s_) : delta_bn(delta_bn_), delta_s(delta_s_) {};
+        amp::Path planND(Eigen::VectorXd init_, Eigen::VectorXd goal_, amp::GridCSpace2D_T<int8_t> envMap);
 
     private:
         std::shared_ptr<amp::Graph<double>> graphPtr = std::make_shared<amp::Graph<double>>();
         std::map<amp::Node, StateAndControl> nodes;
         std::vector<Neighborhood> neighborhoods;
-        amp::Node bestFirstSelection(const Eigen::Vector2d& point, const std::map<amp::Node, StateAndControl>& nodes);
+        amp::Node bestFirstSelection(const Eigen::VectorXd& point, const std::map<amp::Node, StateAndControl>& nodes);
         StateAndControl extendSST(const amp::Node node);
         double delta_bn;
         double delta_s;
-        int iteration = 10000;
+        int iteration = 50000;
+        DifferentialDrive agent;
 };
