@@ -3,6 +3,7 @@
 #include "AMPCore.h"
 #include "MySamplingBasedPlanners.h"
 #include "SST.h"
+#include "MyKinoRRT.h"
 
 #define CELL_PER_METER 20        // in cell per meter
 

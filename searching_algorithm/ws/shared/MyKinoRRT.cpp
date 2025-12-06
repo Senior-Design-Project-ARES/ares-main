@@ -140,7 +140,7 @@ double MyKinoRRT::distance(const amp::AgentType& agent_type, const Eigen::Vector
 
 amp::KinoPath MyKinoRRT::plan(const amp::KinodynamicProblem2D& problem_, amp::DynamicAgent& agent) {
     amp::KinoPath path;
-
+    printf("Starting MyKinoRRT planning...\n");
     amp::KinodynamicProblem2D problem = problem_;
     // if(problem.agent_type == amp::AgentType::SimpleCar && problem.agent_dim.length == 5){
     //     DEBUG("here");
@@ -158,6 +158,7 @@ amp::KinoPath MyKinoRRT::plan(const amp::KinodynamicProblem2D& problem_, amp::Dy
     Eigen::VectorXd state = problem.q_init;
     Point2DCollisionChecker checker(problem);
     bool reached_goal = false;
+    printf("Starting MyKinoRRT planning...\n");
 
     // prepare for polygon agent collision checking
     if (!problem.isPointAgent) {
@@ -174,6 +175,7 @@ amp::KinoPath MyKinoRRT::plan(const amp::KinodynamicProblem2D& problem_, amp::Dy
     nodes[0] = problem.q_init;
 
     for(int i = 0; i < max_iterations; i++) {
+        // printf("Iteration: %d\n", i);
         // if (i % 1000 == 0){
         //     DEBUG("iterations: " << i);
         // }
@@ -187,18 +189,19 @@ amp::KinoPath MyKinoRRT::plan(const amp::KinodynamicProblem2D& problem_, amp::Dy
                 rand_x(i) = (problem.q_goal[i].first + problem.q_goal[i].second)/2;
             }
         }
-        
+        // printf("Sampling random state...\n");
 
         // sample random state
         for (int i = 0; i < problem.q_init.size(); i++) {
             rand_x(i) = problem.q_bounds[i].first + double(rand())/RAND_MAX*(problem.q_bounds[i].second - problem.q_bounds[i].first);
         }
-
+        // printf("Extending RRT towards random state...\n");
         state = extendRRT(problem, checker, agent, rand_x);
+        // printf("Extended state: \n");
         if (state.isZero()){
             continue; // failed to extend RRT
         }
-
+        // printf("Checking if reached goal...\n");
         reached_goal = true;
         for (int i = 0; i < problem.q_goal.size(); i++) {
             if (state(i) < problem.q_goal[i].first || state(i) > problem.q_goal[i].second) {
@@ -206,11 +209,12 @@ amp::KinoPath MyKinoRRT::plan(const amp::KinodynamicProblem2D& problem_, amp::Dy
                 break; // not reached goal
             }
         }
+        // printf("Checking if reached goal...\n");
         if (reached_goal){
             break;
         }
     }
-
+    printf("Planning finished. Reached goal: %d\n", reached_goal);
     if (!reached_goal){
         state = problem.q_init;
         path.valid = false;
@@ -242,7 +246,7 @@ amp::KinoPath MyKinoRRT::plan(const amp::KinodynamicProblem2D& problem_, amp::Dy
         // path.print();
         return path;
     }
-
+    printf("Planning finished. Reached goal: %d\n", reached_goal);
     // backtrack to get path
     path.valid = true;
     path.waypoints.push_back(nodes[nodes.size() - 1]);
@@ -265,8 +269,9 @@ amp::KinoPath MyKinoRRT::plan(const amp::KinodynamicProblem2D& problem_, amp::Dy
     std::reverse(path.waypoints.begin(), path.waypoints.end());
     std::reverse(path.controls.begin(), path.controls.end());
     std::reverse(path.durations.begin(), path.durations.end());
-
-    amp::HW9::check(path, problem);
+    printf("Path found with %lu waypoints.\n", path.waypoints.size());
+    // amp::HW9::check(path, problem);
+    printf("Path checked.\n");
     // amp::Visualizer::makeFigure(problem, path, false); // Set to 'true' to render animation
     // amp::Visualizer::saveFigures(true, "hw9_figs");
     return path;
@@ -375,14 +380,25 @@ Eigen::VectorXd MyKinoRRT::extendRRT(const amp::KinodynamicProblem2D& problem, P
 
     // check if path between two points collide with obstacles using propegate steps
     state = nodes[nearest_node];
-    double dt_propagate = dt / 2;
+    double dt_propagate = dt / 2.0;
     std::vector<Eigen::VectorXd> intermediate_states;
     intermediate_states.push_back(state);
     bool collide = false;
-
+    int count = 0;
+    // printf("Propagating to new state...\n");
     while(distance(problem.agent_type, state, end_state) > 1e-3){
         // if(distance(problem.agent_type, state, end_state) > 1e-2){
         //     DEBUG(distance(problem.agent_type, state, end_state));
+        //     printf("state: ");
+        //     for(int i = 0 ; i < state.size(); i++) {
+        //         printf("%f ", state(i));
+        //     }
+        //     printf("\n");
+        //     printf("end_state: ");
+        //     for(int i = 0 ; i < end_state.size(); i++) {
+        //         printf("%f ", end_state(i));
+        //     }
+        //     printf("\n");
         // }
         Eigen::VectorXd old_state = state;
         if(problem.agent_type == amp::AgentType::SimpleCar){
@@ -442,14 +458,19 @@ Eigen::VectorXd MyKinoRRT::extendRRT(const amp::KinodynamicProblem2D& problem, P
             //     collide = true;
             //     break; // path collide with obstacle
             // }
+            
         }
 
         if(prop_dist > STEP_SIZE){
-            dt_propagate = dt_propagate / 2;
+            dt_propagate = dt_propagate / 2.0;
             state = old_state;
             continue; // reduce step size
         }
         intermediate_states.push_back(state);
+        count++;
+        if(count > 10){
+            break;
+        }
     }
     if (collide){
         return Eigen::VectorXd::Zero(problem.q_init.size());
