@@ -1,1 +1,0 @@
-Invoking command in '/home/blud/ares-main/build/my_package': CMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH}:/opt/ros/humble /usr/bin/cmake /home/blud/ares-main/my_package -DCMAKE_INSTALL_PREFIX=/home/blud/ares-main/install/my_package
