@@ -1,31 +1,37 @@
-%% Vishnu Duriseti
-% Foundational setup for 4-wheel fuzzy PID inner-loop controller
+% ==============================================================
+%   Vishnu Duriseti
+%   PA-13 3000 lb Linear Actuator: Speed vs. Load
+%   Polyfit interpolation and visualization
+% ==============================================================
 clc; close all; clear;
 
-%% Parameters
-Ts = 0.01; % Sample time
-sim_time = 10; % seconds
+% Data (approx. from manufacturer chart)
+load_lbs = [0 500 1000 1500 2000 2500 3000];
+speed_ips = [0.33 0.28 0.24 0.21 0.18 0.16 0.14];   % inches/second
 
-% Wheel speed references (rad/s)
-omega_ref = [10; 10; 10; 10]; % Desired wheel angular velocities
+% Fit polynomial of chosen degree (try 1, 2, or 3)
+deg = 2;
+p = polyfit(load_lbs, speed_ips, deg);
 
-% Initial measured wheel speeds
-omega_meas_init = [0; 0; 0; 0];
+% Generate smooth load range for plotting
+load_dense = linspace(0, 3000, 200);
+speed_fit = polyval(p, load_dense);
 
-%% Fuzzy PID initialization (conceptual)
-% You'll design this fuzzy controller in Simulink using a Fuzzy Logic Controller block.
-% For now, define placeholder Kp, Ki, Kd
-Kp_base = 0.8;
-Ki_base = 0.3;
-Kd_base = 0.05;
+% Plot
+figure; hold on; grid minor;
+plot(load_lbs, speed_ips, 'ko', 'MarkerFaceColor','y', 'DisplayName','Data Points');
+plot(load_dense, speed_fit, 'r-', 'LineWidth',1.5, 'DisplayName',sprintf('Polyfit (deg=%d)', deg));
+xlabel('Load (lbs)');
+ylabel('Speed (in/s)');
+title('PA-13 3000 lb Actuator: Speed vs. Load');
+legend('show','Location','northeast');
+set(gca,'FontSize',12);
 
-assignin('base', 'Ts', Ts);
-assignin('base', 'sim_time', sim_time);
-assignin('base', 'omega_ref', omega_ref);
-assignin('base', 'omega_meas_init', omega_meas_init);
-assignin('base', 'Kp_base', Kp_base);
-assignin('base', 'Ki_base', Ki_base);
-assignin('base', 'Kd_base', Kd_base);
+% Print polynomial coefficients and example prediction
+disp('Polynomial Coefficients (highest power first):');
+disp(p);
 
-%% Run Simulink model
-sim('four_wheel_fuzzy_pid.slx');
+% Example: predict speed at 1200 lbs
+test_load = 1200;
+pred_speed = polyval(p, test_load);
+fprintf('Predicted speed at %.0f lbs = %.3f in/s\n', test_load, pred_speed);

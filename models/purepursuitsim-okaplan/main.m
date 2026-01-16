@@ -1,6 +1,6 @@
 %plots data from rovertest.slx
 
-clc; close all;
+clc;
 
 %translate for IC
 h = height(out.position.Data);
