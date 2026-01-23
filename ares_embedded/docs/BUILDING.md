@@ -54,20 +54,70 @@ Tests are host-only and validate control behavior and correctness.
 
 ---
 
-## Firmware Build (Embedded Target)
-Firmware is cross-compiled using a CMake toolchain file.
+## Firmware Build (STM32H723ZG)
+
+Firmware is cross-compiled for the STM32H723ZG microcontroller using a CMake toolchain file.
+
+### Prerequisites
+
+Install the ARM GCC toolchain:
+
+**On macOS:**
+```sh
+# IMPORTANT: Install the complete toolchain cask (includes newlib)
+# Do NOT install individual packages like arm-none-eabi-gcc
+brew install --cask gcc-arm-embedded
+```
+
+**Note:** If you already have `arm-none-eabi-gcc` installed separately, uninstall it first:
+```sh
+brew uninstall arm-none-eabi-gcc arm-none-eabi-binutils arm-none-eabi-gdb
+brew install --cask gcc-arm-embedded
+```
+
+**On Linux:**
+```sh
+sudo apt-get install gcc-arm-none-eabi
+```
+
+**On Windows:**
+Download from [ARM Developer](https://developer.arm.com/tools-and-software/open-source-software/developer-tools/gnu-toolchain/gnu-rm)
 
 ### Configure
+
 ```sh
 cmake -S . -B build-firmware \
   -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/arm-none-eabi.cmake
 ```
 
 ### Build
+
 ```sh
 cmake --build build-firmware
 ```
-The output is an embedded firmware binary (e.g. `firmware.elf`) suitable for flashing.
+
+The output is `build-firmware/firmware/firmware.elf` - a firmware binary suitable for flashing to the NUCLEO-H723ZG board.
+
+### Flash to Board
+
+Using OpenOCD (recommended):
+```sh
+openocd -f interface/stlink.cfg -f target/stm32h7x.cfg \
+  -c "program build-firmware/firmware/firmware.elf verify reset exit"
+```
+
+Or using STM32CubeProgrammer or your preferred flashing tool.
+
+### Firmware Structure
+
+The firmware includes:
+- **CMSIS:** Core peripheral access layer
+- **HAL:** Hardware abstraction layer (GPIO, UART, TIM, ETH only)
+- **Startup:** Reset and vector table initialization
+- **System:** Clock configuration and system initialization
+- **main.cpp:** Arduino-like `setup()` and `loop()` entry point
+
+All HAL modules except GPIO, UART, TIM/PWM, and Ethernet are disabled for a minimal footprint.
 
 ---
 
