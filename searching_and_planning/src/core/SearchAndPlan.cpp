@@ -2,14 +2,14 @@
 #include "UsefulMacros.h"
 #include "HelpfulFunctions.h"
 
-ares::SearchAndPlanCore::SearchAndPlanCore(const int map_width, const int map_height, const double resolution, const Eigen::Vector2d& origin, const std::vector<int8_t>& FE_map, const Target& target)
+ares::SearchAndPlanCore::SearchAndPlanCore(const int& map_width, const int& map_height, const std::pair<double, double>& x, const std::pair<double, double>& y, const std::vector<int8_t>& FE_map, const Target& target)
     : map_width(map_width),
       map_height(map_height),
-      resolution(resolution),
-      origin(origin),
+      resolution((x.second - x.first) / map_width),
+      origin(Eigen::Vector2d(x.first, y.first)),
       FE_map(FE_map),
       front_expl(map_width, map_height, resolution, origin, FE_map),
-      grid_map(map_width, map_height, origin(0), origin(0) + map_width * resolution, origin(1),  origin(1) + map_height * resolution, -1),
+      grid_map(map_width, map_height, x.first, x.second, y.first, y.second, -1),
       target(target)
 {
     // Initialize the grid map with the occupancy data
@@ -25,10 +25,50 @@ void ares::SearchAndPlanCore::updateGrid(){
     }
 }
 
-void ares::SearchAndPlanCore::addPathObstacles2Grid(const std::vector<std::vector<Eigen::Vector2d>>& path){
+void ares::SearchAndPlanCore::addPathObstacles2Grid(const std::vector<Path2D>& paths){
+    int num_other_rover = paths.size();
+
+    // get all rover current path between frontier and add one additional point
+    std::vector<std::vector<Eigen::Vector2d>> rovers_current_path(num_other_rover);
+    for(int other_id = 0; other_id < num_other_rover; other_id++){
+
+        if (paths[other_id].waypoints.size() == 0) {
+            rovers_current_path[other_id].push_back(paths[other_id].waypoints.back());
+            continue;
+        }
+
+        rovers_current_path[other_id].push_back(paths[other_id].waypoints[0]);
+        for(int i = 1; i < paths[other_id].waypoints.size(); i++){
+            rovers_current_path[other_id].push_back((paths[other_id].waypoints[i] + paths[other_id].waypoints[i-1]) / 2.0);
+            rovers_current_path[other_id].push_back(paths[other_id].waypoints[i]);
+        }
+    }
+
+
+    // add other rover's position as obstacles
+    for(int other_id = 0; other_id < num_other_rover; other_id++){
+        double total_radius = 2*ROVER_RADIUS;
+        for(const auto& point : rovers_current_path[other_id]){
+            int radius_in_cell = ceil(total_radius*RADIUS_INFLATION /((grid_map.x0Bounds().second - grid_map.x0Bounds().first) / grid_map.size().first));
+            for(int dx = -radius_in_cell; dx <= radius_in_cell; dx++){
+                for(int dy = -radius_in_cell; dy <= radius_in_cell; dy++){
+                    int cell_x, cell_y;
+                    std::tie(cell_x, cell_y) = grid_map.getCellFromPoint(point(0), point(1));
+                    int new_x = cell_x + dx;
+                    int new_y = cell_y + dy;
+                    if(new_x < 0 || new_x >= grid_map.size().first || new_y < 0 || new_y >= grid_map.size().second) continue;
+                    double dist = sqrt(dx*dx + dy*dy) * ((grid_map.x0Bounds().second - grid_map.x0Bounds().first) / grid_map.size().first);
+                    if(dist <= total_radius*RADIUS_INFLATION && grid_map(new_x, new_y) != -1){
+                        grid_map(new_x, new_y) = 1;
+                    }
+                }
+            }
+        }
+
+    }
 }
 
-ares::Path2D ares::SearchAndPlanCore::runSingle(const Eigen::Vector2d current_location, const std::vector<std::vector<Eigen::Vector2d>>& other_rover_paths){
+ares::Path2D ares::SearchAndPlanCore::runSingle(const Eigen::Vector2d current_location, const std::vector<Path2D>& other_rover_paths){
     // initialize path
     ares::Path2D path;
     
@@ -142,7 +182,7 @@ ares::Path2D ares::SearchAndPlanCore::runSingle(const Eigen::Vector2d current_lo
     return path;
 }
 
-ares::Path2D ares::SearchAndPlanCore::runWithGoal(const Eigen::Vector2d current_location, const Eigen::Vector2d goal_location, const std::vector<std::vector<Eigen::Vector2d>>& other_rover_paths){
+ares::Path2D ares::SearchAndPlanCore::runWithGoal(const Eigen::Vector2d current_location, const Eigen::Vector2d goal_location, const std::vector<Path2D>& other_rover_paths){
     // update gird map and add other rover paths as obstacles
     updateGrid();
     addPathObstacles2Grid(other_rover_paths);
