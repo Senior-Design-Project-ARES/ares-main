@@ -22,6 +22,9 @@ extern "C" {
 #define LED_RED_PORT       GPIOB
 #define LED_RED_PIN        GPIO_PIN_14
 
+// Global timer handle for red LED PWM
+TIM_HandleTypeDef htim12_red_led = {};
+
 
 /**
  * @brief System clock configuration for NUCLEO-H723ZG
@@ -32,81 +35,183 @@ extern "C" {
  * 
  * THIS IS NOT USED, BUT IS HERE FOR REFERENCE
  */
-void SystemClock_Config(void)
-{
-    RCC_ClkInitTypeDef RCC_ClkInitStruct = {}; // used to be {0} -- redefined to see if this fixes errors
-    RCC_OscInitTypeDef RCC_OscInitStruct = {}; // used to be {0} -- redefined to see if this fixes errors
-    HAL_StatusTypeDef ret = HAL_OK;
+// void SystemClock_Config(void)
+// {
+//     RCC_ClkInitTypeDef RCC_ClkInitStruct = {}; // used to be {0} -- redefined to see if this fixes errors
+//     RCC_OscInitTypeDef RCC_OscInitStruct = {}; // used to be {0} -- redefined to see if this fixes errors
+//     HAL_StatusTypeDef ret = HAL_OK;
 
-    // Configure voltage scaling
-    __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
-    while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
+//     // Configure voltage scaling
+//     __HAL_PWR_VOLTAGESCALING_CONFIG(PWR_REGULATOR_VOLTAGE_SCALE0);
+//     while(!__HAL_PWR_GET_FLAG(PWR_FLAG_VOSRDY)) {}
 
-    // Configure HSE and PLL
-    RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
-    RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
-    RCC_OscInitStruct.HSIState = RCC_HSI_OFF;
-    RCC_OscInitStruct.CSIState = RCC_CSI_OFF;
-    RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
-    RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
+//     // Configure HSE and PLL
+//     RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSE;
+//     RCC_OscInitStruct.HSEState = RCC_HSE_BYPASS;
+//     RCC_OscInitStruct.HSIState = RCC_HSI_OFF;
+//     RCC_OscInitStruct.CSIState = RCC_CSI_OFF;
+//     RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+//     RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSE;
     
-    RCC_OscInitStruct.PLL.PLLM = 4;
-    RCC_OscInitStruct.PLL.PLLN = 260;
-    RCC_OscInitStruct.PLL.PLLFRACN = 0;
-    RCC_OscInitStruct.PLL.PLLP = 1;
-    RCC_OscInitStruct.PLL.PLLR = 2;
-    RCC_OscInitStruct.PLL.PLLQ = 4;
-    RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
-    RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_1;
+//     RCC_OscInitStruct.PLL.PLLM = 4;
+//     RCC_OscInitStruct.PLL.PLLN = 260;
+//     RCC_OscInitStruct.PLL.PLLFRACN = 0;
+//     RCC_OscInitStruct.PLL.PLLP = 1;
+//     RCC_OscInitStruct.PLL.PLLR = 2;
+//     RCC_OscInitStruct.PLL.PLLQ = 4;
+//     RCC_OscInitStruct.PLL.PLLVCOSEL = RCC_PLL1VCOWIDE;
+//     RCC_OscInitStruct.PLL.PLLRGE = RCC_PLL1VCIRANGE_1;
     
-    ret = HAL_RCC_OscConfig(&RCC_OscInitStruct);
-    if(ret != HAL_OK) {
-        while(1) {} // Error handler
-    }
+//     ret = HAL_RCC_OscConfig(&RCC_OscInitStruct);
+//     if(ret != HAL_OK) {
+//         while(1) {} // Error handler
+//     }
 
-    // Configure system clock and bus dividers
-    RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | 
-                                   RCC_CLOCKTYPE_D1PCLK1 | RCC_CLOCKTYPE_PCLK1 | 
-                                   RCC_CLOCKTYPE_PCLK2 | RCC_CLOCKTYPE_D3PCLK1);
+//     // Configure system clock and bus dividers
+//     RCC_ClkInitStruct.ClockType = (RCC_CLOCKTYPE_SYSCLK | RCC_CLOCKTYPE_HCLK | 
+//                                    RCC_CLOCKTYPE_D1PCLK1 | RCC_CLOCKTYPE_PCLK1 | 
+//                                    RCC_CLOCKTYPE_PCLK2 | RCC_CLOCKTYPE_D3PCLK1);
     
-    RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
-    RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
-    RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;
-    RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV2;
-    RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV2;
-    RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
-    RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
+//     RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+//     RCC_ClkInitStruct.SYSCLKDivider = RCC_SYSCLK_DIV1;
+//     RCC_ClkInitStruct.AHBCLKDivider = RCC_HCLK_DIV2;
+//     RCC_ClkInitStruct.APB3CLKDivider = RCC_APB3_DIV2;
+//     RCC_ClkInitStruct.APB1CLKDivider = RCC_APB1_DIV2;
+//     RCC_ClkInitStruct.APB2CLKDivider = RCC_APB2_DIV2;
+//     RCC_ClkInitStruct.APB4CLKDivider = RCC_APB4_DIV2;
     
-    ret = HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3);
-    if(ret != HAL_OK) {
-        while(1) {} // Error handler
-    }
-}
+//     ret = HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_3);
+//     if(ret != HAL_OK) {
+//         while(1) {} // Error handler
+//     }
+// }
 
 
 /**
  * @brief Configure GPIO for LEDs
  */
-void MX_GPIO_Init(void)
+void yellow_led_init(void)
 {
-    GPIO_InitTypeDef GPIO_InitStruct = {};
+    // GPIO Initialization Structure
+    GPIO_InitTypeDef LD2 = {}; // LED pin struct for LD2 (Yellow LED)
     
     // Enable GPIO clocks
     __HAL_RCC_GPIOE_CLK_ENABLE();
-    __HAL_RCC_GPIOB_CLK_ENABLE();
-    
-    // Configure Yellow LED (PE1)
-    GPIO_InitStruct.Pin = LED_YELLOW_PIN;
-    GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
-    GPIO_InitStruct.Pull = GPIO_NOPULL;
-    GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
-    HAL_GPIO_Init(LED_YELLOW_PORT, &GPIO_InitStruct);
+
+    // Configure Yellow LED (PE1) -- CANNOT do PWM on this pin (no physical TIM peripheral)
+    LD2.Pin = LED_YELLOW_PIN;
+    LD2.Mode = GPIO_MODE_OUTPUT_PP;
+    LD2.Pull = GPIO_NOPULL;
+    LD2.Speed = GPIO_SPEED_FREQ_LOW;
+    HAL_GPIO_Init(LED_YELLOW_PORT, &LD2);
     HAL_GPIO_WritePin(LED_YELLOW_PORT, LED_YELLOW_PIN, GPIO_PIN_RESET); // LED off
-    
-    // Configure Red LED (PB14)
-    GPIO_InitStruct.Pin = LED_RED_PIN;
-    HAL_GPIO_Init(LED_RED_PORT, &GPIO_InitStruct);
-    HAL_GPIO_WritePin(LED_RED_PORT, LED_RED_PIN, GPIO_PIN_RESET); // LED off
+}
+
+/**
+ * @brief TIM12 PWM setup for LD3 (PB14)
+ *
+ * Hardware idea:
+ *   Timer counts: 0 → Period → repeat
+ *   Output HIGH while counter < compare value
+ *   Output LOW  otherwise
+ *
+ * So:
+ *   Period  = resolution (max brightness)
+ *   Compare = duty cycle (brightness)
+ *
+ * This behaves like Arduino analogWrite(0–255)
+ */
+void red_led_init(void)
+{
+    __HAL_RCC_GPIOB_CLK_ENABLE();   // power to GPIO port B
+    __HAL_RCC_TIM12_CLK_ENABLE();   // power to TIM12 hardware block
+
+    GPIO_InitTypeDef g = {};
+    g.Pin       = GPIO_PIN_14;
+    g.Mode      = GPIO_MODE_AF_PP; // Alternate function mode means - "timer peripheral controls this pin, not the CPU"
+    g.Pull      = GPIO_NOPULL;  
+    g.Speed     = GPIO_SPEED_FREQ_LOW; // Speed only affects edge sharpness, not frequency  
+    g.Alternate = GPIO_AF2_TIM12; // AF2 maps PB14 → TIM12_CH1 (from datasheet table)
+    HAL_GPIO_Init(GPIOB, &g);
+
+
+    // Timer configuration
+    htim12_red_led.Instance = TIM12;   // choose physical timer block TIM12
+
+    /*
+      PRESCALER
+      ----------
+      Divides timer input clock.
+
+      timer_tick = timer_clock / (Prescaler + 1)
+
+      Example:
+        timer_clock = 64 MHz
+        prescaler = 63
+
+        → 64 MHz / 64 = 1 MHz
+
+      So counter increments 1,000,000 times/sec.
+    */
+    htim12_red_led.Init.Prescaler = 64 - 1;
+
+    /*
+      PERIOD (ARR)
+      ------------
+      Maximum counter value before reset.
+
+      Counter counts:
+        0 → Period → 0 → Period → ...
+
+      Also defines PWM resolution.
+
+      Period = 255
+        → 256 brightness levels
+        → identical to Arduino analogWrite 0–255
+    */
+    htim12_red_led.Init.Period = 255;
+
+    /*
+      COUNTER MODE
+      ------------
+      UP:
+        0 → max → reset
+        normal PWM
+
+      DOWN:
+        max → 0 → reset
+
+      CENTER_ALIGNED:
+        0 → max → 0 (symmetric, motor control)
+
+      For LEDs, always use UP.
+    */
+    htim12_red_led.Init.CounterMode = TIM_COUNTERMODE_UP;
+
+    /*
+      Initialize timer hardware registers
+      (writes prescaler/period into silicon)
+    */
+    HAL_TIM_PWM_Init(&htim12_red_led);
+
+
+
+    // PWM channel config
+    TIM_OC_InitTypeDef s = {};
+
+    /*
+      PWM1 mode:
+        output HIGH while counter < compare
+        output LOW otherwise
+      (standard duty-cycle behavior)
+    */
+    s.OCMode = TIM_OCMODE_PWM1;
+    s.Pulse = 0;   // start at 0% brightness
+    s.OCPolarity = TIM_OCPOLARITY_HIGH;
+    HAL_TIM_PWM_ConfigChannel(&htim12_red_led, &s, TIM_CHANNEL_1);
+
+    // Start timer + PWM signal generation
+    HAL_TIM_PWM_Start(&htim12_red_led, TIM_CHANNEL_1);
 }
 
 
@@ -131,7 +236,8 @@ void setup()
     // Add your initialization code here
     // GPIO, UART, TIM, ETH configuration goes here
     
-    MX_GPIO_Init(); // Configure GPIO for LEDs
+    yellow_led_init();
+    red_led_init(); 
 }
 
 /**
@@ -144,20 +250,36 @@ void setup()
  */
 void loop()
 {
-    // Add your main application code here
     // This runs continuously after setup()
 
-    // Turn off Yellow LED, turn on Red LED
-    HAL_GPIO_WritePin(LED_YELLOW_PORT, LED_YELLOW_PIN, GPIO_PIN_RESET); // Yello LED off
-    HAL_GPIO_WritePin(LED_RED_PORT, LED_RED_PIN, GPIO_PIN_SET);         // Red LED on
-    HAL_Delay(1000);  // Wait 1 seconds
+    // Turn off Yellow LED, fade Red LED in and out using PWM
+    HAL_GPIO_WritePin(LED_YELLOW_PORT, LED_YELLOW_PIN, GPIO_PIN_RESET); // Yellow LED off
+    
+    // Fade Red LED from 0 to 255 over 2.5 seconds
+    const uint32_t fade_duration_ms = 2500;  // 2.5 seconds
+    const uint32_t steps = 255;
+    const uint32_t step_delay_ms = fade_duration_ms / steps;
+    
+    for (uint32_t i = 0; i <= steps; i++) {
+        __HAL_TIM_SET_COMPARE(&htim12_red_led, TIM_CHANNEL_1, i);
+        HAL_Delay(step_delay_ms);
+    }
+    
+    // Fade Red LED from 255 to 0 over 2.5 seconds
+    for (uint32_t i = steps; i > 0; i--) {
+        __HAL_TIM_SET_COMPARE(&htim12_red_led, TIM_CHANNEL_1, i - 1);
+        HAL_Delay(step_delay_ms);
+    }
+    
+    // Ensure Red LED is fully off
+    __HAL_TIM_SET_COMPARE(&htim12_red_led, TIM_CHANNEL_1, 0);  
 
     // Turn on Yellow LED, turn off Red LED
     HAL_GPIO_WritePin(LED_YELLOW_PORT, LED_YELLOW_PIN, GPIO_PIN_SET);   // Yello LED on
     HAL_GPIO_WritePin(LED_RED_PORT, LED_RED_PIN, GPIO_PIN_RESET);       // Red LED off
-    HAL_Delay(1000);  // Wait 1 seconds
+    HAL_Delay(5000);  
     
-    // Cycle repeats (total 5 seconds per cycle)
+    // Cycle repeats (total 10 seconds per cycle)
 }
 
 /**
@@ -171,20 +293,6 @@ int main(void)
         loop();
     }
 
-    // HAL_GPIO_WritePin(LED_YELLOW_PORT, LED_YELLOW_PIN, GPIO_PIN_SET);
-    // while(1){}
-
-    // HAL_Init();
-    // MX_GPIO_Init();
-
-    // while (1)
-    // {
-    //     HAL_GPIO_TogglePin(LED_YELLOW_PORT, LED_YELLOW_PIN);
-
-    //     // for(volatile int i=0;i<1000000;i++);
-    //     HAL_Delay(1000);
-    // }
-    
     return 0;
 }
 
