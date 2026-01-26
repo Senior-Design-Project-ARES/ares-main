@@ -191,3 +191,5 @@ class GridCSpace2D : public GridCSpace2D_T<bool> {
 };
 
 }
+
+#include "ConfigurationSpace_impl.h"
