@@ -100,13 +100,22 @@ The output is `build-firmware/firmware/firmware.elf` - a firmware binary suitabl
 
 ### Flash to Board
 
-Using OpenOCD (recommended):
+If using mac:
 ```sh
-openocd -f interface/stlink.cfg -f target/stm32h7x.cfg \
-  -c "program build-firmware/firmware/firmware.elf verify reset exit"
+cmake --build build-firmware --target flash
 ```
 
-Or using STM32CubeProgrammer or your preferred flashing tool.
+This is because of the custom target addition in the firmware `CMakeList.txt`
+
+```sh
+add_custom_target(flash
+    COMMAND arm-none-eabi-objcopy -O binary firmware.elf firmware.bin
+    COMMAND st-flash --connect-under-reset write firmware.bin 0x08000000
+    DEPENDS firmware.elf
+)
+```
+
+Or using STM32CubeProgrammer if on Windows and flash `build-firmware/firmware.elf` using the start address of `0x08000000`.
 
 ### Firmware Structure
 

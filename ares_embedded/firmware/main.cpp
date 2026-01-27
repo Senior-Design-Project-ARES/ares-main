@@ -270,9 +270,7 @@ void loop()
         __HAL_TIM_SET_COMPARE(&htim12_red_led, TIM_CHANNEL_1, i - 1);
         HAL_Delay(step_delay_ms);
     }
-    
-    // Ensure Red LED is fully off
-    __HAL_TIM_SET_COMPARE(&htim12_red_led, TIM_CHANNEL_1, 0);  
+     __HAL_TIM_SET_COMPARE(&htim12_red_led, TIM_CHANNEL_1, 0);   // Ensure Red LED is fully off
 
     // Turn on Yellow LED, turn off Red LED
     HAL_GPIO_WritePin(LED_YELLOW_PORT, LED_YELLOW_PIN, GPIO_PIN_SET);   // Yello LED on
