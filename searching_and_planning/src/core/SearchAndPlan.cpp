@@ -68,7 +68,7 @@ void ares::SearchAndPlanCore::addPathObstacles2Grid(const std::vector<Path2D>& p
     }
 }
 
-ares::Path2D ares::SearchAndPlanCore::runSingle(const Eigen::Vector2d current_location, const std::vector<Path2D>& other_rover_paths){
+ares::Path2D ares::SearchAndPlanCore::runSingle(const Eigen::Vector2d current_location, const std::vector<ares::Path2D>& other_rover_paths){
     // initialize path
     ares::Path2D path;
     

@@ -5,7 +5,7 @@
 #include <time.h>
 #include <cmath>
 #include "Graph.h"
-#include "Path.h"
+#include "MyPath.h"
 #include "HelpfulClass.h"
 #include <Eigen/Core>
 #include <map>

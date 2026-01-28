@@ -1,7 +1,7 @@
 #pragma once
 
 #include "frontierSearching.h"
-#include "Path.h"
+#include "MyPath.h"
 #include "MySamplingBasedPlanners.h"
 #include "Logging.h"
 #include "HelpfulStructs.h"

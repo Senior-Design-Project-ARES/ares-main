@@ -1,6 +1,6 @@
 #pragma once
 #include <cstdint>
-#include <Path.h>
+#include "MyPath.h"
 #include "ConfigurationSpace.h"
 #include "UsefulMacros.h"
 
