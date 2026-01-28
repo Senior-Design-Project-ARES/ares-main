@@ -2,7 +2,7 @@
 #include "cartographer_ros_msgs/srv/trajectory_query.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "nav_msgs/msg/path.hpp"
-#include "SearchAndPlan.h"
+#include "searching_and_planning/core/SearchAndPlan.h"
 
 struct Path2D_for_rover{
     int32_t rover_id;

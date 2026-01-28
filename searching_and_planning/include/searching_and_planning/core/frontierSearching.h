@@ -9,7 +9,8 @@
 #include <map>
 
 #include <Eigen/Dense>
-#include "Logging.h"
+#include "searching_and_planning/tools/Logging.h"
+#include "searching_and_planning/core/UsefulMacros.h"
 
 // Forward declaration so FrontExpl can hold containers of FrontNode
 class FrontNode;

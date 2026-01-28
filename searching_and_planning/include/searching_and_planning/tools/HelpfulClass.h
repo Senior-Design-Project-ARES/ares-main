@@ -1,8 +1,8 @@
 #pragma once
 #include <cstdint>
-#include "MyPath.h"
-#include "ConfigurationSpace.h"
-#include "UsefulMacros.h"
+#include "searching_and_planning/tools/MyPath.h"
+#include "searching_and_planning/tools/ConfigurationSpace.h"
+#include "searching_and_planning/core/UsefulMacros.h"
 
 // #define GAP 0.05
 // #define GAPDECEN 0.1

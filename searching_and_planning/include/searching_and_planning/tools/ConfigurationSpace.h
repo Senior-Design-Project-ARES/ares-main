@@ -2,7 +2,7 @@
 
 #include <vector>
 #include <Eigen/Core>
-#include "Logging.h"
+#include "searching_and_planning/tools/Logging.h"
 
 // #include "tools/Serializer.h"
 
@@ -192,4 +192,4 @@ class GridCSpace2D : public GridCSpace2D_T<bool> {
 
 }
 
-#include "ConfigurationSpace_impl.h"
+#include "searching_and_planning/tools/ConfigurationSpace_impl.h"

@@ -1,6 +1,4 @@
-#include "SearchAndPlan.h"
-#include "UsefulMacros.h"
-#include "HelpfulFunctions.h"
+#include "searching_and_planning/core/SearchAndPlan.h"
 
 ares::SearchAndPlanCore::SearchAndPlanCore(const int& map_width, const int& map_height, const std::pair<double, double>& x, const std::pair<double, double>& y, const std::vector<int8_t>& FE_map, const Target& target)
     : map_width(map_width),

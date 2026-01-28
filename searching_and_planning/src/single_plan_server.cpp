@@ -1,4 +1,4 @@
-#include "single_plan_server.h"
+#include "searching_and_planning/single_plan_server.h"
 
 // create a path planning node that provides a service to compute paths
 PathPlanningServer::PathPlanningServer()

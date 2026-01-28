@@ -1,8 +1,7 @@
 /// \file
 /// \brief This node causes the robot to move autonomously via Frontier Exploration
 
-#include "frontierSearching.h"
-#include "UsefulMacros.h"
+#include "searching_and_planning/core/frontierSearching.h"
 
 FrontExpl::FrontExpl(int map_width, int map_height, double resolution, const Eigen::Vector2d& origin, const std::vector<int8_t>& FE0_map)
     :map_width(map_width), 

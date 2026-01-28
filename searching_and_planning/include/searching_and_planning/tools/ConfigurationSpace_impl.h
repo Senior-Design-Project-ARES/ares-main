@@ -1,5 +1,5 @@
 #pragma once
-#include "ConfigurationSpace.h"
+#include "searching_and_planning/tools/ConfigurationSpace.h"
 
 template <typename T>
 amp::DenseArray2D<T>::DenseArray2D(std::size_t x0_cells, std::size_t x1_cells) : DenseArray2D(x0_cells, x1_cells, T{}) { }

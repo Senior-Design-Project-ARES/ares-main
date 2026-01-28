@@ -1,10 +1,12 @@
 #pragma once
 
-#include "frontierSearching.h"
-#include "MyPath.h"
-#include "MySamplingBasedPlanners.h"
-#include "Logging.h"
-#include "HelpfulStructs.h"
+#include "searching_and_planning/core/frontierSearching.h"
+#include "searching_and_planning/tools/MyPath.h"
+#include "searching_and_planning/core/MySamplingBasedPlanners.h"
+#include "searching_and_planning/tools/Logging.h"
+#include "searching_and_planning/tools/HelpfulStructs.h"
+#include "searching_and_planning/core/UsefulMacros.h"
+#include "searching_and_planning/tools/HelpfulFunctions.h"
 
 namespace ares {
 class SearchAndPlanCore

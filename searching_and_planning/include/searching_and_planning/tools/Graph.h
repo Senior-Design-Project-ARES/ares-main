@@ -5,8 +5,8 @@
 #include <type_traits>
 #include <memory>
 
-#include "Logging.h"
-#include "GraphContainers.h"
+#include "searching_and_planning/tools/Logging.h"
+#include "searching_and_planning/tools/GraphContainers.h"
 
 namespace ares {
 

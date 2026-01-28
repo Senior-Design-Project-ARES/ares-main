@@ -1,4 +1,4 @@
-#include "HelpfulClass.h"
+#include "searching_and_planning/tools/HelpfulClass.h"
 
 // Point2DCollisionChecker::Point2DCollisionChecker(const amp::Environment2D& enviroument_)
 // : env(enviroument_){

@@ -4,9 +4,9 @@
 // #include "HelpfulClass.h"
 #include <time.h>
 #include <cmath>
-#include "Graph.h"
-#include "MyPath.h"
-#include "HelpfulClass.h"
+#include "searching_and_planning/tools/Graph.h"
+#include "searching_and_planning/tools/MyPath.h"
+#include "searching_and_planning/tools/HelpfulClass.h"
 #include <Eigen/Core>
 #include <map>
 
