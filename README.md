@@ -51,7 +51,7 @@ cat ~/.ssh/id_ed25519.pub
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/<your-org>/<your-repo>.git
+git clone --recurse-submodules git@github.com:Senior-Design-Project-ARES/ares-main.git
 cd <your-repo>
 ```
 

@@ -1,8 +1,7 @@
 #pragma once
 
-#include <string>
-
-#include "ares_embedded/ares_embedded_export.hpp"
+// Export macro not needed for static library
+#define ARES_EMBEDDED_EXPORT
 
 /**
  * A note about the MSVC warning C4251:
@@ -65,6 +64,5 @@ public:
   auto name() const -> char const*;
 
 private:
-  ARES_EMBEDDED_SUPPRESS_C4251
-  std::string m_name;
+  static constexpr char const* m_name = "ares_embedded";
 };

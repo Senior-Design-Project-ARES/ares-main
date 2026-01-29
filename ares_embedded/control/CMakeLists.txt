@@ -2,7 +2,7 @@ add_library(control STATIC)
 
 target_sources(control
   PRIVATE
-    src/pid.cpp
+    src/ares_embedded.cpp
 )
 
 target_include_directories(control
