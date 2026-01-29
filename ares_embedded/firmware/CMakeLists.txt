@@ -1,10 +1,10 @@
 # Firmware CMakeLists.txt for STM32H723ZG
 
-# Define paths
+# Define paths (third_party submodule is full STM32CubeH7 repo)
 set(FIRMWARE_DIR ${CMAKE_CURRENT_SOURCE_DIR})
 set(THIRD_PARTY_DIR ${FIRMWARE_DIR}/third_party)
-set(CMSIS_DIR ${THIRD_PARTY_DIR}/CMSIS)
-set(HAL_DIR ${THIRD_PARTY_DIR}/STM32H7xx_HAL_Driver)
+set(CMSIS_DIR ${THIRD_PARTY_DIR}/STM32CubeH7/Drivers/CMSIS)
+set(HAL_DIR ${THIRD_PARTY_DIR}/STM32CubeH7/Drivers/STM32H7xx_HAL_Driver)
 set(INC_DIR ${FIRMWARE_DIR}/Inc)
 set(SRC_DIR ${FIRMWARE_DIR}/Src)
 set(STARTUP_DIR ${FIRMWARE_DIR}/startup)
