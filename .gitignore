@@ -143,6 +143,8 @@ compile_commands.json
 CTestTestfile.cmake
 _deps/
 *.cmake
+# Toolchain files are part of the repo (used for firmware cross-build)
+!ares_embedded/cmake/toolchains/*.cmake
 *.ninja
 *.ninja.d
 .vscode/
