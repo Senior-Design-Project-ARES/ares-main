@@ -65,3 +65,43 @@ See the [CONTRIBUTING](docs/CONTRIBUTING.md) document.
 
 See the [CODE_OF_CONDUCT](docs/CODE_OF_CONDUCT.md) document.
 
+## Running the SITL (Non-Firmware Code)
+
+The SITL runs the controller in simulation on your host machine (no board needed), logs data to CSV, and displays plots.
+
+### One-time setup: Python venv and requirements
+
+From `ares_embedded`:
+
+```sh
+python3 -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+You can use `venv` instead of `.venv` if you prefer; the script looks for both.
+
+### Run the pipeline
+
+From `ares_embedded`:
+
+```sh
+./run_sitl.sh
+```
+
+If you get "permission denied", run `bash run_sitl.sh` instead, or once: `chmod +x run_sitl.sh`.
+
+This will:
+
+1. **Build** the control library and host test.
+2. **Run** the controller test (case 1); it writes a CSV to `logs/`.
+3. **Plot** the log with matplotlib (three figure windows: body velocity/yaw-rate, wheel speeds, XY path).
+4. **Remove** the build directory when done. Log files stay in `logs/`.
+
+To plot an existing log without re-running the test:
+
+```sh
+source .venv/bin/activate # to get inside your virtual env (only do this if you aren't already inside your venv)
+python3 viz/plot_controller_logs.py logs/<log>.csv
+deactivate # to get out of your virtual env
+```
