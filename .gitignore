@@ -2,3 +2,4 @@ build/
 install/
 log/
 .vscode/
+testing_module/testing_module/__pycache__/
