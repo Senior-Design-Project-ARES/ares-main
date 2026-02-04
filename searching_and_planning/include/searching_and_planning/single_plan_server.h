@@ -1,8 +1,12 @@
+#pragma once
+
 #include "rclcpp/rclcpp.hpp"
 #include "cartographer_ros_msgs/srv/trajectory_query.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "nav_msgs/msg/path.hpp"
 #include "searching_and_planning/core/SearchAndPlan.h"
+#include "searching_and_planning/tools/MyPath.h"
+#include "nav_msgs/msg/occupancy_grid.hpp"
 
 struct Path2D_for_rover{
     int32_t rover_id;
@@ -14,15 +18,7 @@ struct Path2D_for_rover{
 class PathPlanningServer : public rclcpp::Node 
 {
 public:
-    PathPlanningServer() : Node("path_planning_server"),
-    planner(MAP_WIDTH, MAP_HEIGHT, std::make_pair(X_MIN, X_MAX), std::make_pair(Y_MIN, Y_MAX), map, target){
-        service_ = this->create_service<cartographer_ros_msgs::srv::TrajectoryQuery>(
-            "get_path",
-            std::bind(&PathPlanningServer::handle_trajectory_query, this,
-                std::placeholders::_1, std::placeholders::_2));
-    
-        RCLCPP_INFO(this->get_logger(), "Path planning server ready.");
-    }
+    PathPlanningServer();
 
 private:
     void handle_trajectory_query(
@@ -31,12 +27,14 @@ private:
 
     void poseCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
     void otherRoverPathsCallback(const nav_msgs::msg::Path::SharedPtr msg);
-    void otherRoverLocationsCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
+    // void otherRoverLocationsCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
+    void mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
 
     rclcpp::Service<cartographer_ros_msgs::srv::TrajectoryQuery>::SharedPtr service_;
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_subscription_;
     rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr other_rover_paths_subscription_;
-    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr other_rover_locations_subscription_;
+    // rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr other_rover_locations_subscription_;
+    rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_subscription_;
 
     Eigen::Vector2d current_location;
     std::map<int32_t, Path2D_for_rover> other_rover_paths;

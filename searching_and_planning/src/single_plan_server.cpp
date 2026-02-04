@@ -29,6 +29,12 @@ PathPlanningServer::PathPlanningServer()
         "other_rover_paths",
         10,
         std::bind(&PathPlanningServer::otherRoverPathsCallback, this, std::placeholders::_1));
+
+    // subscribe to map updates
+    map_subscription_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
+        "map",
+        10,
+        std::bind(&PathPlanningServer::mapCallback, this, std::placeholders::_1));
 }
 
 void PathPlanningServer::handle_trajectory_query(
@@ -113,18 +119,32 @@ void PathPlanningServer::otherRoverPathsCallback(const nav_msgs::msg::Path::Shar
 }
 
 void PathPlanningServer::poseCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg) {
-    current_location(0) = msg->pose.position.x;
-    current_location(1) = msg->pose.position.y;
-}
+    int32_t id = static_cast<int32_t>(msg->pose.orientation.x);
 
-void PathPlanningServer::otherRoverLocationsCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg) {
-    int32_t other_rover_id = static_cast<int32_t>(msg->pose.orientation.x);
+    if (id == rover_id) {
+        current_location(0) = msg->pose.position.x;
+        current_location(1) = msg->pose.position.y;
+        return;
+    }
     Eigen::Vector2d location;
     location(0) = msg->pose.position.x;
     location(1) = msg->pose.position.y;
+    other_rover_locations[id] = location;
 
-    other_rover_locations[other_rover_id] = location;
 }
+
+void PathPlanningServer::mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
+    // Update the internal map representation
+}
+
+// void PathPlanningServer::otherRoverLocationsCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg) {
+//     int32_t other_rover_id = static_cast<int32_t>(msg->pose.orientation.x);
+//     Eigen::Vector2d location;
+//     location(0) = msg->pose.position.x;
+//     location(1) = msg->pose.position.y;
+
+//     other_rover_locations[other_rover_id] = location;
+// }
 
 int main(int argc, char **argv){
   rclcpp::init(argc, argv);
