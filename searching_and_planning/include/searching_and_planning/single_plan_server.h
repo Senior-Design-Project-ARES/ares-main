@@ -1,12 +1,17 @@
 #pragma once
 
+// import ROS2 libraries
 #include "rclcpp/rclcpp.hpp"
+
+// import message and service types
 #include "cartographer_ros_msgs/srv/trajectory_query.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "nav_msgs/msg/path.hpp"
+#include "nav_msgs/msg/occupancy_grid.hpp"
+
+// import other necessary libraries
 #include "searching_and_planning/core/SearchAndPlan.h"
 #include "searching_and_planning/tools/MyPath.h"
-#include "nav_msgs/msg/occupancy_grid.hpp"
 
 struct Path2D_for_rover{
     int32_t rover_id;
