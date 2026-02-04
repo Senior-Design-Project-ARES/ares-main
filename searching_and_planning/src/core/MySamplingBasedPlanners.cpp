@@ -7,7 +7,7 @@ ares::Path MyGenericRRT::planND(Eigen::VectorXd init_, Eigen::VectorXd goal_, Ba
     nodes[0] = init_;
     bool success = false;
 
-    int temp = 0;
+    // int temp = 0;
     for (int num_it = 0; num_it < iteration; num_it++){
         int step_num = 0;
         if(double(rand())/RAND_MAX < bias){
@@ -36,7 +36,7 @@ ares::Path MyGenericRRT::planND(Eigen::VectorXd init_, Eigen::VectorXd goal_, Ba
         // if (num_it != temp){
         //     LOG(num_it);
         // }
-        temp = num_it;
+        // temp = num_it;
     }
     // LOG(temp);
 
@@ -111,7 +111,7 @@ ares::Path MyGenericRRT::planND(Eigen::VectorXd init_, Eigen::VectorXd goal_, Ba
 Eigen::VectorXd MyGenericRRT::generatePoint(const std::vector<std::pair<double, double>>& bounds){
     Eigen::VectorXd point;
     point.resize(bounds.size());
-    for(int i = 0; i < bounds.size(); i++){
+    for(size_t i = 0; i < bounds.size(); i++){
         double lower = bounds[i].first;
         double upper = bounds[i].second;
         point(i) = lower + (upper - lower)*double(rand())/RAND_MAX;
@@ -208,7 +208,7 @@ bool MyGenericRRT::checkDistance(Eigen::VectorXd one_2_two, double requirement){
         direction.push_back(Eigen::Vector2d(one_2_two(2*i), one_2_two(2*i+1)));
     }
 
-    for(int i; i < direction.size(); i++){
+    for(size_t i = 0; i < direction.size(); i++){
         if(direction[i].norm()>requirement){
             return false;
         }

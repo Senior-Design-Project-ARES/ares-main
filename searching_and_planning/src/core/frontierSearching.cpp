@@ -49,7 +49,7 @@ void FrontExpl::find_all_edges()
             // If there is an unknown cell, then check neighboring cells to find a potential frontier edge (free cell)
             neighborhood(x);
 
-            for(int i = 0; i < neighbor0_index.size(); i++) // For all neighboring cells
+            for(size_t i = 0; i < neighbor0_index.size(); i++) // For all neighboring cells
             {
                 if ((i==1||i==3||i==4||i==6) && FE0_map.at(neighbor0_index.at(i)) == 0)
                 {
@@ -84,7 +84,7 @@ void FrontExpl::find_regions()
     std::vector<bool> visited(FE0_map.size(), false);
 
 
-    for (int q = 0; q < edge0_vec.size() - 1; q++)
+    for (size_t q = 0; q < edge0_vec.size() - 1; q++)
     {
         // For each frontier edge, check that the next value is unique and not a repeat
         unique_flag = check_edges(edge0_vec.at(q), edge0_vec.at(q+1));
@@ -99,9 +99,9 @@ void FrontExpl::find_regions()
             bool loop = false;
 
             // Check if there is more than 2 frontier neighbors
-            for(int i = 0; i < neighbor0_index.size(); i++)
+            for(size_t i = 0; i < neighbor0_index.size(); i++)
             {
-                for (int j = 0; j < edge0_vec.size(); j++)
+                for (size_t j = 0; j < edge0_vec.size(); j++)
                 {
                     if (neighbor0_index.at(i) == edge0_vec.at(j))
                     {
@@ -120,7 +120,7 @@ void FrontExpl::find_regions()
             visited[edge0_vec.at(q)] = true;
             int previous_index = edge0_vec.at(q);
             int index_to_check = frontier_group[0].getFrontierNeighbors().first;
-            int previous_vector_index = 0;
+            // int previous_vector_index = 0;
             bool checking_second_direction = false;
             
             // Continue adding to the region until there are no more neighbors
@@ -138,7 +138,7 @@ void FrontExpl::find_regions()
                 neighborhood(index_to_check);
 
                 // Check all the neighbors of the cell
-                for(int i = 0; i < neighbor0_index.size(); i++)
+                for(size_t i = 0; i < neighbor0_index.size(); i++)
                 {
                     // If the neighbour is where we came from or it is within other region, skip it
                     if (neighbor0_index.at(i) == previous_index){
@@ -155,7 +155,7 @@ void FrontExpl::find_regions()
                     }
 
                     // Go through all the frontier edges
-                    for (int j = 0; j < edge0_vec.size(); j++)
+                    for (size_t j = 0; j < edge0_vec.size(); j++)
                     {
                         // Check if the neighbor is a frontier edge
                         if (neighbor0_index.at(i) == edge0_vec.at(j))
@@ -236,7 +236,7 @@ void FrontExpl::find_centroids(){
         int left_over = frountier_pair.first.size() - (cells_per_group * number_of_groups);
         // if it is a loop, just start at random place, at it is already in sequence
         if (frountier_pair.second == true){
-            for (int current_start = 0; current_start < frountier_pair.first.size(); current_start += cells_per_group)
+            for (size_t current_start = 0; current_start < frountier_pair.first.size(); current_start += cells_per_group)
             {
                 if (left_over > 0){
                     left_over -= 1;
@@ -252,7 +252,7 @@ void FrontExpl::find_centroids(){
         int end_node_index = 0;
         std::map<int, int> global_to_local_map;
         // find the grid that touch a "wall"
-        for (int node_index = 0; node_index < frountier_pair.first.size(); node_index++)
+        for (size_t node_index = 0; node_index < frountier_pair.first.size(); node_index++)
         {
             global_to_local_map[frountier_pair.first[node_index].getIndex()] = node_index;
             if(frountier_pair.first[node_index].getFrontierNeighbors().second == 0){
@@ -266,9 +266,9 @@ void FrontExpl::find_centroids(){
             std::rotate(frountier_pair.first.begin(),frountier_pair.first.begin()+end_node_index+1, frountier_pair.first.end());
         }
         // DEBUG("size: " << frountier_pair.first.size());
-        for (int current_start = 0; current_start < frountier_pair.first.size(); current_start += cells_per_group)
+        for (size_t current_start = 0; current_start < frountier_pair.first.size(); current_start += cells_per_group)
         {
-            int centroid_index = current_start + floor(cells_per_group / 2);
+            size_t centroid_index = current_start + floor(cells_per_group / 2);
             if (left_over > 0){
                 left_over -= 1;
                 current_start += 1;
@@ -318,7 +318,7 @@ void FrontExpl::find_centroids(){
 
 void FrontExpl::centroid_index_to_point()
 {
-    for (int t = 0; t < centroids0.size(); t++)
+    for (size_t t = 0; t < centroids0.size(); t++)
     {
         // For all the centorid cells, find the x and y coordinates in the map frame
         point(0) = (centroids0.at(t) % map_width)*resolution + origin(0);
@@ -338,7 +338,8 @@ void FrontExpl::centroid_index_to_point()
         if((point(0) < origin(0) + 0.05) && (point(1) < origin(1) + 0.05))
         {
             // If the centroid is too close to the map orgin, skip
-            goto bad_centroid;
+            // goto bad_centroid;
+            continue;
         }
 
         else
@@ -361,7 +362,7 @@ void FrontExpl::centroid_index_to_point()
         }
 
         // Skip to the end of the for loop if there was an invalid centroid
-        bad_centroid: 
+        // bad_centroid: 
         // std::cout << "Ignore bad centroid" << std::endl;
     }
 }

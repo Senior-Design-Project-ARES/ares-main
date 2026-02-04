@@ -22,7 +22,7 @@ class SearchAndPlanCore
         const int map_width;
         const int map_height;
         const double resolution;
-        const Eigen::Vector2d& origin;
+        const Eigen::Vector2d origin;
         const std::vector<int8_t>& FE_map;
         FrontExpl front_expl;
         amp::GridCSpace2D_T<int8_t> grid_map;

@@ -36,7 +36,7 @@ void ares::SearchAndPlanCore::addPathObstacles2Grid(const std::vector<Path2D>& p
         }
 
         rovers_current_path[other_id].push_back(paths[other_id].waypoints[0]);
-        for(int i = 1; i < paths[other_id].waypoints.size(); i++){
+        for(size_t i = 1; i < paths[other_id].waypoints.size(); i++){
             rovers_current_path[other_id].push_back((paths[other_id].waypoints[i] + paths[other_id].waypoints[i-1]) / 2.0);
             rovers_current_path[other_id].push_back(paths[other_id].waypoints[i]);
         }
@@ -54,7 +54,7 @@ void ares::SearchAndPlanCore::addPathObstacles2Grid(const std::vector<Path2D>& p
                     std::tie(cell_x, cell_y) = grid_map.getCellFromPoint(point(0), point(1));
                     int new_x = cell_x + dx;
                     int new_y = cell_y + dy;
-                    if(new_x < 0 || new_x >= grid_map.size().first || new_y < 0 || new_y >= grid_map.size().second) continue;
+                    if(new_x < 0 || new_x >= static_cast<int>(grid_map.size().first) || new_y < 0 || new_y >= static_cast<int>(grid_map.size().second)) continue;
                     double dist = sqrt(dx*dx + dy*dy) * ((grid_map.x0Bounds().second - grid_map.x0Bounds().first) / grid_map.size().first);
                     if(dist <= total_radius*RADIUS_INFLATION && grid_map(new_x, new_y) != -1){
                         grid_map(new_x, new_y) = 1;
@@ -206,7 +206,7 @@ ares::Path2D ares::SearchAndPlanCore::runWithGoal(const Eigen::Vector2d current_
 Eigen::Vector2d ares::SearchAndPlanCore::nextPoint(std::vector<std::pair<Eigen::Vector2d, int>>& point_of_interest, Eigen::Vector2d location){
     double distance = (location - point_of_interest[0].first).norm();
     int nextPoint = 0;
-    for(int i = 1; i < point_of_interest.size(); i++){
+    for(size_t i = 1; i < point_of_interest.size(); i++){
         double temp_distance = (location - point_of_interest[i].first).norm();
 
         if(distance < LIDARRADIUS*1.2 && temp_distance < LIDARRADIUS*1.2){

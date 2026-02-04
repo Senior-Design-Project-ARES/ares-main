@@ -7,9 +7,57 @@ endif()
 
 # find dependencies
 find_package(ament_cmake REQUIRED)
-# uncomment the following section in order to fill in
-# further dependencies manually.
-# find_package(<dependency> REQUIRED)
+find_package(rclcpp REQUIRED)
+find_package(cartographer_ros_msgs REQUIRED)
+find_package(geometry_msgs REQUIRED)
+find_package(nav_msgs REQUIRED)
+find_package(Eigen3 REQUIRED)
+
+add_library(searching_and_planning
+  src/core/SearchAndPlan.cpp
+  src/core/frontierSearching.cpp
+  src/core/MySamplingBasedPlanners.cpp
+  src/tools/HelpfulClass.cpp
+)
+
+target_include_directories(searching_and_planning PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+
+ament_target_dependencies(
+  searching_and_planning
+)
+target_link_libraries(searching_and_planning Eigen3::Eigen)
+
+# Add executable
+add_executable(path_planning
+  src/single_plan_server.cpp
+)
+
+target_link_libraries(path_planning Eigen3::Eigen)
+target_link_libraries(path_planning searching_and_planning)
+
+ament_target_dependencies(
+  path_planning
+  rclcpp
+  cartographer_ros_msgs
+  geometry_msgs
+  nav_msgs
+  # Eigen3
+)
+
+# Include directories
+target_include_directories(path_planning PUBLIC
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<INSTALL_INTERFACE:include>
+)
+
+# Install targets
+install(TARGETS
+  path_planning
+  DESTINATION lib/${PROJECT_NAME}
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

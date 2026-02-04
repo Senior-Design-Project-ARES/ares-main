@@ -10,8 +10,15 @@
 template <typename P>
 class BaseCollisionChecker {
     public:
-        virtual bool isCollide(const P& point_) {return false;}
-        virtual bool isCollide2P(const P& point1_, const P& point2_) {return false;}
+        virtual bool isCollide(const P& point_) {
+            (void)point_;
+            return false;
+        }
+        virtual bool isCollide2P(const P& point1_, const P& point2_) {
+            (void)point1_;
+            (void)point2_;
+            return false;
+        }
 
         std::vector<std::pair<double,double>> getBounds() {return bounds;}
         void setBounds(std::vector<std::pair<double,double>> bounds_) {bounds = bounds_;}

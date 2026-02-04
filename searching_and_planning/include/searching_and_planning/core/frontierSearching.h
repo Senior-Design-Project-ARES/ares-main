@@ -74,10 +74,8 @@ class FrontExpl
         std::vector<Eigen::Vector2i> getCentroidsGrid() { return centroid_grid_pts; }
 
     private:
-        const std::vector<int8_t>& FE0_map;
         Eigen::Vector2d point;
         // Eigen::Vector2d robot0_pose_;
-        Eigen::Vector2d origin;
         std::string map0_frame = "tb3_0/map";
         std::string body0_frame = "tb3_0/base_footprint";
         std::vector<signed int> edge0_vec, neighbor0_index, neighbor0_value;
@@ -90,7 +88,9 @@ class FrontExpl
         std::vector<std::pair<std::vector<FrontNode>, bool>> frontier_regions;
         // int group0_c=0, prev_group0_c=0;
         int centroid0=0, centroid0_index=0, move_to_pt=0, map_width=0, map_height=0, mark_edge=0, edge_index=0;
+        const std::vector<int8_t>& FE0_map;
         double smallest = 9999999.0, dist0= 0.0, resolution = 0.0;
+        Eigen::Vector2d origin;
         bool unique_flag = true;
 };
 
