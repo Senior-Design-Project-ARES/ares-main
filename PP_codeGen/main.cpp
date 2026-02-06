@@ -1,166 +1,91 @@
 #include <eigen3/Eigen/Dense>
-#include <fstream>
-#include <sstream>
-#include <vector>
-#include <string>
-#include <iostream>
 #include <cmath>
 
 /* ============================================================
-   Helper functions
+   CONFIG & GLOBAL VARIABLES
    ============================================================ */
 
-// Read a single line CSV file into a vector<double>
-std::vector<double> readCSVLine(const std::string& filename)
-{
-    std::ifstream file(filename);
-    std::vector<double> data;
-    std::string line;
+// Define fixed sizes to avoid dynamic memory allocation (Heap Fragmentation)
+#define MAX_WAYPOINTS 20 
 
-    if (!file.is_open())
-    {
-        std::cerr << "Failed to open " << filename << "\n";
-        return data;
-    }
-
-    std::getline(file, line);
-    std::stringstream ss(line);
-    std::string token;
-
-    while (std::getline(ss, token, ','))
-        data.push_back(std::stod(token));
-
-    return data;
-}
-
-// Read waypoints as a Nx2 matrix
-Eigen::MatrixXd readWaypoints(const std::string& filename)
-{
-    std::ifstream file(filename);
-    std::vector<Eigen::Vector2d> wp;
-
-    if (!file.is_open())
-    {
-        std::cerr << "Failed to open waypoints file: " << filename << "\n";
-        return Eigen::MatrixXd();
-    }
-
-    std::string line;
-    while (std::getline(file, line))
-    {
-        if (line.empty()) continue;
-
-        // Replace commas with spaces
-        for (auto &c : line) if (c == ',') c = ' ';
-
-        std::stringstream ss(line);
-        double x, y;
-        if (ss >> x >> y)
-            wp.emplace_back(x, y);
-        else
-            std::cerr << "Skipping invalid line in waypoints: " << line << "\n";
-    }
-
-    Eigen::MatrixXd waypoints(wp.size(), 2);
-    for (size_t i = 0; i < wp.size(); ++i)
-        waypoints.row(i) = wp[i];
-
-    return waypoints;
-}
-
-
-std::vector<double> readVectorFile(const std::string& filename)
-{
-    std::ifstream file(filename);
-    std::vector<double> data;
-    double val;
-
-    while (file >> val)
-        data.push_back(val);
-
-    return data;
-}
-
-// Write vector<double> to a text file
-void writeVector(const std::string& filename, const std::vector<double>& data)
-{
-    std::ofstream file(filename);
-    if (!file.is_open())
-    {
-        std::cerr << "Failed to write " << filename << "\n";
-        return;
-    }
-    for (double v : data)
-        file << v << "\n";
-}
+// Global variables to persist between timer interrupts
+Eigen::Matrix<double, MAX_WAYPOINTS, 2> global_waypoints;
+int last_refindex = 0;
+bool waypoints_loaded = false;
 
 /* ============================================================
-   Controller function (declaration only)
+   CONTROLLER WRAPPER
    ============================================================ */
+// Note: We use Eigen::Ref to allow fixed-size matrices to be passed 
+// into functions expecting generic types without copying data.
 void codeGen_func(
     const Eigen::Vector3d& State,
-    const Eigen::MatrixXd& waypoints,
+    const Eigen::Ref<const Eigen::Matrix<double, Eigen::Dynamic, 2>>& waypoints,
     double& linVel,
     double& angVel,
     int& last_refindex
 );
 
 /* ============================================================
-   MAIN
+   STM32 HARDWARE INTERRUPT (The "Polling" Mechanism)
    ============================================================ */
-int main()
+
+/**
+ * This function is called by the hardware timer (e.g., TIM2) 
+ * at a fixed frequency (e.g., 100Hz / every 10ms).
+ */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim) 
 {
-    std::vector<double> rawState = readCSVLine("states.txt");
-    Eigen::MatrixXd waypoints = readWaypoints("waypoints.txt");
-
-    if (waypoints.size() == 0)
+    if (htim->Instance == TIM2) 
     {
-        std::cerr << "Waypoints input file could not be read.\n";
-        return -1;
-    }
+        if (!waypoints_loaded) return;
 
-    if (rawState.empty())
-    {
-        std::cerr << "State input file could not be read.\n";
-        return -1;
-    }
-
-    if (rawState.size() % 3 != 0)
-    {
-        std::cerr << "State file length is not divisible by 3\n";
-        return -1;
-    }
-
-    int numSteps = rawState.size() / 3;
-
-    std::vector<double> cpp_linVel(numSteps);
-    std::vector<double> cpp_angVel(numSteps);
-
-    int last_refindex = 0; // zero-based
-
-    for (int i = 0; i < numSteps; ++i)
-    {
-        std::vector<double> rawState = readCSVLine("states.txt");
-        Eigen::MatrixXd waypoints = readWaypoints("waypoints.txt");
-
-        Eigen::Vector3d State;
-        State << rawState[3*i],
-                 rawState[3*i + 1],
-                 rawState[3*i + 2] * M_PI / 180.0; // deg → rad
+        // 1. Get current state from Sensors (IMU, Encoders, or GPS)
+        // Usually: [x_pos, y_pos, heading_rad]
+        Eigen::Vector3d State = Sensor_GetRobotState(); 
 
         double linVel = 0.0;
         double angVel = 0.0;
 
-        codeGen_func(State, waypoints, linVel, angVel, last_refindex);
+        // 2. Run the Controller
+        // Because we use fixed-size matrices, this execution time is deterministic
+        codeGen_func(State, global_waypoints, linVel, angVel, last_refindex);
 
-        cpp_linVel[i] = linVel;
-        cpp_angVel[i] = angVel;
+        // 3. Actuate Motors
+        // Convert velocities to PWM or CAN commands for your motor drivers
+        Motor_SetVelocity(linVel, angVel);
     }
+}
 
-    writeVector("cpp_linVel.txt", cpp_linVel);
-    writeVector("cpp_angVel.txt", cpp_angVel);
+/* ============================================================
+   INITIALIZATION (Setup)
+   ============================================================ */
 
-    std::cout << "C++ results written to cpp_linVel.txt and cpp_angVel.txt\n";
+int main(void) 
+{
+    // Standard STM32 HAL Init
+    HAL_Init();
+    SystemClock_Config();
+    MX_GPIO_Init();
+    MX_TIM2_Init();
 
-    return 0;
+    // 4. Load Waypoints 
+    // Instead of reading a CSV file, we populate the fixed-size Matrix.
+    // In a real app, you might receive these over UART or SPI.
+    global_waypoints << 0.0, 0.0,
+                        1.0, 0.5,
+                        2.0, 0.0,
+                        3.0, -0.5; 
+                        // ... fill the rest with zeros or use a sub-block
+    
+    waypoints_loaded = true;
+
+    // 5. Start the Timer Interrupt
+    HAL_TIM_Base_Start_IT(&htim2);
+
+    while (1) 
+    {
+        // The main loop is now empty or handles low-priority tasks (LED blinking, UART logging)
+        // The "Polling Rate" is handled entirely by the Timer Interrupt above.
+    }
 }
