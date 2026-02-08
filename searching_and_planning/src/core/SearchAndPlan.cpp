@@ -16,15 +16,19 @@ ares::SearchAndPlanCore::SearchAndPlanCore(const int& map_width, const int& map_
 
 void ares::SearchAndPlanCore::updateGrid(){
     // This is not really required if I code it properly, but this is more ituitive for now. So people know they are updating the map,
-    for(int i = 0; i < map_width; i++){
-        for(int j = 0; j < map_height; j++){
-            grid_map(i, j) = FE_map[j*map_width + i];
+    for(int i = 0; i < map_height; i++){
+        for(int j = 0; j < map_width; j++){
+            grid_map(j, i) = FE_map[i*map_width + j];
         }
     }
 }
 
 void ares::SearchAndPlanCore::addPathObstacles2Grid(const std::vector<Path2D>& paths){
     int num_other_rover = paths.size();
+
+    if (num_other_rover == 0) {
+        return;
+    }
 
     // get all rover current path between frontier and add one additional point
     std::vector<std::vector<Eigen::Vector2d>> rovers_current_path(num_other_rover);
@@ -71,7 +75,7 @@ ares::Path2D ares::SearchAndPlanCore::runSingle(const Eigen::Vector2d current_lo
     ares::Path2D path;
     
     // initialize path planner
-    MyGenericRRT my_rrt(0.05, 7500, 0.3);
+    // MyGenericRRT my_rrt(0.05, 7500, 0.3);
     // SST my_sst(0.5, 0.2);
     // MyKinoRRT my_kinorrt(10000, 10);
 
@@ -92,60 +96,17 @@ ares::Path2D ares::SearchAndPlanCore::runSingle(const Eigen::Vector2d current_lo
     }
 
     // plan path to next point
-    ares::Path raw_path;
-    raw_path.valid = false;
     while(points.size() != 0){
         LOG("Planning path....");
         path = runWithGoal(current_location, next_point, other_rover_paths);
 
-        // raw_path = my_rrt.planND(eigen2dToEigenXd(current_location), eigen2dToEigenXd(next_point), *multi_collision_checker[rover_id]);
-        // raw_path = my_sst.planND(eigen2dToEigenXd(current_location), eigen2dToEigenXd(next_point), C_space.getDiskMapptr());
-
-        // // MyFirstOrderUnicycle car_agent = MyFirstOrderUnicycle();
-        // // amp::KinodynamicProblem2D kino_problem;
-        // // kino_problem.obstacles = problem.obstacles;
-        // // kino_problem.agent_type = amp::AgentType::FirstOrderUnicycle;
-        // // kino_problem.q_init = eigen2dToEigenXd(current_location);
-        // // kino_problem.q_goal.resize(2);
-        // // kino_problem.q_goal[0] = std::make_pair(next_point(0)-0.1, next_point(0)+0.1);
-        // // kino_problem.q_goal[1] = std::make_pair(next_point(1)-0.1, next_point(1)+0.1);
-        // // kino_problem.q_bounds.resize(2);
-        // // kino_problem.q_bounds[0] = std::make_pair(problem.x_min, problem.x_max);
-        // // kino_problem.q_bounds[1] = std::make_pair(problem.y_min, problem.y_max);
-        // // kino_problem.u_bounds.resize(2);
-        // // kino_problem.u_bounds[0] = std::make_pair(-1.0, 1.0); // linear velocity
-        // // kino_problem.u_bounds[1] = std::make_pair(-M_PI/2, M_PI/2); // angular velocity
-        // // kino_problem.dt_bounds = std::make_pair(0.0, 0.5);
-        // // kino_problem.agent_dim.length = 0.5;
-        // // kino_problem.agent_dim.width = 0.3;
-        // // raw_path = my_kinorrt.plan(kino_problem, car_agent);
-
-        // amp::Problem2D problem_2d;
-        // problem_2d.obstacles = problem.obstacles;
-        // problem_2d.q_init = current_location;
-        // problem_2d.q_goal = next_point;
-        // amp::Visualizer::makeFigure(problem_2d, *my_sst.getGraphPtr(), [&](amp::Node node) -> Eigen::Vector2d {return {my_sst.getNodes()[node].state(0), my_sst.getNodes()[node].state(1)};});
-        // amp::Visualizer::saveFigures(true, "ARES");
-
-        // printf("Raw path valid: %d\n", raw_path.valid);
-        // if (target_found && raw_path.valid){
-        //     amp::Visualizer::makeFigure(*multi_maps[rover_id]);
-        //     amp::Visualizer::makeFigure(problem, rovers_paths);
-        // }
-
-        if(raw_path.valid){
+        if(path.valid){
             break;
         }
-        // if (target_found && next_point == problem.agent_properties[rover_id].q_goal){
-        //     for(int i = 0; i < num_rover; i++){
-        //         if(i != rover_id){
-        //             active_paths.agent_paths[i].waypoints = temp_active_paths[i];
-        //         }
-        //     }
-        // }
+
         next_point = nextPoint(points, current_location);
     }
-    if(!raw_path.valid){
+    if(!path.valid){
         ERROR("cannot find path to any frontier");
         return path;
     }
@@ -199,6 +160,9 @@ ares::Path2D ares::SearchAndPlanCore::runWithGoal(const Eigen::Vector2d current_
     raw_path.valid = false;
 
     raw_path = my_rrt.planND(eigen2dToEigenXd(current_location), eigen2dToEigenXd(goal_location), collision_checker);
+
+    path.valid = raw_path.valid;
+    path.waypoints = raw_path.getWaypoints2D();
 
     return path;
 }
