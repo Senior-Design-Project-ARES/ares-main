@@ -121,9 +121,14 @@ void PathPlanningServer::otherRoverPathsCallback(const nav_msgs::msg::Path::Shar
 void PathPlanningServer::poseCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg) {
     int32_t id = static_cast<int32_t>(msg->pose.orientation.x);
 
+    // RCLCPP_INFO(this->get_logger(), "Received pose for rover_id: %d", id);
+
     if (id == rover_id) {
         current_location(0) = msg->pose.position.x;
         current_location(1) = msg->pose.position.y;
+
+        RCLCPP_DEBUG(this->get_logger(), "Updated current location to (%.2f, %.2f)",
+                    current_location(0), current_location(1));
         return;
     }
     Eigen::Vector2d location;
@@ -131,10 +136,22 @@ void PathPlanningServer::poseCallback(const geometry_msgs::msg::PoseStamped::Sha
     location(1) = msg->pose.position.y;
     other_rover_locations[id] = location;
 
+    RCLCPP_DEBUG(this->get_logger(), "Updated location for rover_id: %d to (%.2f, %.2f)",
+                id, other_rover_locations[id](0), other_rover_locations[id](1));
 }
 
 void PathPlanningServer::mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg) {
     // Update the internal map representation
+    RCLCPP_DEBUG(this->get_logger(), "Received map update with size: %zu", msg->data.size());
+
+    if (msg->data.size() != MAP_WIDTH * MAP_HEIGHT) {
+        RCLCPP_ERROR(this->get_logger(), "Received map size does not match expected dimensions.");
+        return;
+    }
+    for (size_t i = 0; i < msg->data.size(); ++i) {
+        map[i] = msg->data[i];
+    }
+    return;
 }
 
 // void PathPlanningServer::otherRoverLocationsCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg) {
@@ -142,7 +159,6 @@ void PathPlanningServer::mapCallback(const nav_msgs::msg::OccupancyGrid::SharedP
 //     Eigen::Vector2d location;
 //     location(0) = msg->pose.position.x;
 //     location(1) = msg->pose.position.y;
-
 //     other_rover_locations[other_rover_id] = location;
 // }
 
