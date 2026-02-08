@@ -47,7 +47,7 @@ private:
     std::map<int32_t, Eigen::Vector2d> other_rover_locations;
 
     Target target;
-    std::vector<int8_t> map = std::vector<int8_t>(MAP_WIDTH * MAP_HEIGHT, 0); // Example empty map
+    std::vector<int8_t> map = std::vector<int8_t>(MAP_WIDTH * MAP_HEIGHT, -1); // Example empty map
     ares::SearchAndPlanCore planner;
     int32_t rover_id = -1;
 };
