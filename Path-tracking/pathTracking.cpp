@@ -163,22 +163,22 @@ Eigen::Vector2d PP_single(const Eigen::Vector3d& state, const Eigen::MatrixXd& m
             angVel = -angVelClamp;
         }
 
+        if(std::abs(alpha) > (45*(M_PI/180)))
+        {
+            if(alpha > 0)
+            {
+                angVel = 0.05;
+            }
+            if(alpha > 0)
+            {
+                angVel = -0.05;
+            }    
+            linVel = 0;
+        }
+
         // ------------------ Store Controls in 2x1 Vector ----------------
 
         controls << linVel, angVel;
-    }
-
-    /*
-    std::cout << "Closest Point = [" << microp(closest_idx,0) << ", " << microp(closest_idx,1) << "]" << std::endl;
-    std::cout << "Target Point = [" << target(0) << ", " << target(1) << "]" << std::endl;
-    std::cout << "Backwheel Position = [" << backWheel_pos(0) << ", " << backWheel_pos(1) << "]" << std::endl;
-    std::cout << "Theta = " << state[2] << std::endl;
-    std::cout << "Alpha = " << alpha*180/M_PI << std::endl;
-    std::cout << "Base = " << std::atan(dy / dx) << std::endl;
-    std::cout << "dx, dy = " << dx << ", " << dy << std::endl;
-    */
-
-    return controls;
 }
 
 int main()
