@@ -4,3 +4,4 @@ log/
 .vscode/
 testing_module/testing_module/__pycache__/
 coordinator/coordinator/__pycache__/
+output/
