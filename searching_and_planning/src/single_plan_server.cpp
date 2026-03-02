@@ -25,8 +25,8 @@ PathPlanningServer::PathPlanningServer()
         std::bind(&PathPlanningServer::poseCallback, this, std::placeholders::_1));
 
     // subscribe to other rover paths if needed
-    other_rover_paths_subscription_ = this->create_subscription<nav_msgs::msg::Path>(
-        "other_rover_paths",
+    rover_paths_subscription_ = this->create_subscription<nav_msgs::msg::Path>(
+        "planned_paths",
         10,
         std::bind(&PathPlanningServer::otherRoverPathsCallback, this, std::placeholders::_1));
 
@@ -35,6 +35,12 @@ PathPlanningServer::PathPlanningServer()
         "map",
         10,
         std::bind(&PathPlanningServer::mapCallback, this, std::placeholders::_1));
+
+    // subscribe to target location
+    target_subscription_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
+        "target_location",
+        10,
+        std::bind(&PathPlanningServer::targetCallback, this, std::placeholders::_1));
 }
 
 void PathPlanningServer::handle_trajectory_query(
@@ -59,7 +65,8 @@ void PathPlanningServer::handle_trajectory_query(
             single_point_path.waypoints.push_back(pair.second);
             other_rover_current_locations.push_back(single_point_path);
         }
-        path = planner.runSingle(current_location, other_rover_current_locations);
+        // path = planner.runSingle(current_location, other_rover_current_locations);
+        path = planner.runWithGoal(current_location, target.position, other_rover_current_locations);
     }
 
     if (!path.valid) {
@@ -92,6 +99,11 @@ void PathPlanningServer::handle_trajectory_query(
 
 void PathPlanningServer::otherRoverPathsCallback(const nav_msgs::msg::Path::SharedPtr msg) {
     int32_t other_rover_id = static_cast<int32_t>(msg->poses[0].pose.orientation.x);
+
+    if (other_rover_id == rover_id) {
+        // Ignore paths from self
+        return;
+    }
 
     ares::Path2D other_path;
     for (const auto& pose_stamped : msg->poses) {
@@ -152,6 +164,12 @@ void PathPlanningServer::mapCallback(const nav_msgs::msg::OccupancyGrid::SharedP
         map[i] = msg->data[i];
     }
     return;
+}
+
+void PathPlanningServer::targetCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg) {
+    target.found = true;
+    target.position[0] = msg->pose.position.x;
+    target.position[1] = msg->pose.position.y;
 }
 
 // void PathPlanningServer::otherRoverLocationsCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg) {

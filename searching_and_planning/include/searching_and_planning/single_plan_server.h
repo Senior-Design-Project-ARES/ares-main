@@ -34,12 +34,14 @@ private:
     void otherRoverPathsCallback(const nav_msgs::msg::Path::SharedPtr msg);
     // void otherRoverLocationsCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
     void mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
+    void targetCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
 
     rclcpp::Service<cartographer_ros_msgs::srv::TrajectoryQuery>::SharedPtr service_;
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_subscription_;
-    rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr other_rover_paths_subscription_;
+    rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr rover_paths_subscription_;
     // rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr other_rover_locations_subscription_;
     rclcpp::Subscription<nav_msgs::msg::OccupancyGrid>::SharedPtr map_subscription_;
+    rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr target_subscription_;
 
     Eigen::Vector2d current_location;
     std::map<int32_t, Path2D_for_rover> other_rover_paths;
