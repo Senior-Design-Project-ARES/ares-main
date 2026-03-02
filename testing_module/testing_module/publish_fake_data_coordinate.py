@@ -9,14 +9,16 @@ from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import OccupancyGrid
 from nav_msgs.msg import Path as PathMsg
 
-class PublishFakeDataNode(Node):
+class PublishFakeDataCoordinateNode(Node):
     def __init__(self):
-        super().__init__('publish_fake_data_node')
+        super().__init__('publish_fake_data_coordinate_node')
         self.pose_publisher_ = self.create_publisher(PoseStamped, 'current_pose', 10)
 
         self.path_publisher_ = self.create_publisher(PathMsg, 'planned_paths', 10)
 
         self.OccupancyGrid_publisher_ = self.create_publisher(OccupancyGrid, 'map', 10)
+
+        self.target_location_publisher_ = self.create_publisher(PoseStamped, 'target_location', 10)
 
         self.map_width = 100
         self.map_height = 100
@@ -31,7 +33,7 @@ class PublishFakeDataNode(Node):
 
     def _load_test_map(self):
         pkg_share = Path(get_package_share_directory("testing_module"))
-        map_path = pkg_share / "test_map" / "rover_0_iter_3_diskmap.csv"
+        map_path = pkg_share / "test_map" / "rover_0_iter_9_diskmap.csv"
 
         if not map_path.exists():
             self.get_logger().warning(f"Test map not found: {map_path}")
@@ -113,10 +115,23 @@ class PublishFakeDataNode(Node):
         self.OccupancyGrid_publisher_.publish(msg)
         self.get_logger().info('Publishing OccupancyGrid message')
 
+        msg = PoseStamped()
+        msg.header.stamp = self.get_clock().now().to_msg()
+        msg.header.frame_id = "map"
+        msg.pose.position.x = 2.3
+        msg.pose.position.y = 2.0
+        msg.pose.position.z = 0.0
+        msg.pose.orientation.x = 0.0
+        msg.pose.orientation.y = 0.0
+        msg.pose.orientation.z = 0.0
+        msg.pose.orientation.w = 1.0
+        self.target_location_publisher_.publish(msg)
+        self.get_logger().info('Publishing target location PoseStamped message')
+
 def main(args=None):
     rclpy.init(args=args)
 
-    publish_fake_data_node = PublishFakeDataNode()
-    rclpy.spin(publish_fake_data_node)
-    publish_fake_data_node.destroy_node()
+    publish_fake_data_coordinate_node = PublishFakeDataCoordinateNode()
+    rclpy.spin(publish_fake_data_coordinate_node)
+    publish_fake_data_coordinate_node.destroy_node()
     rclpy.shutdown()
