@@ -11,6 +11,8 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "ament_index_cpp/get_package_share_directory.hpp"
 
+using std::placeholders::_1;
+
 struct Point {
     double x;
     double y;
@@ -51,8 +53,6 @@ Eigen::MatrixXd readWaypoints(const std::string& filename)
         double x, y;
         if (ss >> x >> y)
             wp.emplace_back(x, y);
-        else
-            std::cerr << "Skipping invalid line in waypoints: " << line << "\n";
     }
 
     Eigen::MatrixXd waypoints(wp.size(), 2);
@@ -96,10 +96,9 @@ std::vector<double> cubicSpline(
         d[j] = (c[j+1]-c[j])/(3.0*h[j]);
     }
 
-    // Evaluate spline
     std::vector<double> result;
     for (double xq : tq) {
-        int i = std::min(int(xq) - 1, n - 2);  // convert 1-based → 0-based
+        int i = std::min(int(xq) - 1, n - 2);
         double dx = xq - t[i];
         result.push_back(a[i] + b[i]*dx + c[i]*dx*dx + d[i]*dx*dx*dx);
     }
@@ -142,28 +141,44 @@ Eigen::MatrixXd micropointsProd(const Eigen::MatrixXd& waypoints, int numSamples
 // ---------------- ROS 2 Node ----------------
 class PathInterpolatorNode : public rclcpp::Node {
 public:
-    PathInterpolatorNode() : Node("pathInterp") 
+    PathInterpolatorNode() : Node("pathInterp")
     {
         micro_pub_ = this->create_publisher<nav_msgs::msg::Path>("/micro_waypoints", 10);
 
-        // Get package share directory
-        std::string pkg_path = ament_index_cpp::get_package_share_directory("my_package");
-        std::string file_path = pkg_path + "/resources/waypoints.txt";  
-
-        Eigen::MatrixXd waypoints = readWaypoints(file_path);
-        int numSamples = 100;
-        micro_ = micropointsProd(waypoints, numSamples);
+        sub_wp_ = this->create_subscription<nav_msgs::msg::Path>("/planned_paths", 10, std::bind(&PathInterpolatorNode::waypointCallback, this, _1));
 
         timer_ = this->create_wall_timer(std::chrono::milliseconds(500), std::bind(&PathInterpolatorNode::publishMicroWaypoints, this));
     }
 
 private:
-    void publishMicroWaypoints() {
+
+    void waypointCallback(const nav_msgs::msg::Path::SharedPtr msg)
+    {
+        if (msg->poses.empty())
+            return;
+
+        Eigen::MatrixXd waypoints(msg->poses.size(), 2);
+
+        for (size_t i = 0; i < msg->poses.size(); ++i)
+        {
+            waypoints(i, 0) = msg->poses[i].pose.position.x;
+            waypoints(i, 1) = msg->poses[i].pose.position.y;
+        }
+
+        int numSamples = 100;
+        micro_ = micropointsProd(waypoints, numSamples);
+
+        RCLCPP_INFO(this->get_logger(), "Waypoints updated from topic.");
+    }
+
+    void publishMicroWaypoints()
+    {
         nav_msgs::msg::Path msg;
         msg.header.stamp = this->now();
         msg.header.frame_id = "map";
 
-        for (int i = 0; i < micro_.rows(); i++) {
+        for (int i = 0; i < micro_.rows(); i++)
+        {
             geometry_msgs::msg::PoseStamped pose;
             pose.header = msg.header;
             pose.pose.position.x = micro_(i, 0);
@@ -177,15 +192,16 @@ private:
     }
 
     rclcpp::Publisher<nav_msgs::msg::Path>::SharedPtr micro_pub_;
+    rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr sub_wp_;
     Eigen::MatrixXd micro_;
     rclcpp::TimerBase::SharedPtr timer_;
 };
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv)
+{
     std::cout << "pathInterp started running!" << std::endl;
     rclcpp::init(argc, argv);
-    auto node = std::make_shared<PathInterpolatorNode>();
-    rclcpp::spin(node);
+    rclcpp::spin(std::make_shared<PathInterpolatorNode>());
     rclcpp::shutdown();
     std::cout << "pathInterp finished!" << std::endl;
     return 0;

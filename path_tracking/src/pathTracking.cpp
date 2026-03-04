@@ -141,13 +141,13 @@ class PathTrackingNode : public rclcpp::Node
         PathTrackingNode() : Node("pathTracking")
         {
             // Subscribe to Pose
-            sub_pos = this->create_subscription<geometry_msgs::msg::Pose>("/Pose", 10, std::bind(&PathTrackingNode::poseCallback, this, _1));
+            sub_pos = this->create_subscription<geometry_msgs::msg::Pose>("/current_pose", 10, std::bind(&PathTrackingNode::poseCallback, this, _1));
 
             // Subscribe to waypoints
             sub_wp = this->create_subscription<nav_msgs::msg::Path>("/micro_waypoints", 10, std::bind(&PathTrackingNode::pathCallback, this, _1));
 
             // Subscribe to stopIF
-            sub_stop = this->create_subscription<std_msgs::msg::Bool>("/stopIF", 10, std::bind(&PathTrackingNode::stopCallback, this, _1));
+            sub_stop = this->create_subscription<std_msgs::msg::Bool>("/stop_rover", 10, std::bind(&PathTrackingNode::stopCallback, this, _1));
 
             // Publish to cmd_vel
             pub_ = this->create_publisher<geometry_msgs::msg::Twist>("/cmd_vel", 10);
