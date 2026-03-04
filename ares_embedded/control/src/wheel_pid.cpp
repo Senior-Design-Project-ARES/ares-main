@@ -1,5 +1,12 @@
 #include "wheel_pid.hpp"
 
+/**
+ * @Author: Vishnu Duriseti
+ * Discrete-time wheel PID. Holds integrator state internally.
+ * No actuator dynamics, no saturation (delegate to Limits).
+ * Deterministic and allocation-free (fixed 4 wheels).
+ */
+
 namespace control {
 
 WheelPid::WheelPid() = default;

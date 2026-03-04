@@ -1,7 +1,8 @@
 #pragma once
 
 /**
- * Central controller parameters. Constants only; no logic.
+ * @Author: Vishnu Duriseti
+ * Central controller parameters. 
  * Derived from MATLAB design (actuation_controller_sim.m, test.m).
  */
 
@@ -11,12 +12,12 @@ namespace control {
 constexpr float kDt = 0.01f;
 
 /// Wheel PID gains (analytical design: rise time, settling time, damping)
-constexpr float kKp = 0.5f;
-constexpr float kKi = 2.5f;
-constexpr float kKd = 0.0f;
+constexpr float kKp = 0.0045f;
+constexpr float kKi = 0.0152f;
+constexpr float kKd = 0.0005f;
 
 /// Wheel speed limit [deg/s] (command and output)
-constexpr float kWheelSpeedLimitDegPerS = 500.0f;
+constexpr float kWheelSpeedLimitDegPerS = 1000.0f;
 
 /// Actuator output limit (same units as PID output; scale to your DAC/PWM)
 constexpr float kOutputLimit = 1.0f;

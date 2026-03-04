@@ -9,6 +9,7 @@
 #include "stm32h7xx.h"
 #include "stm32h7xx_hal.h"
 #include "stm32h7xx_hal_gpio_ex.h"
+#include "ares_control.hpp" // custom control library
 
 extern "C" {
     void SystemClock_Config(void);

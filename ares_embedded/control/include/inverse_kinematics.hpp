@@ -6,6 +6,7 @@
 namespace control {
 
 /**
+ * @Author: Vishnu Duriseti
  * Algebraic IK: (v_cmd, yaw_rate_cmd) -> wheel speed commands.
  * No dynamics, no physics, no state.
  * Wheel order: 1=FR, 2=FL, 3=RL, 4=RR (omni front, normal rear).

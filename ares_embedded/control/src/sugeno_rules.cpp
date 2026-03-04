@@ -2,6 +2,14 @@
 #include "config.hpp"
 #include <cmath>
 
+/**
+ * @Author: Vishnu Duriseti
+ * Sugeno-style rule output: gain multipliers from normalized body-level errors.
+ * No fuzzy engine; deterministic rules only.
+ * Inputs: velocity error [m/s], yaw-rate error [deg/s].
+ * Outputs: Kp_mult, Ki_mult, Kd_mult (applied to base PID gains).
+ */
+
 namespace control {
 
 namespace {
