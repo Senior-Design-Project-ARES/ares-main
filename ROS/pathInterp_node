@@ -154,10 +154,7 @@ public:
         int numSamples = 100;
         micro_ = micropointsProd(waypoints, numSamples);
 
-        timer_ = this->create_wall_timer(
-            std::chrono::milliseconds(500),
-            std::bind(&PathInterpolatorNode::publishMicroWaypoints, this)
-        );
+        timer_ = this->create_wall_timer(std::chrono::milliseconds(500), std::bind(&PathInterpolatorNode::publishMicroWaypoints, this));
     }
 
 private:
