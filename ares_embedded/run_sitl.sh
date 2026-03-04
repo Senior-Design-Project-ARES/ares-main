@@ -9,7 +9,7 @@ if [ -z "$ARES_EMBEDDED_DIR" ]; then
   ARES_EMBEDDED_DIR="$(cd "$(dirname "$0")" && pwd)"
 fi
 
-BUILD_DIR="${ARES_EMBEDDED_DIR}/SITL_build"
+BUILD_DIR="${ARES_EMBEDDED_DIR}/build"
 TEST_EXE="${BUILD_DIR}/control/test_controller"
 LOG_DIR="${ARES_EMBEDDED_DIR}/logs"
 VIZ_SCRIPT="${ARES_EMBEDDED_DIR}/viz/plot_controller_logs.py"
@@ -34,9 +34,9 @@ else
   exit 1
 fi
 
-echo ""
-rm -rf $BUILD_DIR
-echo "Build directory removed. CSVs kept in logs/."
+# echo ""
+# rm -rf $BUILD_DIR
+# echo "Build directory removed. CSVs kept in logs/."
 
 # Pipeline: run Python viz on the log (use venv, .venv, or python3)
 CSV_LOG="${LOG_DIR}/controller_sim_case1.csv"
