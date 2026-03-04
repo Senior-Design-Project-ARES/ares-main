@@ -1,5 +1,35 @@
 # ares-main
 
+Install ROS2 Humble from https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html assuming you are using Ubuntu 22.04, if you are on another OS you can find other install instructions from that same link.
+
+When installing make sure to not install both the Base install and the Desktop install only do the Desktop install. Also make sure to get the Dev tools as they will be needed to build our package.
+
+once you have ros2 installed then you can run,  
+
+```bash
+sudo apt-get install ros-humble-ros-gz
+sudo apt install ros-humble-ros-gz-bridge
+source /opt/ros/humble/setup.bash
+colcon build 
+```
+
+To build the project. next run
+
+```bash
+source install/local_setup.bash
+```
+
+to source the project. Finally run the launch file which sets up the gazebo simulation and runs the ros2 code.
+
+```bash
+ros2 launch ares-main sim.launch.py
+ros2 launch fast_lio mapping.launch.py use_sim_time:=true config_file:=test.yaml
+ros2 run pc_modifier modifier
+ign topic -t "/cmd_vel" -m ignition.msgs.Twist -p "linear: {x: 0.5}, angular: {z: 0.1}"
+```
+
+
+
 ---
 ## Intro to Github
 
