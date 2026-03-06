@@ -1,0 +1,26 @@
+# ARES Configuration File
+# All parameters for the searching and planning module
+
+searching_and_planning:
+  # Sensor parameters
+  lidar_radius: 4.0                    # meters - LIDAR detection radius
+  min_region_length: 1.0               # meters - minimum region length
+  absolute_min_region_length: 0.1      # meters - absolute minimum region length
+  gap: 0.05                            # meters - gap parameter
+  
+  # Robot parameters
+  rover_radius: 0.15                   # meters - rover physical radius
+  radius_inflation: 1.5                # inflation factor for rover radius when adding path obstacles
+  
+  # Map parameters (grid resolution)
+  map_width: 92                        # cells - map width in grid cells
+  map_height: 92                       # cells - map height in grid cells
+  
+  # Map bounds (world coordinates)
+  x_min: 0.0                           # meters - minimum X coordinate
+  x_max: 4.6                           # meters - maximum X coordinate
+  y_min: 0.0                           # meters - minimum Y coordinate
+  y_max: 4.6                           # meters - maximum Y coordinate
+  
+  # Note: Make sure X and Y have the same resolution
+  # Resolution = (x_max - x_min) / map_width = (y_max - y_min) / map_height

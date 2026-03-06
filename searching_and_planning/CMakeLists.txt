@@ -12,11 +12,13 @@ find_package(cartographer_ros_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
 find_package(Eigen3 REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 add_library(searching_and_planning
   src/core/SearchAndPlan.cpp
   src/core/frontierSearching.cpp
   src/core/MySamplingBasedPlanners.cpp
+  src/core/Config.cpp
   src/tools/HelpfulClass.cpp
 )
 
@@ -28,7 +30,7 @@ target_include_directories(searching_and_planning PUBLIC
 ament_target_dependencies(
   searching_and_planning
 )
-target_link_libraries(searching_and_planning Eigen3::Eigen)
+target_link_libraries(searching_and_planning Eigen3::Eigen yaml-cpp)
 
 # Add executable
 add_executable(path_planning
