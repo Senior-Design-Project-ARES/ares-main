@@ -30,19 +30,21 @@ class PlotPlannedPath(Node):
         xs = [pose.pose.position.x for pose in response.poses]
         ys = [pose.pose.position.y for pose in response.poses]
 
-        plt.figure(figsize=(6, 6))
-        plt.plot(xs, ys, marker="o", linewidth=1.5)
-        plt.title("Planned Trajectory")
-        plt.xlabel("x")
-        plt.ylabel("y")
-        plt.axis("equal")
-        plt.grid(True, alpha=0.3)
+        fig, ax = plt.subplots(figsize=(6, 6))
+        ax.plot(xs, ys, marker="o", linewidth=1.5)
+        ax.set_title("Planned Trajectory")
+        ax.set_xlabel("x")
+        ax.set_ylabel("y")
+        ax.set_xlim(0.0, 4.6)
+        ax.set_ylim(0.0, 4.6)
+        ax.set_aspect("equal", adjustable="box")
+        ax.grid(True, alpha=0.3)
 
         output_dir = os.path.join(os.getcwd(), "output")
         os.makedirs(output_dir, exist_ok=True)
         output_path = os.path.join(output_dir, "trajectory.png")
-        plt.savefig(output_path, dpi=150, bbox_inches="tight")
-        plt.close()
+        fig.savefig(output_path, dpi=150, bbox_inches="tight")
+        plt.close(fig)
 
         self.get_logger().info(f"Trajectory plot saved to {output_path}")
 
