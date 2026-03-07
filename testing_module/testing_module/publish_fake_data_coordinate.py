@@ -33,7 +33,7 @@ class PublishFakeDataCoordinateNode(Node):
 
     def _load_test_map(self):
         pkg_share = Path(get_package_share_directory("testing_module"))
-        map_path = pkg_share / "test_map" / "rover_0_iter_9_diskmap.csv"
+        map_path = pkg_share / "test_map" / "occupancy_92x92_flip.csv"
 
         if not map_path.exists():
             self.get_logger().warning(f"Test map not found: {map_path}")
@@ -70,8 +70,8 @@ class PublishFakeDataCoordinateNode(Node):
         msg = PoseStamped()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = "map"
-        msg.pose.position.x = 13.05
-        msg.pose.position.y = 4.6
+        msg.pose.position.x = 0.3
+        msg.pose.position.y = 4.3
         msg.pose.position.z = 0.0
         msg.pose.orientation.x = -1.0
         msg.pose.orientation.y = 0.0
@@ -118,8 +118,8 @@ class PublishFakeDataCoordinateNode(Node):
         msg = PoseStamped()
         msg.header.stamp = self.get_clock().now().to_msg()
         msg.header.frame_id = "map"
-        msg.pose.position.x = 2.3
-        msg.pose.position.y = 2.0
+        msg.pose.position.x = 3.9
+        msg.pose.position.y = 1.7
         msg.pose.position.z = 0.0
         msg.pose.orientation.x = 0.0
         msg.pose.orientation.y = 0.0
