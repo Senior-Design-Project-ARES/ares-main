@@ -1,9 +1,14 @@
 #include "searching_and_planning/single_plan_server.h"
 
 // create a path planning node that provides a service to compute paths
-PathPlanningServer::PathPlanningServer()
+PathPlanningServer::PathPlanningServer(const searching_and_planning::Config& config)
     : Node("path_planning_server"),
-      planner(MAP_WIDTH, MAP_HEIGHT, std::make_pair(X_MIN, X_MAX), std::make_pair(Y_MIN, Y_MAX), map, target)
+      current_location(Eigen::Vector2d::Zero()),
+      target(),
+      config(config),
+      map(std::vector<int8_t>(config.map_width * config.map_height, -1)), // Example empty map
+      FE_map(std::vector<int8_t>(config.map_width * config.map_height, -1)), // Example empty map
+      planner(config.map_width, config.map_height, std::make_pair(config.x_min, config.x_max), std::make_pair(config.y_min, config.y_max), FE_map, target, config)
 {
     // get parameters
     this->declare_parameter<int32_t>("rover_id", -1);
@@ -65,6 +70,14 @@ void PathPlanningServer::handle_trajectory_query(
             single_point_path.waypoints.push_back(pair.second);
             other_rover_current_locations.push_back(single_point_path);
         }
+        
+        if (!target.found) {
+            RCLCPP_WARN(this->get_logger(), "Target not set yet, cannot plan path for trajectory_id 1");
+            response->status.code = 1;  // Failure
+            response->status.message = "Target not set";
+            return;
+        }
+        
         // path = planner.runSingle(current_location, other_rover_current_locations);
         path = planner.runWithGoal(current_location, target.position, other_rover_current_locations);
     }
@@ -73,6 +86,16 @@ void PathPlanningServer::handle_trajectory_query(
         response->status.code = 1;  // Failure
         response->status.message = "Failed to compute path";
         RCLCPP_WARN(this->get_logger(), "Path planning failed.");
+        
+        geometry_msgs::msg::PoseStamped failure_pose;
+        failure_pose.header.frame_id = "world";
+        failure_pose.header.stamp = this->now();
+        failure_pose.pose.position.x = -1.0;
+        failure_pose.pose.position.y = -1.0;
+        failure_pose.pose.position.z = 0.0;
+        failure_pose.pose.orientation.x = static_cast<double>(rover_id);
+        response->trajectory.push_back(failure_pose);
+        
         return;
     }
 
@@ -156,14 +179,120 @@ void PathPlanningServer::mapCallback(const nav_msgs::msg::OccupancyGrid::SharedP
     // Update the internal map representation
     RCLCPP_DEBUG(this->get_logger(), "Received map update with size: %zu", msg->data.size());
 
-    if (msg->data.size() != MAP_WIDTH * MAP_HEIGHT) {
+    if (msg->data.size() != config.map_width * config.map_height) {
         RCLCPP_ERROR(this->get_logger(), "Received map size does not match expected dimensions.");
         return;
     }
     for (size_t i = 0; i < msg->data.size(); ++i) {
         map[i] = msg->data[i];
     }
+    updateFEMap();
     return;
+}
+
+void PathPlanningServer::updateFEMap() {
+    // Placeholder for updating the FE map based on the current map and target information
+    // This function can be called after receiving a new map or target update
+    // For example, you might want to mark cells around the target as more desirable
+    // or mark cells around other rovers' paths as less desirable.
+    std::vector<std::pair<int, int>> unknow_to_blow_up;
+    std::vector<std::pair<int, int>> obstacle_to_blow_up;
+    std::vector<int8_t> temp_FEMap = std::vector<int8_t>(config.map_width * config.map_height, -1);
+    for (size_t i = 0; i < map.size(); ++i) {
+        temp_FEMap[i] = map[i];
+    }
+
+    double radius_in_cells = config.rover_radius * 1.5 / ((config.x_max - config.x_min) / config.map_width);
+
+    for(size_t i = 0; i < config.map_width; i++){
+        for(size_t j = 0; j < config.map_height; j++){
+            // find unknow cells that are serrounded by free cells
+            if (map[i+j*config.map_width] == -1 && IsSerroundingFree(map, i, j)){
+                if (IsSerroundingAllFree(map, i, j)){
+                    temp_FEMap[i+j*config.map_width] = 0;
+                    continue;
+                }
+                unknow_to_blow_up.push_back({i, j}); // find unknow cells that are serrounded by free cells
+            }
+            else if (map[i+j*config.map_width] == 1 && IsSerroundingFree(map, i, j)){
+                obstacle_to_blow_up.push_back({i, j}); // find obstacle cells that are serrounded by free cells
+            }
+        }
+    }
+
+    // Blow up unknow cells to size of disk
+    for(size_t i = 0; i < unknow_to_blow_up.size(); i++){
+        int cell_x = unknow_to_blow_up[i].first;
+        int cell_y = unknow_to_blow_up[i].second;
+        for(int dx = - ceil(radius_in_cells); dx <= ceil(radius_in_cells); dx++){
+            for(int dy = - ceil(radius_in_cells); dy <= ceil(radius_in_cells); dy++){
+                double distance = sqrt(dx*dx + dy*dy);
+                if (distance < ceil(radius_in_cells)){
+                    int new_x = cell_x + dx;
+                    int new_y = cell_y + dy;
+                    if(new_x >= 0 && new_x < static_cast<int>(config.map_width) && new_y >= 0 && new_y < static_cast<int>(config.map_height)){
+                        temp_FEMap[new_x + new_y * config.map_width] = -1;
+                    }
+                }
+            }
+        }
+    }
+
+    // Blow up obstacle cells to size of disk
+    for(size_t i = 0; i < obstacle_to_blow_up.size(); i++){
+        int cell_x = obstacle_to_blow_up[i].first;;
+        int cell_y = obstacle_to_blow_up[i].second;
+        for(int dx = - ceil(radius_in_cells); dx <= ceil(radius_in_cells); dx++){
+            for(int dy = - ceil(radius_in_cells); dy <= ceil(radius_in_cells); dy++){
+                double distance = sqrt(dx*dx + dy*dy);
+                if (distance <= ceil(radius_in_cells)){
+                    int new_x = cell_x + dx;
+                    int new_y = cell_y + dy;
+                    if(new_x >= 0 && new_x < static_cast<int>(config.map_width) && new_y >= 0 && new_y < static_cast<int>(config.map_height)){
+                        temp_FEMap[new_x + new_y * config.map_width] = 1;
+                    }
+                }
+            }
+        }
+    }
+
+    for(size_t i = 0; i < FE_map.size(); ++i) {
+        FE_map[i] = temp_FEMap[i];
+    }
+}
+
+bool PathPlanningServer::IsSerroundingFree(const std::vector<int8_t>& _map, int i, int j) {
+    for(int dx = -1; dx <= 1; dx++){
+        for(int dy = -1; dy <= 1; dy++){
+            if(dx == 0 && dy == 0) continue; // Skip the center cell
+            int new_x = i + dx;
+            int new_y = j + dy;
+            if(new_x < 0 || new_x >= static_cast<int>(config.map_width) || new_y < 0 || new_y >= static_cast<int>(config.map_height)){
+                continue; // Out of bounds
+            }
+            if(_map[new_x + new_y * config.map_width] == 0){
+                return true; // At least one surrounding cell is free
+            }
+        }
+    }
+    return false; // All surrounding cells are free
+}
+
+bool PathPlanningServer::IsSerroundingAllFree(const std::vector<int8_t>& _map, int i , int j){
+    for(int dx = -1; dx <= 1; dx++){
+        for(int dy = -1; dy <= 1; dy++){
+            if(dx == 0 && dy == 0) continue; // Skip the center cell
+            int new_x = i + dx;
+            int new_y = j + dy;
+            if(new_x < 0 || new_x >= static_cast<int>(config.map_width) || new_y < 0 || new_y >= static_cast<int>(config.map_height)){
+                continue; // Out of bounds
+            }
+            if(_map[new_x + new_y * config.map_width] != 0){
+                return false; // At least one surrounding cell is not free
+            }
+        }
+    }
+    return true; // All surrounding cells are free
 }
 
 void PathPlanningServer::targetCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg) {
@@ -182,7 +311,12 @@ void PathPlanningServer::targetCallback(const geometry_msgs::msg::PoseStamped::S
 
 int main(int argc, char **argv){
   rclcpp::init(argc, argv);
-  rclcpp::spin(std::make_shared<PathPlanningServer>());
+  
+  // Create configuration (with default values)
+  searching_and_planning::Config config;
+  
+  // Create and spin the path planning server
+  rclcpp::spin(std::make_shared<PathPlanningServer>(config));
   rclcpp::shutdown();
   return 0;
 }

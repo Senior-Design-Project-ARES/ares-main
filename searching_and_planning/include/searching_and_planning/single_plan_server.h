@@ -23,7 +23,7 @@ struct Path2D_for_rover{
 class PathPlanningServer : public rclcpp::Node 
 {
 public:
-    PathPlanningServer();
+    PathPlanningServer(const searching_and_planning::Config& config);
 
 private:
     void handle_trajectory_query(
@@ -35,6 +35,10 @@ private:
     // void otherRoverLocationsCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
     void mapCallback(const nav_msgs::msg::OccupancyGrid::SharedPtr msg);
     void targetCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg);
+    
+    void updateFEMap();
+    bool IsSerroundingFree(const std::vector<int8_t>& _map, int i, int j);
+    bool IsSerroundingAllFree(const std::vector<int8_t>& _map, int i, int j);
 
     rclcpp::Service<cartographer_ros_msgs::srv::TrajectoryQuery>::SharedPtr service_;
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_subscription_;
@@ -49,7 +53,9 @@ private:
     std::map<int32_t, Eigen::Vector2d> other_rover_locations;
 
     Target target;
-    std::vector<int8_t> map = std::vector<int8_t>(MAP_WIDTH * MAP_HEIGHT, -1); // Example empty map
+    const searching_and_planning::Config& config;
+    std::vector<int8_t> map;
+    std::vector<int8_t> FE_map;
     ares::SearchAndPlanCore planner;
     int32_t rover_id = -1;
 };

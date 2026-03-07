@@ -1,13 +1,14 @@
 #include "searching_and_planning/core/SearchAndPlan.h"
 
-ares::SearchAndPlanCore::SearchAndPlanCore(const int& map_width, const int& map_height, const std::pair<double, double>& x, const std::pair<double, double>& y, const std::vector<int8_t>& FE_map, const Target& target)
-    : map_width(map_width),
+ares::SearchAndPlanCore::SearchAndPlanCore(const size_t& map_width, const size_t& map_height, const std::pair<double, double>& x, const std::pair<double, double>& y, const std::vector<int8_t>& FE_map, const Target& target, const searching_and_planning::Config& config)
+    : config(config),
+      map_width(map_width),
       map_height(map_height),
       resolution((x.second - x.first) / map_width),
       origin(Eigen::Vector2d(x.first, y.first)),
       FE_map(FE_map),
-      front_expl(map_width, map_height, resolution, origin, FE_map),
-      grid_map(map_width, map_height, x.first, x.second, y.first, y.second, -1),
+      front_expl(static_cast<int>(map_width), static_cast<int>(map_height), resolution, origin, FE_map, config),
+      grid_map(static_cast<int>(map_width), static_cast<int>(map_height), x.first, x.second, y.first, y.second, -1),
       target(target)
 {
     // Initialize the grid map with the occupancy data
@@ -16,8 +17,8 @@ ares::SearchAndPlanCore::SearchAndPlanCore(const int& map_width, const int& map_
 
 void ares::SearchAndPlanCore::updateGrid(){
     // This is not really required if I code it properly, but this is more ituitive for now. So people know they are updating the map,
-    for(int i = 0; i < map_height; i++){
-        for(int j = 0; j < map_width; j++){
+    for(size_t i = 0; i < map_height; i++){
+        for(size_t j = 0; j < map_width; j++){
             grid_map(j, i) = FE_map[i*map_width + j];
         }
     }
@@ -49,9 +50,9 @@ void ares::SearchAndPlanCore::addPathObstacles2Grid(const std::vector<Path2D>& p
 
     // add other rover's position as obstacles
     for(int other_id = 0; other_id < num_other_rover; other_id++){
-        double total_radius = 2*ROVER_RADIUS;
+        double total_radius = 2*config.rover_radius;
         for(const auto& point : rovers_current_path[other_id]){
-            int radius_in_cell = ceil(total_radius*RADIUS_INFLATION /((grid_map.x0Bounds().second - grid_map.x0Bounds().first) / grid_map.size().first));
+            int radius_in_cell = ceil(total_radius*config.radius_inflation /((grid_map.x0Bounds().second - grid_map.x0Bounds().first) / grid_map.size().first));
             for(int dx = -radius_in_cell; dx <= radius_in_cell; dx++){
                 for(int dy = -radius_in_cell; dy <= radius_in_cell; dy++){
                     int cell_x, cell_y;
@@ -60,7 +61,7 @@ void ares::SearchAndPlanCore::addPathObstacles2Grid(const std::vector<Path2D>& p
                     int new_y = cell_y + dy;
                     if(new_x < 0 || new_x >= static_cast<int>(grid_map.size().first) || new_y < 0 || new_y >= static_cast<int>(grid_map.size().second)) continue;
                     double dist = sqrt(dx*dx + dy*dy) * ((grid_map.x0Bounds().second - grid_map.x0Bounds().first) / grid_map.size().first);
-                    if(dist <= total_radius*RADIUS_INFLATION && grid_map(new_x, new_y) != -1){
+                    if(dist <= total_radius*config.radius_inflation && grid_map(new_x, new_y) != -1){
                         grid_map(new_x, new_y) = 1;
                     }
                 }
@@ -173,7 +174,7 @@ Eigen::Vector2d ares::SearchAndPlanCore::nextPoint(std::vector<std::pair<Eigen::
     for(size_t i = 1; i < point_of_interest.size(); i++){
         double temp_distance = (location - point_of_interest[i].first).norm();
 
-        if(distance < LIDARRADIUS*1.2 && temp_distance < LIDARRADIUS*1.2){
+        if(distance < config.lidar_radius*1.2 && temp_distance < config.lidar_radius*1.2){
             // Choose the point in the largest frontier region
             if(point_of_interest[i].second > point_of_interest[nextPoint].second){
                 nextPoint = i;

@@ -11,6 +11,7 @@
 #include <Eigen/Dense>
 #include "searching_and_planning/tools/Logging.h"
 #include "searching_and_planning/core/UsefulMacros.h"
+#include "searching_and_planning/core/Config.h"
 
 // Forward declaration so FrontExpl can hold containers of FrontNode
 class FrontNode;
@@ -25,8 +26,9 @@ class FrontExpl
         /// \param resolution: The map resolution in meters/cell
         /// \param origin: The world coordinates of the map's origin
         /// \param FE0_map: The occupancy grid data from the map (do not need to update every time the map is updated, it is pass by reference)
+        /// \param config: Configuration object passed from parent planner
         /// \returns constructed object
-        FrontExpl(int map_width, int map_height, double resolution, const Eigen::Vector2d& origin, const std::vector<int8_t>& FE0_map);
+        FrontExpl(int map_width, int map_height, double resolution, const Eigen::Vector2d& origin, const std::vector<int8_t>& FE0_map, const searching_and_planning::Config& config);
 
         /// \brief Stores a vector of index values of the 8 cell neighborhood relative to the input cell
         /// \param cell - map cell
@@ -74,6 +76,7 @@ class FrontExpl
         std::vector<Eigen::Vector2i> getCentroidsGrid() { return centroid_grid_pts; }
 
     private:
+        const searching_and_planning::Config& config;
         Eigen::Vector2d point;
         // Eigen::Vector2d robot0_pose_;
         std::string map0_frame = "tb3_0/map";

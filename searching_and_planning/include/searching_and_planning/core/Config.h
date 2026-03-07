@@ -43,8 +43,8 @@ public:
     const double radius_inflation;           // inflation for rover radius when adding path obstacles
     
     // Map parameters (const, grid cells)
-    const int map_width;                     // cells
-    const int map_height;                    // cells
+    const size_t map_width;                     // cells
+    const size_t map_height;                    // cells
     
     // Map bounds (const, meters)
     const double x_min;                      // meters
@@ -68,8 +68,8 @@ private:
                             double& gap,
                             double& rover_radius,
                             double& radius_inflation,
-                            int& map_width,
-                            int& map_height,
+                            size_t& map_width,
+                            size_t& map_height,
                             double& x_min,
                             double& x_max,
                             double& y_min,

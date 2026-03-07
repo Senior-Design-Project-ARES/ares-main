@@ -3,8 +3,9 @@
 
 #include "searching_and_planning/core/frontierSearching.h"
 
-FrontExpl::FrontExpl(int map_width, int map_height, double resolution, const Eigen::Vector2d& origin, const std::vector<int8_t>& FE0_map)
-    :map_width(map_width), 
+FrontExpl::FrontExpl(int map_width, int map_height, double resolution, const Eigen::Vector2d& origin, const std::vector<int8_t>& FE0_map, const searching_and_planning::Config& config)
+    :config(config),
+    map_width(map_width), 
     map_height(map_height), 
     FE0_map(FE0_map), 
     resolution(resolution), 
@@ -218,7 +219,7 @@ void FrontExpl::find_centroids(){
     {
         double length = frountier_pair.first.size() * resolution;
 
-        if (length < ABSULUTE_MIN_REGION_LENGTH) {
+        if (length < config.absolute_min_region_length) {
             // std::cout << "Region too small, skipping" << std::endl;
             continue;
         }
@@ -230,7 +231,7 @@ void FrontExpl::find_centroids(){
         }
         else
         {
-            number_of_groups = floor(length / MIN_REGION_LENGTH);
+            number_of_groups = floor(length / config.min_region_length);
         }
         int cells_per_group = floor(frountier_pair.first.size() / number_of_groups);
         int left_over = frountier_pair.first.size() - (cells_per_group * number_of_groups);

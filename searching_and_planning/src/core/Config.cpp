@@ -45,8 +45,8 @@ Config::Config(const std::string& yaml_path)
     double temp_gap = gap;
     double temp_rover_radius = rover_radius;
     double temp_radius_inflation = radius_inflation;
-    int temp_map_width = map_width;
-    int temp_map_height = map_height;
+    size_t temp_map_width = map_width;
+    size_t temp_map_height = map_height;
     double temp_x_min = x_min;
     double temp_x_max = x_max;
     double temp_y_min = y_min;
@@ -74,8 +74,8 @@ Config::Config(const std::string& yaml_path)
     const_cast<double&>(this->gap) = temp_gap;
     const_cast<double&>(this->rover_radius) = temp_rover_radius;
     const_cast<double&>(this->radius_inflation) = temp_radius_inflation;
-    const_cast<int&>(this->map_width) = temp_map_width;
-    const_cast<int&>(this->map_height) = temp_map_height;
+    const_cast<size_t&>(this->map_width) = temp_map_width;
+    const_cast<size_t&>(this->map_height) = temp_map_height;
     const_cast<double&>(this->x_min) = temp_x_min;
     const_cast<double&>(this->x_max) = temp_x_max;
     const_cast<double&>(this->y_min) = temp_y_min;
@@ -90,8 +90,8 @@ void Config::loadFromYaml(const std::string& yaml_path,
                           double& gap,
                           double& rover_radius,
                           double& radius_inflation,
-                          int& map_width,
-                          int& map_height,
+                          size_t& map_width,
+                          size_t& map_height,
                           double& x_min,
                           double& x_max,
                           double& y_min,
@@ -143,10 +143,10 @@ void Config::loadFromYaml(const std::string& yaml_path,
         
         // Load map parameters
         if (sp_config["map_width"]) {
-            map_width = sp_config["map_width"].as<int>();
+            map_width = sp_config["map_width"].as<size_t>();
         }
         if (sp_config["map_height"]) {
-            map_height = sp_config["map_height"].as<int>();
+            map_height = sp_config["map_height"].as<size_t>();
         }
         
         // Load map bounds
