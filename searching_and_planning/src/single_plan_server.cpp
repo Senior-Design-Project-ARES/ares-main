@@ -63,7 +63,7 @@ void PathPlanningServer::handle_trajectory_query(
     }
 
     if (request->trajectory_id == 1){
-        // only consider currnet location of other rovers
+        // only consider current location of other rovers
         std::vector<ares::Path2D> other_rover_current_locations;
         for (const auto& pair : other_rover_locations) {
             ares::Path2D single_point_path;
@@ -101,9 +101,17 @@ void PathPlanningServer::handle_trajectory_query(
 
     RCLCPP_INFO(this->get_logger(), "Path planning succeeded with %zu waypoints.", 
                 path.waypoints.size());
-    
-    response->status.code = 0;  // Success
-    response->status.message = "Path computed successfully";
+
+
+    // compare the last waypoint with the target position, if they are close enough, return code 2
+    if ((target.found) && (path.waypoints.back() - target.position).norm() < 0.01) {
+        response->status.code = 2;  // Success, target reached
+        response->status.message = "Path computed successfully, target reached";
+    }
+    else{
+        response->status.code = 0;  // Success
+        response->status.message = "Path computed successfully";
+    }
 
     geometry_msgs::msg::PoseStamped pose;
     pose.header.frame_id = "world";
