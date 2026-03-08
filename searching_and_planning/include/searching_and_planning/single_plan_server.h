@@ -12,6 +12,9 @@
 // import other necessary libraries
 #include "searching_and_planning/core/SearchAndPlan.h"
 #include "searching_and_planning/tools/MyPath.h"
+#include <filesystem>
+#include "searching_and_planning/tools/Logging.h"
+#include "searching_and_planning/core/Config.h"
 
 struct Path2D_for_rover{
     int32_t rover_id;

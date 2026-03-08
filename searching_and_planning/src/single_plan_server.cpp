@@ -181,6 +181,7 @@ void PathPlanningServer::mapCallback(const nav_msgs::msg::OccupancyGrid::SharedP
 
     if (msg->data.size() != config.map_width * config.map_height) {
         RCLCPP_ERROR(this->get_logger(), "Received map size does not match expected dimensions.");
+        RCLCPP_ERROR(this->get_logger(), "Expected size: %zu, Received size: %zu", config.map_width * config.map_height, msg->data.size());
         return;
     }
     for (size_t i = 0; i < msg->data.size(); ++i) {
@@ -202,7 +203,7 @@ void PathPlanningServer::updateFEMap() {
         temp_FEMap[i] = map[i];
     }
 
-    double radius_in_cells = config.rover_radius * 1.5 / ((config.x_max - config.x_min) / config.map_width);
+    double radius_in_cells = config.rover_radius * config.radius_inflation / ((config.x_max - config.x_min) / config.map_width);
 
     for(size_t i = 0; i < config.map_width; i++){
         for(size_t j = 0; j < config.map_height; j++){
@@ -312,8 +313,10 @@ void PathPlanningServer::targetCallback(const geometry_msgs::msg::PoseStamped::S
 int main(int argc, char **argv){
   rclcpp::init(argc, argv);
   
-  // Create configuration (with default values)
-  searching_and_planning::Config config;
+  // Create configuration from YAML file in config folder relative to current working directory
+  std::string config_path = (std::filesystem::current_path() / "config" / "config.yaml").string();
+  LOG("Loading config from: " << config_path);
+  searching_and_planning::Config config(config_path);
   
   // Create and spin the path planning server
   rclcpp::spin(std::make_shared<PathPlanningServer>(config));
