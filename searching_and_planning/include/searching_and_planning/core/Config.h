@@ -2,6 +2,7 @@
 #define CONFIG_H
 
 #include <string>
+#include "searching_and_planning/tools/Logging.h"
 
 namespace searching_and_planning {
 

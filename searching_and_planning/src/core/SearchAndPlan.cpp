@@ -81,10 +81,14 @@ ares::Path2D ares::SearchAndPlanCore::runSingle(const Eigen::Vector2d current_lo
     // MyKinoRRT my_kinorrt(10000, 10);
 
     // find frontiers
+    LOG("Finding frontiers....");
     std::vector<std::pair<Eigen::Vector2d, int>> points = front_expl.run();
     if(points.size() == 0){
         ERROR("no more frontier");
         return path;
+    }
+    else{
+        LOG("Found " << points.size() << " frontier points.");
     }
     
     // determine next point to explore

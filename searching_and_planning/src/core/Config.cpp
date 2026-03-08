@@ -101,8 +101,8 @@ void Config::loadFromYaml(const std::string& yaml_path,
         // Check if file exists
         std::ifstream file(yaml_path);
         if (!file.good()) {
-            std::cerr << "Warning: Config file not found at " << yaml_path 
-                      << ". Using default values." << std::endl;
+            WARN("Config file not found at " << yaml_path 
+                      << ". Using default values.");
             return;
         }
         file.close();
@@ -112,8 +112,8 @@ void Config::loadFromYaml(const std::string& yaml_path,
         
         // Check if searching_and_planning section exists
         if (!config["searching_and_planning"]) {
-            std::cerr << "Warning: 'searching_and_planning' section not found in config. "
-                      << "Using default values." << std::endl;
+            WARN("'searching_and_planning' section not found in config. "
+                      << "Using default values.");
             return;
         }
         
@@ -163,14 +163,14 @@ void Config::loadFromYaml(const std::string& yaml_path,
             y_max = sp_config["y_max"].as<double>();
         }
         
-        std::cout << "Successfully loaded configuration from: " << yaml_path << std::endl;
+        LOG("Successfully loaded configuration from: " << yaml_path);
         
     } catch (const YAML::Exception& e) {
-        std::cerr << "Error parsing YAML file: " << e.what() 
-                  << ". Using default values." << std::endl;
+        ERROR("Error parsing YAML file: " << e.what() 
+                  << ". Using default values.");
     } catch (const std::exception& e) {
-        std::cerr << "Error loading config: " << e.what() 
-                  << ". Using default values." << std::endl;
+        ERROR("Error loading config: " << e.what() 
+                  << ". Using default values.");
     }
 }
 
