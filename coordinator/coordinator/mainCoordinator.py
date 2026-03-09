@@ -87,6 +87,9 @@ class MainCoordinator(Node):
             self.get_logger().info('Waiting for path planning service...')
         self.pending_future = None
 
+        # create timer to check if path still valid and replan if needed
+        self.checking_timer = self.create_timer(1.0, self.checking_timer_callback)
+
         # create timers for periodic planning for target
         self.target_plan_timer = self.create_timer(5.0, self.timer_target_callback)
 
@@ -136,6 +139,9 @@ class MainCoordinator(Node):
             self.planning_type = PlanningType.TO_TARGET_TEST
             # self.need_path_to_target_test = True
             return
+        
+    def checking_timer_callback(self):
+        pass
         
     def other_rovers_path_callback(self, msg):
         if (not self.target_found):
