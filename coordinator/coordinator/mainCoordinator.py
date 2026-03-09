@@ -10,9 +10,16 @@ from enum import Enum
 
 class State(Enum):
     IDLE = 0
-    PLANNING_FOR_TARGET = 1
-    NORMAL_PLANNING = 2
-    STOPPED = 3
+    NORMAL_PLANNING = 1
+    PLANNING_FOR_TARGET_TEST = 2
+    PLANNING_FOR_TARGET = 3
+    STOPPED = 4
+
+class PlanningType(Enum):
+    NONE = -1
+    NORMAL = 0
+    TO_TARGET_TEST = 1
+    TO_TARGET = 2
 
 class MainCoordinator(Node):
     def __init__(self):
@@ -29,10 +36,9 @@ class MainCoordinator(Node):
         self.should_exit = False
         self.path2target_planned = False
         self.state = State.IDLE
+        self.planning_type = PlanningType.NONE
 
         # Flags to control when to request new paths
-        self.need_path_to_target = False
-        self.need_new_path = False
         self.target_found = False
         self.target_path_planned = False
 
@@ -45,6 +51,7 @@ class MainCoordinator(Node):
         # Create publisher and subscribers
         self.path_publisher = self.create_publisher(PathMsg, 'planned_paths', 10)
         self.stop_publisher = self.create_publisher(Bool, 'stop_rover', 10)
+        self.stop_except_to_target_publisher = self.create_publisher(Bool, '/stop_except_to_target', 10)
 
         self.target_subscription = self.create_subscription(
             PoseStamped,
@@ -67,6 +74,12 @@ class MainCoordinator(Node):
             10
         )
 
+        self.stop_except_to_target_subscription = self.create_subscription(
+            Bool,
+            '/stop_except_to_target',
+            self.stop_except_to_target_callback,
+            10
+        )
 
         # Create service client for trajectory planning
         self.planning_client = self.create_client(TrajectoryQuery, 'get_path')
@@ -83,19 +96,29 @@ class MainCoordinator(Node):
     def main_loop(self):
         if self.state != State.IDLE:
             return
+        
+        if self.planning_type == PlanningType.NONE:
+            return
+        
+        if self.planning_type == PlanningType.TO_TARGET_TEST:
+            self.request_trajectory(trajectory_id=1)
+            self.planning_type = PlanningType.NONE
+            self.state = State.PLANNING_FOR_TARGET_TEST
+            return
+        
+        if self.planning_type == PlanningType.TO_TARGET:
+            self.request_trajectory(trajectory_id=1)
+            self.planning_type = PlanningType.NONE
+            self.state = State.PLANNING_FOR_TARGET
+            return
 
-        if self.need_new_path:
+        if self.planning_type == PlanningType.NORMAL:
             self.request_trajectory(trajectory_id=0)
-            self.need_new_path = False
-            self.need_path_to_target = False
+            self.planning_type = PlanningType.NONE
             self.state = State.NORMAL_PLANNING
             return
         
-        if self.need_path_to_target:
-            self.request_trajectory(trajectory_id=1)
-            self.need_path_to_target = False
-            self.state = State.PLANNING_FOR_TARGET
-            return
+        self.get_logger().warn(f"Unknown planning type: {self.planning_type}")
         
     def target_callback(self, msg):
         self.target_found = True
@@ -103,11 +126,15 @@ class MainCoordinator(Node):
         self.target_location[1] = msg.pose.position.y
 
     def timer_target_callback(self):
-        if self.target_path_planned:
+        # if self.target_path_planned or self.planning_type != PlanningType.NONE:
+        #     return
+        
+        if self.planning_type != PlanningType.NONE:
             return
 
-        if self.target_found:
-            self.need_path_to_target = True
+        if self.target_found and not self.path2target_planned:
+            self.planning_type = PlanningType.TO_TARGET_TEST
+            # self.need_path_to_target_test = True
             return
         
     def other_rovers_path_callback(self, msg):
@@ -125,6 +152,15 @@ class MainCoordinator(Node):
             stop_msg = Bool()
             stop_msg.data = True
             self.stop_publisher.publish(stop_msg)
+
+    def stop_except_to_target_callback(self, msg):
+        if not msg.data:
+            self.stop_publisher.publish(Bool(data=False))
+            return
+    
+        if not self.path2target_planned:
+            self.stop_publisher.publish(Bool(data=True))
+            return
         
     def pose_callback(self, msg):
         if (msg.pose.orientation.x != self.rover_id):
@@ -134,8 +170,9 @@ class MainCoordinator(Node):
             return
         
         pose = [msg.pose.position.x, msg.pose.position.y]
-        if (pose[0]-self.path_end[0])**2 + (pose[1]-self.path_end[1])**2 < self.replanning_threshold**2:
-            self.need_new_path = True
+        if (not self.path2target_planned and (pose[0]-self.path_end[0])**2 + (pose[1]-self.path_end[1])**2 < self.replanning_threshold**2):
+            self.planning_type = PlanningType.NORMAL
+            # self.need_new_path = True
 
 
     def planning_response_callback(self, future):
@@ -143,11 +180,59 @@ class MainCoordinator(Node):
             response = future.result()
         except Exception as exc:
             self.get_logger().error(f'TrajectoryQuery call failed: {exc}')
+            self.state = State.IDLE
             return
 
         if response is None:
             self.get_logger().error('TrajectoryQuery returned no response.')
+            self.state = State.IDLE
             return
+        
+        self.get_logger().info(f"Received trajectory with status: {response.status}")
+        
+        # Catch and exit early if planning failed
+        if response.status.code == 1:
+            if self.state == State.PLANNING_FOR_TARGET_TEST:
+                self.get_logger().info("Trajectory to target planned failed.")
+                self.state = State.IDLE
+                return
+            
+            if self.state == State.PLANNING_FOR_TARGET:
+                self.get_logger().info("Trajectory to target planned failed.")
+                self.stop_except_to_target_publisher.publish(Bool(data=False))
+                self.state = State.IDLE
+                return
+            
+            if self.state == State.NORMAL_PLANNING:
+                self.get_logger().info("Trajectory planning failed.")
+                self.state = State.IDLE
+                return
+                
+            self.get_logger().warn(f"Trajectory planning failed with unknown status: {response.status}")
+            self.state = State.IDLE
+            return
+
+        if response.status.code == 2:
+            self.path2target_planned = True
+            self.stop_except_to_target_publisher.publish(Bool(data=True))
+
+            if self.state == State.PLANNING_FOR_TARGET_TEST:
+                self.get_logger().info("Trajectory to target planned successfully. Now planning for real.")
+                self.planning_type = PlanningType.TO_TARGET
+                self.state = State.IDLE
+                return
+            
+            if self.state == State.PLANNING_FOR_TARGET or self.state == State.NORMAL_PLANNING:
+                self.get_logger().info("Trajectory to target planned successfully.")
+
+        if response.status.code == 0:
+            if self.state == State.PLANNING_FOR_TARGET_TEST or self.state == State.PLANNING_FOR_TARGET:
+                self.get_logger().warn("This should not happen: trajectory to target planned successfully but target not reached in test mode.")
+                self.state = State.IDLE
+                return
+            
+            if self.state == State.NORMAL_PLANNING:
+                self.get_logger().info("Trajectory planned successfully.")
 
         path_msg = PathMsg()
         path_msg.header.stamp = self.get_clock().now().to_msg()
@@ -162,7 +247,6 @@ class MainCoordinator(Node):
         self.path_publisher.publish(path_msg)
         self.path_end[0] = path_msg.poses[-1].pose.position.x
         self.path_end[1] = path_msg.poses[-1].pose.position.y
-
         self.state = State.IDLE
 
     def request_trajectory(self, trajectory_id):
