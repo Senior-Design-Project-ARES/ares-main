@@ -4,8 +4,7 @@
 #include <limits>
 #include <iostream>
 
-#include <tf2/LinearMath/Quaternion.h>
-#include <tf2/LinearMath/Matrix3x3.h>
+#include "geometry_msgs/msg/pose_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "nav_msgs/msg/path.hpp"
 #include "geometry_msgs/msg/twist.hpp"
@@ -107,6 +106,19 @@ Eigen::Vector2d PP_single(
 
         double angVel = kappa * linVel;
 
+        if(std::abs(alpha) > (45*(M_PI/180)))
+        {
+            if(alpha > 0)
+            {
+                angVel = 0.05;
+            }
+            if(alpha > 0)
+            {
+                angVel = -0.05;
+            }    
+            linVel = 0;
+        }
+
         if (angVel > angVelClamp) 
         {
             angVel = angVelClamp;
@@ -129,9 +141,9 @@ class PathTrackingNode : public rclcpp::Node
 {
     private:
         // Subscription Pose
-        geometry_msgs::msg::Pose latest_pose_;
+        geometry_msgs::msg::PoseStamped latest_pose_;
         bool pose_received_ = false;
-        rclcpp::Subscription<geometry_msgs::msg::Pose>::SharedPtr sub_pos;
+        rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr sub_pos;
 
         // Subscription stopIF
         bool stop_flag_ = false;
@@ -141,7 +153,7 @@ class PathTrackingNode : public rclcpp::Node
         PathTrackingNode() : Node("pathTracking")
         {
             // Subscribe to Pose
-            sub_pos = this->create_subscription<geometry_msgs::msg::Pose>("/current_pose", 10, std::bind(&PathTrackingNode::poseCallback, this, _1));
+            sub_pos = this->create_subscription<geometry_msgs::msg::PoseStamped>("/current_pose", 10, std::bind(&PathTrackingNode::poseCallback, this, _1));
 
             // Subscribe to waypoints
             sub_wp = this->create_subscription<nav_msgs::msg::Path>("/micro_waypoints", 10, std::bind(&PathTrackingNode::pathCallback, this, _1));
@@ -155,7 +167,7 @@ class PathTrackingNode : public rclcpp::Node
 
     // Pose callback
     private:
-        void poseCallback(const geometry_msgs::msg::Pose::SharedPtr msg)
+        void poseCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
         {
             latest_pose_ = *msg;
             pose_received_ = true;
@@ -185,14 +197,11 @@ class PathTrackingNode : public rclcpp::Node
                 micropoints(i,1) = mpoints->poses[i].pose.position.y;
             }
 
-            double x = latest_pose_.position.x;
-            double y = latest_pose_.position.y;
+            double x = latest_pose_.pose.position.x;
+            double y = latest_pose_.pose.position.y;
+            double yaw = latest_pose_.pose.position.z;
 
-            // Convert quaternion to yaw
-            tf2::Quaternion q(latest_pose_.orientation.x, latest_pose_.orientation.y, latest_pose_.orientation.z, latest_pose_.orientation.w);
-
-            double roll, pitch, yaw;
-            tf2::Matrix3x3(q).getRPY(roll, pitch, yaw);
+            int rover_id = static_cast<int>(latest_pose_.pose.orientation.x);
 
             Eigen::Vector3d state = {x, y, yaw};
 
@@ -208,6 +217,7 @@ class PathTrackingNode : public rclcpp::Node
             // Publish command
             geometry_msgs::msg::Twist cmd;
             cmd.linear.x = control(0);
+            cmd.linear.y = rover_id;
             cmd.angular.z = control(1);
             pub_->publish(cmd);
         }

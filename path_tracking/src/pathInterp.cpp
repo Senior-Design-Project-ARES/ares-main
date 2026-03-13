@@ -184,7 +184,6 @@ private:
             pose.pose.position.x = micro_(i, 0);
             pose.pose.position.y = micro_(i, 1);
             pose.pose.position.z = 0.0;
-            pose.pose.orientation.w = 1.0;
             msg.poses.push_back(pose);
         }
 
