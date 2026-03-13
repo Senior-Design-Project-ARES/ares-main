@@ -33,22 +33,27 @@ Version 0.0.1 is based on ST's example for LwIP-TCP-Echo-Server
 Code layout
 ************************************************************************************************************************
 Main execution:
-  * "main.c"
+- "main.c"
+  
 Ethernet execution:
-  * "tcp_echo_server.c"
+- "tcp_echo_server.c"
+  
 Configuration files:
-  * "ethernetif.c"
-  * "stm32h7xx_it.c"
-  * "syscalls.c"
-  * "sysmem.c"
+- "ethernetif.c"
+- "stm32h7xx_it.c"
+- "syscalls.c"
+- "sysmem.c"
+    
 Connection setup:
-  * "app_ethernet.c" set up DHCP, LED status indicators
+- "app_ethernet.c" set up DHCP, LED status indicators
+    
 Required middleware
-  * "LwIP" 
+- "LwIP"
+    
 Required Drivers
-  * "STM32H7xx_HAL_Driver"
-  * "BSP"
-  * "STM32H7xx_HAL_Driver"
+- "STM32H7xx_HAL_Driver"
+- "BSP"
+- "STM32H7xx_HAL_Driver"
 
 ***********************************************************************************************************************
 Know before you go
