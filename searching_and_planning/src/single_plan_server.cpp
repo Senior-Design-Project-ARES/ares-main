@@ -25,7 +25,7 @@ PathPlanningServer::PathPlanningServer(const searching_and_planning::Config& con
 
     // subscribe to current pose topic
     pose_subscription_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
-        "current_pose",
+        "/current_pose",
         10,
         std::bind(&PathPlanningServer::poseCallback, this, std::placeholders::_1));
 
