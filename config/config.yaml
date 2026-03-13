@@ -4,7 +4,7 @@
 common_params:
   # General parameters
   rover_id: 1                          # Unique identifier for the rover
-  rover_name: "Marlin"                   # Name of the rover
+  rover_name: "Taurus"                   # Name of the rover
 
 vrpn:
   server: 192.168.20.100
