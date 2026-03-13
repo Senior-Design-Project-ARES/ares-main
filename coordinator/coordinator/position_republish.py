@@ -13,8 +13,6 @@ class PositionRepublish(Node):
         self.declare_parameter('rover_id', -1)
         self.rover_id = self.get_parameter('rover_id').get_parameter_value().integer_value
 
-        self.declare_parameter('rover_name', 'Marlin')
-
         self.position_publisher = self.create_publisher(PoseStamped, '/current_pose', 10)
         self.position_subscription = self.create_subscription(PoseStamped, 'pose', self.position_callback, 10)
 

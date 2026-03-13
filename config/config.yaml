@@ -1,6 +1,21 @@
 # ARES Configuration File
 # All parameters for the searching and planning module
 
+common_params:
+  # General parameters
+  rover_id: 1                          # Unique identifier for the rover
+  rover_name: "Marlin"                   # Name of the rover
+
+vrpn:
+  server: 192.168.20.100
+  port: 3883
+  frame_id: "world"
+  use_server_time: false
+  broadcast_tf: true
+  refresh_tracker_frequency: 0.2
+  update_frequency: 240.0
+
+
 searching_and_planning:
   # Sensor parameters
   lidar_radius: 4.0                    # meters - LIDAR detection radius
