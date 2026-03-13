@@ -49,27 +49,27 @@ class MainCoordinator(Node):
         self.target_location = [None] * 2
 
         # Create publisher and subscribers
-        self.path_publisher = self.create_publisher(PathMsg, 'planned_paths', 10)
+        self.path_publisher = self.create_publisher(PathMsg, '/planned_paths', 10)
         self.stop_publisher = self.create_publisher(Bool, 'stop_rover', 10)
         self.stop_except_to_target_publisher = self.create_publisher(Bool, '/stop_except_to_target', 10)
 
         self.target_subscription = self.create_subscription(
             PoseStamped,
-            'target_location',
+            '/target_location',
             self.target_callback,
             10
         )
 
         self.pose_subscription = self.create_subscription(
             PoseStamped,
-            'current_pose',
+            '/current_pose',
             self.pose_callback,
             10
         )
 
         self.other_rovers_path_subscription = self.create_subscription(
             PathMsg,
-            'planned_paths',
+            '/planned_paths',
             self.other_rovers_path_callback,
             10
         )
