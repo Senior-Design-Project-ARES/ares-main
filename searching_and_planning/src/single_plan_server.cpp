@@ -31,19 +31,19 @@ PathPlanningServer::PathPlanningServer(const searching_and_planning::Config& con
 
     // subscribe to other rover paths if needed
     rover_paths_subscription_ = this->create_subscription<nav_msgs::msg::Path>(
-        "planned_paths",
+        "/planned_paths",
         10,
         std::bind(&PathPlanningServer::otherRoverPathsCallback, this, std::placeholders::_1));
 
     // subscribe to map updates
     map_subscription_ = this->create_subscription<nav_msgs::msg::OccupancyGrid>(
-        "map",
+        "/map",
         10,
         std::bind(&PathPlanningServer::mapCallback, this, std::placeholders::_1));
 
     // subscribe to target location
     target_subscription_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
-        "target_location",
+        "/target_location",
         10,
         std::bind(&PathPlanningServer::targetCallback, this, std::placeholders::_1));
 }
