@@ -1,3 +1,9 @@
+#
+# @file CMakeLists.txt
+# @brief Build definition for the embedded control module.
+# @author Vishnu Duriseti
+# Core author and maintainer of `ares_embedded/control`.
+#
 cmake_minimum_required(VERSION 3.20)
 
 # Static control library: cascade controller (IK, wheel PID, Sugeno, limits)

@@ -1,3 +1,9 @@
+/**
+ * @file uart_print.h/c
+ * @brief UART debug print interface for firmware logging.
+ * @author Vishnu Duriseti
+ * Core author and maintainer of `ares_embedded/firmware/Drivers/uart`.
+ */
 #ifndef UART_PRINT_H
 #define UART_PRINT_H
 
