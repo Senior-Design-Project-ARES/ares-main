@@ -10,6 +10,8 @@
 #include "stm32h7xx_hal.h"
 #include "stm32h7xx_hal_gpio_ex.h"
 #include "ares_control.hpp" // custom control library
+#include "encoder_driver.h" // encoder driver
+#include "uart_print.h"     // simple UART debug printing
 
 extern "C" {
     void SystemClock_Config(void);
@@ -367,7 +369,8 @@ int main(void)
 {
     // HAL initialization
     HAL_Init();
-    
+    print_init();  // enable USART3 debug prints (115200 8N1 over ST-LINK)
+
     yellow_led_init();
     red_led_init();
 
@@ -432,7 +435,15 @@ int main(void)
     motor_driver_init(&m3_cfg, &motors[2]);
     motor_driver_init(&m4_cfg, &motors[3]);
 
+    uint32_t last_log_ms = HAL_GetTick();
     while (true) {
+        /* Simple debug print every second over UART */
+        uint32_t now_ms = HAL_GetTick();
+        if ((now_ms - last_log_ms) >= 1000U) {
+            last_log_ms = now_ms;
+            println("Firmware alive, t=%lu ms", static_cast<unsigned long>(now_ms));
+        }
+
         /* All 4 motors forward at 20% duty for 5 seconds */
         for (int i = 0; i < 4; i++)
             motor_drive(&motors[i], MOTOR_FORWARD, 20);

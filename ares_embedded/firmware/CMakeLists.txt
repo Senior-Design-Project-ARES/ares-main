@@ -25,14 +25,17 @@ set(HAL_SOURCES
     ${HAL_DIR}/Src/stm32h7xx_hal_gpio.c
     ${HAL_DIR}/Src/stm32h7xx_hal_pwr.c
     ${HAL_DIR}/Src/stm32h7xx_hal_rcc.c
+    ${HAL_DIR}/Src/stm32h7xx_hal_rcc_ex.c
     ${HAL_DIR}/Src/stm32h7xx_hal_tim.c
     ${HAL_DIR}/Src/stm32h7xx_hal_uart.c
 )
 
-# System and startup files
+# System, startup, and libc glue (syscalls/sysmem)
 set(SYSTEM_SOURCES
     ${SRC_DIR}/system_stm32h7xx.c
     ${SRC_DIR}/stm32h7xx_it.c
+    ${SRC_DIR}/syscalls.c
+    ${SRC_DIR}/sysmem.c
     ${STARTUP_DIR}/startup_stm32h723xx.s
 )
 
@@ -46,17 +49,34 @@ set_source_files_properties(${HAL_SOURCES} PROPERTIES LANGUAGE C)
 #     LANGUAGE ASM
 # )
 
+# Encoder driver sources (TIM-based quadrature decoding)
+set(ENCODER_DIR ${FIRMWARE_DIR}/Drivers/encoder)
+set(ENCODER_SOURCES
+    ${ENCODER_DIR}/src/encoder_tim.c
+    ${ENCODER_DIR}/src/encoder_driver.c
+)
+
+# UART print driver sources (USART3 debug output)
+set(UART_DIR ${FIRMWARE_DIR}/Drivers/uart)
+set(UART_SOURCES
+    ${UART_DIR}/src/uart_print.c
+)
+
 # Create executable target
 add_executable(firmware.elf
     main.cpp
     ${HAL_SOURCES}
     ${SYSTEM_SOURCES}
+    ${ENCODER_SOURCES}
+    ${UART_SOURCES}
 )
 
 # Include directories
 target_include_directories(firmware.elf PRIVATE
     ${INC_DIR}
     ${SRC_DIR}
+    ${ENCODER_DIR}/src
+    ${UART_DIR}/src
     ${CMSIS_DEVICE_DIR}/Include
     ${CMSIS_CORE_DIR}/Include
     ${HAL_DIR}/Inc
@@ -67,6 +87,8 @@ target_include_directories(firmware.elf PRIVATE
 target_compile_definitions(firmware.elf PRIVATE
     STM32H723xx
     USE_HAL_DRIVER
+    ENCODER_USE_POLLING=0
+    ENCODER_USE_TIM=1
     HSE_VALUE=8000000U
     HSE_STARTUP_TIMEOUT=100U
     HSI_VALUE=64000000U
