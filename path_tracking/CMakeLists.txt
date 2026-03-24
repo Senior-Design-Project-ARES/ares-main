@@ -18,14 +18,17 @@ find_package(tf2_ros REQUIRED)
 # Executables
 add_executable(pathTracking src/pathTracking.cpp)
 add_executable(pathInterp src/pathInterp.cpp)
+add_executable(pathTrackingVLA src/pathTrackingVLA.cpp)
 
 # Link dependencies
 ament_target_dependencies(pathTracking rclcpp nav_msgs geometry_msgs Eigen3 tf2 tf2_ros)
 ament_target_dependencies(pathInterp rclcpp nav_msgs geometry_msgs Eigen3 tf2 tf2_ros)
+ament_target_dependencies(pathTrackingVLA rclcpp nav_msgs geometry_msgs Eigen3 tf2 tf2_ros)
 
 # Install targets
 install(TARGETS
   pathTracking
+  pathTrackingVLA
   pathInterp
   DESTINATION lib/${PROJECT_NAME}
 )
