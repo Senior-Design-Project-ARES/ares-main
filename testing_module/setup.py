@@ -26,10 +26,12 @@ setup(
     },
     entry_points={
         'console_scripts': [
-            f'publish_fake_data_node = {package_name}.publish_fake_data:main',
-            f'publish_fake_data_coordinate_node = {package_name}.publish_fake_data_coordinate:main',
-            f'call_searching_server_node = {package_name}.call_searching_server:main',
-            f'plot_generated_graph_node = {package_name}.plot_generated_graph:main',
+            f'publish_fake_data = {package_name}.publish_fake_data:main',
+            f'publish_fake_data_coordinate = {package_name}.publish_fake_data_coordinate:main',
+            f'call_searching_server = {package_name}.call_searching_server:main',
+            f'plot_generated_graph = {package_name}.plot_generated_graph:main',
+            f'rover_simulation = {package_name}.rover_simulator:main',
+            f'lidar_simulation = {package_name}.lidar_simulator:main',
         ],
     },
 )
