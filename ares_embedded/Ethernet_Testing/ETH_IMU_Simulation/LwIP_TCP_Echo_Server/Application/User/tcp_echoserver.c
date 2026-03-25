@@ -72,6 +72,9 @@ struct tcp_echoserver_struct
   u8_t retries;
   struct tcp_pcb *pcb;    /* pointer on the current tcp_pcb */
   struct pbuf *p;         /* pointer on the received/to be transmitted pbuf */
+  float t;	//simulation timer
+  char rx_buff[128];	//store incoming data
+  int rx_len;	//length of incoming data
 };
 
 
@@ -79,9 +82,8 @@ static err_t tcp_echoserver_accept(void *arg, struct tcp_pcb *newpcb, err_t err)
 static err_t tcp_echoserver_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err);
 static void tcp_echoserver_error(void *arg, err_t err);
 static err_t tcp_echoserver_poll(void *arg, struct tcp_pcb *tpcb);
-static err_t tcp_echoserver_sent(void *arg, struct tcp_pcb *tpcb, u16_t len);
-static void tcp_echoserver_send(struct tcp_pcb *tpcb, struct tcp_echoserver_struct *es);
 static void tcp_echoserver_connection_close(struct tcp_pcb *tpcb, struct tcp_echoserver_struct *es);
+static void generate_virtual_imu(imu_packet *imu, float t);
 
 
 /**
@@ -142,7 +144,8 @@ static err_t tcp_echoserver_accept(void *arg, struct tcp_pcb *newpcb, err_t err)
     es->state = ES_ACCEPTED;
     es->pcb = newpcb;
     es->retries = 0;
-    es->p = NULL;
+    es->t = 0;
+    es->rx_len = 0;
     
     /* pass newly allocated es structure as argument to newpcb */
     tcp_arg(newpcb, es);
@@ -154,7 +157,7 @@ static err_t tcp_echoserver_accept(void *arg, struct tcp_pcb *newpcb, err_t err)
     tcp_err(newpcb, tcp_echoserver_error);
     
     /* initialize lwip tcp_poll callback function for newpcb */
-    tcp_poll(newpcb, tcp_echoserver_poll, 0);
+    tcp_poll(newpcb, tcp_echoserver_poll, 1);
     
     ret_err = ERR_OK;
   }
@@ -191,20 +194,6 @@ static err_t tcp_echoserver_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p
   {
     /* remote host closed connection */
     es->state = ES_CLOSING;
-    if(es->p == NULL)
-    {
-       /* we're done sending, close connection */
-       tcp_echoserver_connection_close(tpcb, es);
-    }
-    else
-    {
-      /* we're not done yet */
-      /* acknowledge received packet */
-      tcp_sent(tpcb, tcp_echoserver_sent);
-      
-      /* send remaining data*/
-      tcp_echoserver_send(tpcb, es);
-    }
     ret_err = ERR_OK;
   }   
   /* else : a non empty frame was received from client but for some reason err != ERR_OK */
@@ -213,62 +202,32 @@ static err_t tcp_echoserver_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p
     /* free received pbuf*/
     if (p != NULL)
     {
-      es->p = NULL;
       pbuf_free(p);
     }
     ret_err = err;
   }
-  else if(es->state == ES_ACCEPTED)
-  {
-    /* first data chunk in p->payload */
-    es->state = ES_RECEIVED;
-    
-    /* store reference to incoming pbuf (chain) */
-    es->p = p;
-    
-    /* initialize LwIP tcp_sent callback function */
-    tcp_sent(tpcb, tcp_echoserver_sent);
-    
-    /* send back the received data (echo) */
-    tcp_echoserver_send(tpcb, es);
-    
-    ret_err = ERR_OK;
-  }
-  else if (es->state == ES_RECEIVED)
-  {
-    /* more data received from client and previous data has been already sent*/
-    if(es->p == NULL)
-    {
-      es->p = p;
-  
-      /* send back received data */
-      tcp_echoserver_send(tpcb, es);
-    }
-    else
-    {
-      struct pbuf *ptr;
-
-      /* chain pbufs to the end of what we recv'ed previously  */
-      ptr = es->p;
-      pbuf_chain(ptr,p);
-    }
-    ret_err = ERR_OK;
-  }
-  else if(es->state == ES_CLOSING)
-  {
-    /* odd case, remote side closing twice, trash data */
-    tcp_recved(tpcb, p->tot_len);
-    es->p = NULL;
-    pbuf_free(p);
-    ret_err = ERR_OK;
-  }
   else
   {
-    /* unknown es->state, trash data  */
-    tcp_recved(tpcb, p->tot_len);
-    es->p = NULL;
-    pbuf_free(p);
-    ret_err = ERR_OK;
+	  if (p->len > 0) //saftey check
+	  {
+		  int len = p->len;
+		  //downsize the incoming data if too big
+		  if (len > sizeof(es->rx_buff) -1)
+			  len = sizeof(es->rx_buff) -1;
+
+		  memcpy(es->rx_buff, p->payload, len);	//copy data
+		  es->rx_buff[len] = '\0';	//add null terminator
+		  es->rx_len = len;	//store the data length
+	  }
+
+	  // Acknowledge reception
+	  tcp_recved(tpcb, p->tot_len);
+
+	  // Free the packet
+	  pbuf_free(p);
+
+
+	  ret_err = ERR_OK;
   }
   return ret_err;
 }
@@ -302,67 +261,58 @@ static void tcp_echoserver_error(void *arg, err_t err)
   */
 static err_t tcp_echoserver_poll(void *arg, struct tcp_pcb *tpcb)
 {
-  err_t ret_err;
+	//variables
   struct tcp_echoserver_struct *es;
-
   es = (struct tcp_echoserver_struct *)arg;
-  if (es != NULL)
-  {
-    if (es->p != NULL)
-    {
-      tcp_sent(tpcb, tcp_echoserver_sent);
-      /* there is a remaining pbuf (chain) , try to send data */
-      tcp_echoserver_send(tpcb, es);
-    }
-    else
-    {
-      /* no remaining pbuf (chain)  */
-      if(es->state == ES_CLOSING)
+
+  //check for null
+  if (es == NULL)
       {
-        /*  close tcp connection */
-        tcp_echoserver_connection_close(tpcb, es);
+          tcp_abort(tpcb);
+          return ERR_ABRT;
       }
-    }
-    ret_err = ERR_OK;
-  }
-  else
+
+  // Handle connection closing
+  if (es->state == ES_CLOSING)
   {
-    /* nothing to be done */
-    tcp_abort(tpcb);
-    ret_err = ERR_ABRT;
+	  tcp_echoserver_connection_close(tpcb, es);
+	  return ERR_OK;
   }
-  return ret_err;
-}
 
-/**
-  * @brief  This function implements the tcp_sent LwIP callback (called when ACK
-  *         is received from remote host for sent data) 
-  * @param  None
-  * @retval None
-  */
-static err_t tcp_echoserver_sent(void *arg, struct tcp_pcb *tpcb, u16_t len)
-{
-  struct tcp_echoserver_struct *es;
+  // --- Handle incoming command (if any) ---
+  if (es->rx_len > 0)
+  {
+	  if (strncmp(es->rx_buff, "RESET", 5) == 0)
+	  {
+		  es->t = 0;
+	  }
 
-  LWIP_UNUSED_ARG(len);
+	  // clear command after processing
+	  es->rx_len = 0;
+  }
 
-  es = (struct tcp_echoserver_struct *)arg;
-  es->retries = 0;
+  // --- Generate IMU telemetry ---
+  imu_packet imu;
+  generate_virtual_imu(&imu, es->t);
+  es->t += 0.05f;
+
+  char msg[128];
+  int len = sprintf(msg,
+	  "ax=%.2f ay=%.2f az=%.2f gx=%.2f gy=%.2f gz=%.2f roll=%.2f pitch=%.2f yaw=%.2f\n",
+	  imu.ax, imu.ay, imu.az,
+	  imu.gx, imu.gy, imu.gz,
+	  imu.roll, imu.pitch, imu.yaw);
   
-  if(es->p != NULL)
+  // --- Send telemetry ---
+  if (len <= tcp_sndbuf(tpcb))
   {
-    /* still got pbufs to send */
-    tcp_sent(tpcb, tcp_echoserver_sent);
-    tcp_echoserver_send(tpcb, es);
+	  tcp_write(tpcb, msg, len, TCP_WRITE_FLAG_COPY);
+	  tcp_output(tpcb);
   }
-  else
-  {
-    /* if no more data to send and client closed connection*/
-    if(es->state == ES_CLOSING)
-      tcp_echoserver_connection_close(tpcb, es);
-  }
+
   return ERR_OK;
 }
+
 
 /* Simulates IMU Data. Delete when not needed*/
 static void generate_virtual_imu(imu_packet *imu, float t)
@@ -380,80 +330,6 @@ static void generate_virtual_imu(imu_packet *imu, float t)
     imu->yaw   = fmodf(t * 20.0f, 360.0f);
 }
 
-/**
-  * @brief  This function is used to send data for tcp connection
-  * @param  tpcb: pointer on the tcp_pcb connection
-  * @param  es: pointer on echo_state structure
-  * @retval None
-  */
-static void tcp_echoserver_send(struct tcp_pcb *tpcb, struct tcp_echoserver_struct *es)
-{
-  struct pbuf *ptr;	//main packet buffer
-  err_t wr_err = ERR_OK;	//clear error
-
-  imu_packet imu;	//imu structure
-  static float t = 0;
- 
-  //check for error, null, and buffersize
-  while ((wr_err == ERR_OK) &&
-         (es->p != NULL) && 
-         (es->p->len <= tcp_sndbuf(tpcb)))
-  {
-    
-    /* get pointer on pbuf from es structure */
-    ptr = es->p;
-
-    generate_virtual_imu(&imu, t);
-    t += 0.05f;
-
-    char msg[128];
-
-    int len = sprintf(msg,
-            "ax=%.2f ay=%.2f az=%.2f gx=%.2f gy=%.2f gz=%.2f roll=%.2f pitch=%.2f yaw=%.2f\n",
-            imu.ax, imu.ay, imu.az,
-            imu.gx, imu.gy, imu.gz,
-            imu.roll, imu.pitch, imu.yaw);
-
-    wr_err = tcp_write(tpcb, msg, len, 1);
-
-    
-    if (wr_err == ERR_OK)
-    {
-      u16_t plen;
-      u8_t freed;
-
-      plen = ptr->len;
-     
-      /* continue with next pbuf in chain (if any) */
-      es->p = ptr->next;
-      
-      if(es->p != NULL)
-      {
-        /* increment reference count for es->p */
-        pbuf_ref(es->p);
-      }
-      
-     /* chop first pbuf from chain */
-      do
-      {
-        /* try hard to free pbuf */
-        freed = pbuf_free(ptr);
-      }
-      while(freed == 0);
-     /* we can read more data now */
-     tcp_recved(tpcb, plen);
-   }
-   else if(wr_err == ERR_MEM)
-   {
-      /* we are low on memory, try later / harder, defer to poll */
-     es->p = ptr;
-   }
-   else
-   {
-     /* other problem ?? */
-   }
-  }
-}
 
 /**
   * @brief  This functions closes the tcp connection
@@ -482,3 +358,4 @@ static void tcp_echoserver_connection_close(struct tcp_pcb *tpcb, struct tcp_ech
 }
 
 #endif /* LWIP_TCP */
+
