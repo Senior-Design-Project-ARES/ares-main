@@ -143,7 +143,7 @@ class PathInterpolatorNode : public rclcpp::Node {
 public:
     PathInterpolatorNode() : Node("pathInterp")
     {
-        micro_pub_ = this->create_publisher<nav_msgs::msg::Path>("/micro_waypoints", 10);
+        micro_pub_ = this->create_publisher<nav_msgs::msg::Path>("micro_waypoints", 10);
 
         sub_wp_ = this->create_subscription<nav_msgs::msg::Path>("/planned_paths", 10, std::bind(&PathInterpolatorNode::waypointCallback, this, _1));
 
