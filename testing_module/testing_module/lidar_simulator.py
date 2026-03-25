@@ -39,7 +39,7 @@ class LidarSimulatorNode(Node):
 
         self.lidar_map_publisher = self.create_publisher(OccupancyGrid, '/map', 10)
 
-        self.update_timer = self.create_timer(1/10, self.publish_map)
+        self.update_timer = self.create_timer(1/2, self.publish_map)
         # self._check_update_lidar_map()
 
     def _check_update_lidar_map(self):
@@ -119,7 +119,7 @@ class LidarSimulatorNode(Node):
         obstacle_locations = []
 
         angle = 0.0
-        while angle < 4.0 * math.pi:
+        while angle < 10.0 * math.pi:
             # Rotate unit arm (0, 1) by angle: dx = -sin(a), dy = cos(a)
             dx = -math.sin(angle)
             dy =  math.cos(angle)
