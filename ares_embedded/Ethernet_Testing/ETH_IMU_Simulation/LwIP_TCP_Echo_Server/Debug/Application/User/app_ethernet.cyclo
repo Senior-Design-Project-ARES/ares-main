@@ -1,4 +1,0 @@
-/home/jcool/stm32cubeh7-v1-13-0/STM32Cube_FW_H7_V1.13.0/Projects/NUCLEO-H723ZG/Applications/LwIP/LwIP_TCP_Echo_Server/Src/app_ethernet.c:48:6:ethernet_link_status_updated	2
-/home/jcool/stm32cubeh7-v1-13-0/STM32Cube_FW_H7_V1.13.0/Projects/NUCLEO-H723ZG/Applications/LwIP/LwIP_TCP_Echo_Server/Src/app_ethernet.c:78:6:Ethernet_Link_Periodic_Handle	2
-/home/jcool/stm32cubeh7-v1-13-0/STM32Cube_FW_H7_V1.13.0/Projects/NUCLEO-H723ZG/Applications/LwIP/LwIP_TCP_Echo_Server/Src/app_ethernet.c:95:6:DHCP_Process	7
-/home/jcool/stm32cubeh7-v1-13-0/STM32Cube_FW_H7_V1.13.0/Projects/NUCLEO-H723ZG/Applications/LwIP/LwIP_TCP_Echo_Server/Src/app_ethernet.c:166:6:DHCP_Periodic_Handle	2

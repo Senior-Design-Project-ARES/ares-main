@@ -12,6 +12,7 @@
 #include "ares_control.hpp" // custom control library
 #include "encoder_driver.h" // encoder driver
 #include "uart_print.h"     // simple UART debug printing
+#include "ethernet_driver.h" // ethernet driver
 
 extern "C" {
     void SystemClock_Config(void);
@@ -374,6 +375,12 @@ int main(void)
     yellow_led_init();
     red_led_init();
 
+    /* Ethernet + LwIP bring-up (DHCP + TCP echo on port 7) */
+    // ethernet_driver_config_t eth_cfg = {};
+    // eth_cfg.use_dhcp = 1;
+    // eth_cfg.tcp_port = 7;
+    // ethernet_driver_init(&eth_cfg);
+
     /*
      * Motor timer setup: TIM1 (16-bit) and TIM2 (32-bit), both at 20 kHz.
      * Each motor uses one TIM1 channel (IN1) + one TIM2 channel (IN2).
@@ -437,6 +444,8 @@ int main(void)
 
     uint32_t last_log_ms = HAL_GetTick();
     while (true) {
+        // ethernet_driver_poll();
+
         /* Simple debug print every second over UART */
         uint32_t now_ms = HAL_GetTick();
         if ((now_ms - last_log_ms) >= 1000U) {

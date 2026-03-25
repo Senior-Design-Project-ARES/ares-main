@@ -39,6 +39,8 @@ MEMORY
   ITCMRAM    (xrw)    : ORIGIN = 0x00000000,   LENGTH = 64K
   RAM    (xrw)    : ORIGIN = 0x20000000,   LENGTH = 128K
   ROM    (rx)    : ORIGIN = 0x08000000,   LENGTH = 1024K
+  /* Ethernet DMA cannot access DTCM (0x2000...), place descriptors/buffers in D2 SRAM. */
+  RAM_D2 (xrw)      : ORIGIN = 0x30000000, LENGTH = 32K
 }
 
 /* Sections */
@@ -165,6 +167,19 @@ SECTIONS
     . = . + _Min_Stack_Size;
     . = ALIGN(8);
   } >RAM
+
+  /* LwIP / ETH DMA descriptors + RX pool (NOLOAD). */
+  .lwip_sec (NOLOAD) :
+  {
+    . = ABSOLUTE(0x30000000);
+    *(.RxDescripSection)
+
+    . = ABSOLUTE(0x30000080);
+    *(.TxDescripSection)
+
+    . = ABSOLUTE(0x30000100);
+    *(.Rx_PoolSection)
+  } >RAM_D2 AT> ROM
 
   /* Remove information from the compiler libraries */
   /DISCARD/ :

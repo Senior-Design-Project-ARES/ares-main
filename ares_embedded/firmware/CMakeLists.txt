@@ -9,6 +9,7 @@ set(INC_DIR ${FIRMWARE_DIR}/Inc)
 set(SRC_DIR ${FIRMWARE_DIR}/Src)
 set(STARTUP_DIR ${FIRMWARE_DIR}/startup)
 set(LINKER_DIR ${FIRMWARE_DIR}/linker)
+set(LWIP_DIR ${THIRD_PARTY_DIR}/STM32CubeH7/Middlewares/Third_Party/LwIP)
 
 # CMSIS paths
 set(CMSIS_DEVICE_DIR ${CMSIS_DIR}/Device/ST/STM32H7xx)
@@ -62,6 +63,37 @@ set(UART_SOURCES
     ${UART_DIR}/src/uart_print.c
 )
 
+## Ethernet + LwIP (bare-metal, NO_SYS)
+set(ETHERNET_DIR ${FIRMWARE_DIR}/Drivers/ethernet)
+set(ETHERNET_SOURCES
+    ${ETHERNET_DIR}/src/ethernet_driver.c
+    ${ETHERNET_DIR}/src/ethernetif.c
+    ${ETHERNET_DIR}/src/tcp_echo_server.c
+    ${ETHERNET_DIR}/src/lwip_sys_now.c
+    ${ETHERNET_DIR}/src/lwip_sys_arch.c
+)
+
+# LwIP sources (minimal set for raw TCP/IPv4 + DHCP)
+file(GLOB LWIP_CORE_SOURCES
+    ${LWIP_DIR}/src/core/*.c
+    ${LWIP_DIR}/src/core/ipv4/*.c
+)
+set(LWIP_NETIF_SOURCES
+    ${LWIP_DIR}/src/netif/ethernet.c
+)
+
+# GCC can emit a noisy false-positive on packed DHCP option writes at -O2/-O3.
+set_source_files_properties(
+    ${LWIP_DIR}/src/core/ipv4/dhcp.c
+    PROPERTIES COMPILE_OPTIONS "-Wno-stringop-overflow"
+)
+
+# PHY driver (LAN8742)
+set(LAN8742_DIR ${THIRD_PARTY_DIR}/STM32CubeH7/Drivers/BSP/Components/lan8742)
+set(LAN8742_SOURCES
+    ${LAN8742_DIR}/lan8742.c
+)
+
 # Create executable target
 add_executable(firmware.elf
     main.cpp
@@ -69,6 +101,10 @@ add_executable(firmware.elf
     ${SYSTEM_SOURCES}
     ${ENCODER_SOURCES}
     ${UART_SOURCES}
+    ${ETHERNET_SOURCES}
+    ${LWIP_CORE_SOURCES}
+    ${LWIP_NETIF_SOURCES}
+    ${LAN8742_SOURCES}
 )
 
 # Include directories
@@ -77,10 +113,15 @@ target_include_directories(firmware.elf PRIVATE
     ${SRC_DIR}
     ${ENCODER_DIR}/src
     ${UART_DIR}/src
+    ${ETHERNET_DIR}/src
     ${CMSIS_DEVICE_DIR}/Include
     ${CMSIS_CORE_DIR}/Include
     ${HAL_DIR}/Inc
     ${HAL_DIR}/Inc/Legacy
+    ${LWIP_DIR}/src/include
+    ${LWIP_DIR}/system
+    ${LWIP_DIR}/system/arch
+    ${LAN8742_DIR}
 )
 
 # Compile definitions
