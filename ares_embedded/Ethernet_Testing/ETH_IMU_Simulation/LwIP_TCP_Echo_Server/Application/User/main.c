@@ -32,18 +32,22 @@
 #include "main.h"
 #include "app_ethernet.h"
 #include "tcp_echoserver.h"
+#include "stm32h7xx_hal_tim.h"
 
 /* Private typedef -----------------------------------------------------------*/
 /* Private define ------------------------------------------------------------*/
 /* Private macro -------------------------------------------------------------*/
 /* Private variables ---------------------------------------------------------*/
 struct netif gnetif;
+TIM_HandleTypeDef htim2;
+volatile uint8_t imu_send_flag = 0;
 /* Private function prototypes -----------------------------------------------*/
 static void SystemClock_Config(void);
 static void BSP_Config(void);
 static void Netif_Config(void);
 static void MPU_Config(void);
 static void CPU_CACHE_Enable(void);
+static void MX_TIM2_Init(void);
 /* Private functions ---------------------------------------------------------*/
 
 /**
@@ -80,6 +84,9 @@ int main(void)
 
   /* TCP echo server Init */
   tcp_echoserver_init();
+  //Initialize the timer 2 for ethernet interrupt
+  MX_TIM2_Init();
+  HAL_TIM_Base_Start_IT(&htim2);	//start timer 2
 
   /* Infinite loop */
   while (1)
@@ -91,13 +98,31 @@ int main(void)
     /* Handle timeouts */
     sys_check_timeouts();
 
-#if LWIP_NETIF_LINK_CALLBACK
-    Ethernet_Link_Periodic_Handle(&gnetif);
-#endif
+	#if LWIP_NETIF_LINK_CALLBACK
+		Ethernet_Link_Periodic_Handle(&gnetif);
+	#endif
 
-#if LWIP_DHCP
-    DHCP_Periodic_Handle(&gnetif);
-#endif
+	#if LWIP_DHCP
+		DHCP_Periodic_Handle(&gnetif);
+	#endif
+
+	if (imu_send_flag)
+	{
+		imu_send_flag = 0;
+		send_imu_data();
+	}
+
+
+	static uint32_t last = 0;
+
+	if (HAL_GetTick() - last > 500)
+	{
+	    last = HAL_GetTick();
+	    BSP_LED_Toggle(LED2);
+	}
+
+	//BSP_LED_Toggle(LED2);
+	//HAL_Delay(500);
   }
 }
 
@@ -106,6 +131,37 @@ static void BSP_Config(void)
   BSP_LED_Init(LED2);
   BSP_LED_Init(LED3);
 
+}
+
+
+//Initializing Timer2 for ethernet interrupt
+void MX_TIM2_Init(void)
+{
+	__HAL_RCC_TIM2_CLK_ENABLE();
+
+	htim2.Instance = TIM2;
+	htim2.Init.Prescaler = 25999;
+	htim2.Init.CounterMode = TIM_COUNTERMODE_UP;
+	htim2.Init.Period = 99;
+	htim2.Init.ClockDivision = TIM_CLOCKDIVISION_DIV1;
+	htim2.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+
+	//check for errors
+	if (HAL_TIM_Base_Init(&htim2) != HAL_OK)
+	{
+		Error_Handler();
+	}
+
+	HAL_NVIC_SetPriority(TIM2_IRQn, 7, 0);	//0, 0 means highest priority
+	HAL_NVIC_EnableIRQ(TIM2_IRQn);
+}
+
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  if (htim->Instance == TIM2)
+  {
+	  imu_send_flag = 1;
+  }
 }
 
 /**

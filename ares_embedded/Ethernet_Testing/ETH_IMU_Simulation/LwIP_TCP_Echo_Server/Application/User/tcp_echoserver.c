@@ -42,6 +42,10 @@
 #include <string.h>	//for output string
 #include <stdio.h>	//for output string
 #include <math.h>	//for simulator (delete when not needed)
+#include <stdlib.h>	//for setting timer rate
+#include "stm32h7xx_hal.h"
+#include "stm32h7xx_hal_tim.h"
+#include "stm32h7xx_hal_rcc.h"
 
 #if LWIP_TCP
 
@@ -49,7 +53,7 @@
 static struct tcp_pcb *tcp_echoserver_pcb;
 
 /* Change this structure to match the needed output */
-typedef struct {
+typedef struct __attribute__((packed)){
 	float ax, ay, az;	//acceleration
 	float gx, gy, gz;	//angular acceleration
 	float roll, pitch, yaw;	//orientation
@@ -77,14 +81,21 @@ struct tcp_echoserver_struct
   int rx_len;	//length of incoming data
 };
 
-
+/* Function Prototypes */
 static err_t tcp_echoserver_accept(void *arg, struct tcp_pcb *newpcb, err_t err);
 static err_t tcp_echoserver_recv(void *arg, struct tcp_pcb *tpcb, struct pbuf *p, err_t err);
 static void tcp_echoserver_error(void *arg, err_t err);
 static err_t tcp_echoserver_poll(void *arg, struct tcp_pcb *tpcb);
 static void tcp_echoserver_connection_close(struct tcp_pcb *tpcb, struct tcp_echoserver_struct *es);
 static void generate_virtual_imu(imu_packet *imu, float t);
+void send_imu_data(void);
+//void set_timer_rate(uint32_t hz);
 
+/* Global Varialbes */
+static float imu_time = 0;
+
+/* External Variables */
+extern TIM_HandleTypeDef htim2;
 
 /**
   * @brief  Initializes the tcp echo server
@@ -130,6 +141,7 @@ static err_t tcp_echoserver_accept(void *arg, struct tcp_pcb *newpcb, err_t err)
 {
   err_t ret_err;
   struct tcp_echoserver_struct *es;
+  tcp_echoserver_pcb = newpcb;
 
   LWIP_UNUSED_ARG(arg);
   LWIP_UNUSED_ARG(err);
@@ -284,30 +296,21 @@ static err_t tcp_echoserver_poll(void *arg, struct tcp_pcb *tpcb)
   {
 	  if (strncmp(es->rx_buff, "RESET", 5) == 0)
 	  {
-		  es->t = 0;
+		  imu_time = 0;
+	  }
+	  else if (strncmp(es->rx_buff, "RATE ", 5) == 0)
+	  {
+		  int rate = atoi(&es->rx_buff[5]);
+
+		  if (rate > 0 && rate <= 1000)
+		  {
+			  //set_timer_rate(rate);
+			  imu_time = 0;
+		  }
 	  }
 
 	  // clear command after processing
 	  es->rx_len = 0;
-  }
-
-  // --- Generate IMU telemetry ---
-  imu_packet imu;
-  generate_virtual_imu(&imu, es->t);
-  es->t += 0.05f;
-
-  char msg[128];
-  int len = sprintf(msg,
-	  "ax=%.2f ay=%.2f az=%.2f gx=%.2f gy=%.2f gz=%.2f roll=%.2f pitch=%.2f yaw=%.2f\n",
-	  imu.ax, imu.ay, imu.az,
-	  imu.gx, imu.gy, imu.gz,
-	  imu.roll, imu.pitch, imu.yaw);
-  
-  // --- Send telemetry ---
-  if (len <= tcp_sndbuf(tpcb))
-  {
-	  tcp_write(tpcb, msg, len, TCP_WRITE_FLAG_COPY);
-	  tcp_output(tpcb);
   }
 
   return ERR_OK;
@@ -353,9 +356,63 @@ static void tcp_echoserver_connection_close(struct tcp_pcb *tpcb, struct tcp_ech
     mem_free(es);
   }  
   
+  tcp_echoserver_pcb = NULL;
+
   /* close tcp connection */
   tcp_close(tpcb);
 }
 
-#endif /* LWIP_TCP */
+// Function to send imu data when interrupt triggered
+void send_imu_data(void)
+{
+	if (tcp_echoserver_pcb == NULL ||
+	    tcp_echoserver_pcb->state != ESTABLISHED ||
+	    tcp_sndbuf(tcp_echoserver_pcb) < sizeof(imu_packet))
+	{
+	    return;
+	}
 
+    imu_time += 0.01f;
+
+    imu_packet imu;
+    generate_virtual_imu(&imu, imu_time);
+
+    // Ensure buffer has space
+    if (sizeof(imu_packet) <= tcp_sndbuf(tcp_echoserver_pcb))
+    {
+        err_t err = tcp_write(tcp_echoserver_pcb,
+                              &imu,
+                              sizeof(imu_packet),
+                              TCP_WRITE_FLAG_COPY);
+
+        if (err == ERR_OK)
+        {
+            tcp_output(tcp_echoserver_pcb);
+        }
+    }
+}
+
+/*
+ * This functiion allows the user to set the timer rate
+ *
+void set_timer_rate(uint32_t hz)
+{
+    if (hz == 0) return;
+
+    // Timer clock
+    uint32_t timer_clk = HAL_RCC_GetPCLK1Freq() * 2;
+
+    uint32_t prescaler = htim2.Init.Prescaler + 1;
+
+    uint32_t period = (timer_clk / (prescaler * hz)) - 1;
+
+    __HAL_TIM_DISABLE(&htim2);
+
+    __HAL_TIM_SET_AUTORELOAD(&htim2, period);
+    __HAL_TIM_SET_COUNTER(&htim2, 0);
+
+    __HAL_TIM_ENABLE(&htim2);
+}
+*/
+
+#endif /* LWIP_TCP */
