@@ -5,8 +5,8 @@
 # the ARM GCC toolchain (arm-none-eabi-*) are in PATH.
 #
 # Usage:
-#   ./build_firmware.sh            # configure (if needed) and build firmware.elf (Release)
-#   ./build_firmware.sh debug      # same, but Debug configuration
+#   ./fw_build.sh                  # configure + build (Release), then auto-flash if target detected
+#   ./fw_build.sh Debug            # same, but Debug configuration
 #
 # The script:
 #   - creates/uses a dedicated build directory: ares_embedded/build/firmware-<config>
@@ -52,5 +52,27 @@ cmake --build "${BUILD_DIR}" --target firmware.elf -j
 
 echo
 echo "Build complete."
-echo "Output binary: ${BUILD_DIR}/firmware.elf"
+echo "Output ELF: ${BUILD_DIR}/firmware.elf"
+
+can_flash=0
+if command -v st-info >/dev/null 2>&1; then
+  probe_out="$(st-info --probe 2>/dev/null || true)"
+  # st-info may exit 0 even with no device; require a real probe record.
+  if [[ "${probe_out}" == *"serial:"* ]]; then
+    can_flash=1
+  fi
+elif command -v st-flash >/dev/null 2>&1; then
+  # Fallback probe when st-info is unavailable.
+  if st-flash --connect-under-reset --reset read /dev/null 0x08000000 4 >/dev/null 2>&1; then
+    can_flash=1
+  fi
+fi
+
+if [[ "${can_flash}" -eq 1 ]]; then
+  echo "Target detected. Flashing via CMake target..."
+  cmake --build "${BUILD_DIR}" --target flash -j
+  echo "Flash complete."
+else
+  echo "No ST target detected (or probe tool unavailable). Build only; skipping flash."
+fi
 

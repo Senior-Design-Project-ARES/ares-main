@@ -89,6 +89,17 @@ void println(const char *fmt, ...)
     va_end(args);
 }
 
+uint8_t uart_try_read_byte(uint8_t *out_byte)
+{
+    if (!g_uart_initialised || out_byte == NULL)
+    {
+        return 0U;
+    }
+
+    HAL_StatusTypeDef st = HAL_UART_Receive(&g_huart3, out_byte, 1U, 0U);
+    return (st == HAL_OK) ? 1U : 0U;
+}
+
 // Provide __io_putchar for STM32Cube syscalls.c so printf/newlib route here.
 int __io_putchar(int ch)
 {

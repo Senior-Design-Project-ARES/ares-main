@@ -441,13 +441,12 @@ int main(void)
     motor_driver_init(&m2_cfg, &motors[1]);
     motor_driver_init(&m3_cfg, &motors[2]);
     motor_driver_init(&m4_cfg, &motors[3]);
-
     uint32_t last_log_ms = HAL_GetTick();
     while (true) {
         // ethernet_driver_poll();
+        uint32_t now_ms = HAL_GetTick();
 
         /* Simple debug print every second over UART */
-        uint32_t now_ms = HAL_GetTick();
         if ((now_ms - last_log_ms) >= 1000U) {
             last_log_ms = now_ms;
             println("Firmware alive, t=%lu ms", static_cast<unsigned long>(now_ms));
