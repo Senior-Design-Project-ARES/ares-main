@@ -29,14 +29,14 @@ class MainCoordinator(Node):
         self.declare_parameter('rover_id', -1)
         self.rover_id = self.get_parameter('rover_id').get_parameter_value().integer_value
 
-        self.declare_parameter('replanning_threshold', 0.3)
+        self.declare_parameter('replanning_threshold', 0.2)
         self.replanning_threshold = self.get_parameter('replanning_threshold').get_parameter_value().double_value
 
         # State variables
         self.should_exit = False
         self.path2target_planned = False
         self.state = State.IDLE
-        self.planning_type = PlanningType.NONE
+        self.planning_type = PlanningType.NORMAL
 
         # Flags to control when to request new paths
         self.target_found = False
@@ -102,6 +102,8 @@ class MainCoordinator(Node):
         
         if self.planning_type == PlanningType.NONE:
             return
+        
+        self.get_clock().sleep_for(rclpy.duration.Duration(seconds=0.5))  # Small delay to ensure all state updates are processed
         
         if self.planning_type == PlanningType.TO_TARGET_TEST:
             self.request_trajectory(trajectory_id=1)
