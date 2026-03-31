@@ -5,6 +5,7 @@ common_params:
   # General parameters
   rover_id: 1                          # Unique identifier for the rover
   rover_name: "Taurus"                   # Name of the rover
+  debug: false                          # Enable debug mode for additional logging and visualization
 
 vrpn:
   server: 192.168.20.100

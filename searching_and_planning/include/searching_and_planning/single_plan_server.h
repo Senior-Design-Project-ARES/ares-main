@@ -42,6 +42,9 @@ private:
     void updateFEMap();
     bool IsSerroundingFree(const std::vector<int8_t>& _map, int i, int j);
     bool IsSerroundingAllFree(const std::vector<int8_t>& _map, int i, int j);
+    void BlowUpPoint(std::vector<int8_t>& _map, int cell_x, int cell_y, int value);
+
+    rclcpp::Publisher<nav_msgs::msg::OccupancyGrid>::SharedPtr cspace_map_publisher_;
 
     rclcpp::Service<cartographer_ros_msgs::srv::TrajectoryQuery>::SharedPtr service_;
     rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr pose_subscription_;
@@ -61,4 +64,6 @@ private:
     std::vector<int8_t> FE_map;
     ares::SearchAndPlanCore planner;
     int32_t rover_id = -1;
+    bool debug = false;
+    bool map_received = false;
 };

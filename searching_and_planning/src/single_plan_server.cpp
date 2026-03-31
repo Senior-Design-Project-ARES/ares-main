@@ -14,14 +14,15 @@ PathPlanningServer::PathPlanningServer(const searching_and_planning::Config& con
     this->declare_parameter<int32_t>("rover_id", -1);
     rover_id = static_cast<int32_t>(this->get_parameter("rover_id").as_int());
 
+    this->declare_parameter<bool>("debug", false);
+    debug = this->get_parameter("debug").as_bool();
 
-    // create service and say ready
-    service_ = this->create_service<cartographer_ros_msgs::srv::TrajectoryQuery>(
-        "get_path",
-        std::bind(&PathPlanningServer::handle_trajectory_query, this,
-                  std::placeholders::_1, std::placeholders::_2));
-    
-    RCLCPP_INFO(this->get_logger(), "Path planning server ready.");
+    if (debug) {
+        // create publisher for cspace map for debugging
+        cspace_map_publisher_ = this->create_publisher<nav_msgs::msg::OccupancyGrid>(
+            "/cspace_map",
+            10);
+    }
 
     // subscribe to current pose topic
     pose_subscription_ = this->create_subscription<geometry_msgs::msg::PoseStamped>(
@@ -46,6 +47,14 @@ PathPlanningServer::PathPlanningServer(const searching_and_planning::Config& con
         "/target_location",
         10,
         std::bind(&PathPlanningServer::targetCallback, this, std::placeholders::_1));
+
+    // create service and say ready
+    // service_ = this->create_service<cartographer_ros_msgs::srv::TrajectoryQuery>(
+    //     "get_path",
+    //     std::bind(&PathPlanningServer::handle_trajectory_query, this,
+    //               std::placeholders::_1, std::placeholders::_2));
+    
+    // RCLCPP_INFO(this->get_logger(), "Path planning server ready.");
 }
 
 void PathPlanningServer::handle_trajectory_query(
@@ -196,6 +205,24 @@ void PathPlanningServer::mapCallback(const nav_msgs::msg::OccupancyGrid::SharedP
         map[i] = msg->data[i];
     }
     updateFEMap();
+
+    if (debug) {
+        auto cspace_msg = nav_msgs::msg::OccupancyGrid();
+        cspace_msg.header = msg->header;
+        cspace_msg.info = msg->info;
+        cspace_msg.data = FE_map;
+        cspace_map_publisher_->publish(cspace_msg);
+    }
+
+    if (!service_) {
+        // Now that we have received the first map, we can create the service
+        service_ = this->create_service<cartographer_ros_msgs::srv::TrajectoryQuery>(
+            "get_path",
+            std::bind(&PathPlanningServer::handle_trajectory_query, this,
+                      std::placeholders::_1, std::placeholders::_2));
+        
+        RCLCPP_INFO(this->get_logger(), "Path planning server ready.");
+    }
     return;
 }
 
@@ -211,8 +238,6 @@ void PathPlanningServer::updateFEMap() {
         temp_FEMap[i] = map[i];
     }
 
-    double radius_in_cells = config.rover_radius * config.radius_inflation / ((config.x_max - config.x_min) / config.map_width);
-
     for(size_t i = 0; i < config.map_width; i++){
         for(size_t j = 0; j < config.map_height; j++){
             // find unknow cells that are serrounded by free cells
@@ -223,7 +248,7 @@ void PathPlanningServer::updateFEMap() {
                 }
                 unknow_to_blow_up.push_back({i, j}); // find unknow cells that are serrounded by free cells
             }
-            else if (map[i+j*config.map_width] == 1 && IsSerroundingFree(map, i, j)){
+            else if (map[i+j*config.map_width] == 1){
                 obstacle_to_blow_up.push_back({i, j}); // find obstacle cells that are serrounded by free cells
             }
         }
@@ -231,42 +256,60 @@ void PathPlanningServer::updateFEMap() {
 
     // Blow up unknow cells to size of disk
     for(size_t i = 0; i < unknow_to_blow_up.size(); i++){
-        int cell_x = unknow_to_blow_up[i].first;
-        int cell_y = unknow_to_blow_up[i].second;
-        for(int dx = - ceil(radius_in_cells); dx <= ceil(radius_in_cells); dx++){
-            for(int dy = - ceil(radius_in_cells); dy <= ceil(radius_in_cells); dy++){
-                double distance = sqrt(dx*dx + dy*dy);
-                if (distance < ceil(radius_in_cells)){
-                    int new_x = cell_x + dx;
-                    int new_y = cell_y + dy;
-                    if(new_x >= 0 && new_x < static_cast<int>(config.map_width) && new_y >= 0 && new_y < static_cast<int>(config.map_height)){
-                        temp_FEMap[new_x + new_y * config.map_width] = -1;
-                    }
-                }
-            }
-        }
+        BlowUpPoint(temp_FEMap, unknow_to_blow_up[i].first, unknow_to_blow_up[i].second, -1);
+        // int cell_x = unknow_to_blow_up[i].first;
+        // int cell_y = unknow_to_blow_up[i].second;
+        // for(int dx = - ceil(radius_in_cells); dx <= ceil(radius_in_cells); dx++){
+        //     for(int dy = - ceil(radius_in_cells); dy <= ceil(radius_in_cells); dy++){
+        //         double distance = sqrt(dx*dx + dy*dy);
+        //         if (distance < ceil(radius_in_cells)){
+        //             int new_x = cell_x + dx;
+        //             int new_y = cell_y + dy;
+        //             if(new_x >= 0 && new_x < static_cast<int>(config.map_width) && new_y >= 0 && new_y < static_cast<int>(config.map_height)){
+        //                 temp_FEMap[new_x + new_y * config.map_width] = -1;
+        //             }
+        //         }
+        //     }
+        // }
     }
 
     // Blow up obstacle cells to size of disk
     for(size_t i = 0; i < obstacle_to_blow_up.size(); i++){
-        int cell_x = obstacle_to_blow_up[i].first;;
-        int cell_y = obstacle_to_blow_up[i].second;
-        for(int dx = - ceil(radius_in_cells); dx <= ceil(radius_in_cells); dx++){
-            for(int dy = - ceil(radius_in_cells); dy <= ceil(radius_in_cells); dy++){
-                double distance = sqrt(dx*dx + dy*dy);
-                if (distance <= ceil(radius_in_cells)){
-                    int new_x = cell_x + dx;
-                    int new_y = cell_y + dy;
-                    if(new_x >= 0 && new_x < static_cast<int>(config.map_width) && new_y >= 0 && new_y < static_cast<int>(config.map_height)){
-                        temp_FEMap[new_x + new_y * config.map_width] = 1;
-                    }
-                }
-            }
-        }
+        BlowUpPoint(temp_FEMap, obstacle_to_blow_up[i].first, obstacle_to_blow_up[i].second, 1);
+        // int cell_x = obstacle_to_blow_up[i].first;;
+        // int cell_y = obstacle_to_blow_up[i].second;
+        // for(int dx = - ceil(radius_in_cells); dx <= ceil(radius_in_cells); dx++){
+        //     for(int dy = - ceil(radius_in_cells); dy <= ceil(radius_in_cells); dy++){
+        //         double distance = sqrt(dx*dx + dy*dy);
+        //         if (distance <= ceil(radius_in_cells)){
+        //             int new_x = cell_x + dx;
+        //             int new_y = cell_y + dy;
+        //             if(new_x >= 0 && new_x < static_cast<int>(config.map_width) && new_y >= 0 && new_y < static_cast<int>(config.map_height)){
+        //                 temp_FEMap[new_x + new_y * config.map_width] = 1;
+        //             }
+        //         }
+        //     }
+        // }
     }
 
     for(size_t i = 0; i < FE_map.size(); ++i) {
         FE_map[i] = temp_FEMap[i];
+    }
+}
+
+void PathPlanningServer::BlowUpPoint(std::vector<int8_t>& _map, int cell_x, int cell_y, int value){
+    double radius_in_cells = config.rover_radius * config.radius_inflation / ((config.x_max - config.x_min) / config.map_width);
+    for(int dx = - ceil(radius_in_cells); dx <= ceil(radius_in_cells); dx++){
+        for(int dy = - ceil(radius_in_cells); dy <= ceil(radius_in_cells); dy++){
+            double distance = sqrt(dx*dx + dy*dy);
+            if (distance < ceil(radius_in_cells)){
+                int new_x = cell_x + dx;
+                int new_y = cell_y + dy;
+                if(new_x >= 0 && new_x < static_cast<int>(config.map_width) && new_y >= 0 && new_y < static_cast<int>(config.map_height)){
+                    _map[new_x + new_y * config.map_width] = value;
+                }
+            }
+        }
     }
 }
 
