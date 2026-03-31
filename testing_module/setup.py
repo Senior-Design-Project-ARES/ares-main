@@ -1,5 +1,6 @@
 from setuptools import find_packages, setup
 from glob import glob
+import os
 
 package_name = 'testing_module'
 
@@ -12,6 +13,7 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        (os.path.join('share', package_name, 'launch'), glob('launch/*')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -32,6 +34,7 @@ setup(
             f'plot_generated_graph = {package_name}.plot_generated_graph:main',
             f'rover_simulation = {package_name}.rover_simulator:main',
             f'lidar_simulation = {package_name}.lidar_simulator:main',
+            f'visualization = {package_name}.visualization:main',
         ],
     },
 )
