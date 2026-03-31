@@ -16,7 +16,7 @@ def generate_launch_description():
         Node(
             package='coordinator',
             executable='coordinator_node',
-            namespace = common_params.get('rover_name', 'Dora'),
+            namespace=common_params.get('rover_name', 'Dora'),
             output='screen',
             parameters=[common_params]
         ),
@@ -24,6 +24,34 @@ def generate_launch_description():
             package='coordinator',
             executable='position_republish',
             namespace = common_params.get('rover_name', 'Dora'),
+            output='screen',
+            parameters=[common_params]
+        ),
+        Node(
+            package='searching_and_planning',
+            executable='path_planning',
+            namespace=common_params.get('rover_name', 'Dora'),
+            output='screen',
+            parameters=[common_params]
+        ),
+        # Node(
+        #     package='path_tracking',
+        #     executable='pathTracking',
+        #     namespace=common_params.get('rover_name', 'Dora'),
+        #     output='screen',
+        #     parameters=[common_params]
+        # ),
+        Node(
+            package='path_tracking',
+            executable='pathTrackingVLA',
+            namespace=common_params.get('rover_name', 'Dora'),
+            output='screen',
+            parameters=[common_params]
+        ),
+        Node(
+            package='path_tracking',
+            executable='pathInterp',
+            namespace=common_params.get('rover_name', 'Dora'),
             output='screen',
             parameters=[common_params]
         ),
