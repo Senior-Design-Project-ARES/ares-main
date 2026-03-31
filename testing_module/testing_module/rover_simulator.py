@@ -1,10 +1,8 @@
 import rclpy
 from rclpy.node import Node
 
-from nav_msgs.msg import Path as PathMsg
 from geometry_msgs.msg import PoseStamped
 from geometry_msgs.msg import Twist
-from std_msgs.msg import Bool
 
 import numpy as np
 
@@ -13,7 +11,7 @@ class RoverSimulatorNode(Node):
         super().__init__('rover_simulator')
         self.get_logger().info("Rover Simulator Node has been started.")
         self.cmd_vel = (0, 0)
-        self.pose2d = [0, 0, 0]  # [theta, x, y]
+        self.pose2d = [0, 0.3, 4.5]  # [theta, x, y]
 
         self.velocity_subscriber = self.create_subscription(
             Twist,
@@ -27,7 +25,7 @@ class RoverSimulatorNode(Node):
         self.timer = self.create_timer(1/240, self.publish_pose)
 
     def velocity_callback(self, msg):
-        self.cmd_vel = (msg.linear.x, msg.linear.z)
+        self.cmd_vel = (msg.linear.x, msg.angular.z)
 
     def publish_pose(self):
         # Update location based on velocity
@@ -43,6 +41,7 @@ class RoverSimulatorNode(Node):
         pose_msg.pose.position.x = self.pose2d[1]
         pose_msg.pose.position.y = self.pose2d[2]
         pose_msg.pose.position.z = self.pose2d[0]  # Using z for theta
+        pose_msg.pose.orientation.x = 1.0  # rover ID
         pose_msg.pose.orientation.w = 1.0  # No rotation
 
         self.pose_publisher.publish(pose_msg)
