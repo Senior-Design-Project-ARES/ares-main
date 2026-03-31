@@ -1,4 +1,8 @@
 #include "SearchAndPlan.h"
+#include <fstream>
+#include <iomanip>
+#include <chrono>
+#include <ctime>
 
 SearchAndPlan::SearchAndPlan(const amp::MultiAgentProblem2D& problem_, const int num_rover_):
 problem(problem_), 
@@ -280,6 +284,13 @@ amp::MultiAgentPath2D SearchAndPlan::run(){
 
 
             amp::MultiAgentPath2D single_rover_path = runSingle(rover_id);
+            
+            // Export disk map to CSV for rover 1
+            if (rover_id == 0) {
+                static int iteration_counter = 0;
+                writeDiskMapToCSV(rover_id, iteration_counter++);
+            }
+            
             active_paths.agent_paths[rover_id] = single_rover_path.agent_paths[0];
             current_waypoint_indexs[rover_id] = 0;
 
@@ -465,4 +476,33 @@ void SearchAndPlan::updateMultiMap(int rover_id){
     }
     // amp::Visualizer::makeFigure(*map_ptr);
     // amp::Visualizer::saveFigures(true, "ares");
+}
+
+void SearchAndPlan::writeDiskMapToCSV(int rover_id, int iteration) {
+    const amp::GridCSpace2D_T<int8_t>& disk_map = C_space.getDiskMapptr();
+    auto [num_cells_x, num_cells_y] = disk_map.size();
+    
+    // Generate filename with rover_id and iteration number
+    std::string filename = "rover_" + std::to_string(rover_id) + "_iter_" + std::to_string(iteration) + "_diskmap.csv";
+    
+    std::ofstream csv_file(filename);
+    if (!csv_file.is_open()) {
+        ERROR("Failed to open file: " << filename);
+        return;
+    }
+    
+    // Write CSV data: each row represents a row in the grid (y coordinate)
+    // each column represents a column in the grid (x coordinate)
+    for (std::size_t j = 0; j < num_cells_y; j++) {
+        for (std::size_t i = 0; i < num_cells_x; i++) {
+            csv_file << static_cast<int>(disk_map(i, j));
+            if (i < num_cells_x - 1) {
+                csv_file << ",";
+            }
+        }
+        csv_file << "\n";
+    }
+    
+    csv_file.close();
+    LOG("Exported disk map to " << filename);
 }

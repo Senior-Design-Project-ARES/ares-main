@@ -58,4 +58,5 @@ class SearchAndPlan{
         }
 
         void updateMultiMap(int rover_id);
+        void writeDiskMapToCSV(int rover_id, int iteration);
 };

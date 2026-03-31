@@ -83,6 +83,10 @@ void FrontExpl::find_regions()
 {
     std::cout << "Finding regions" << std::endl;
 
+    // for (int i = 0; i < edge0_vec.size(); i ++){
+    //     DEBUG(edge0_vec.at(i));
+    // }
+
     std::vector<bool> visited(FE0_map.size(), false);
 
 
@@ -101,29 +105,32 @@ void FrontExpl::find_regions()
             bool loop = false;
 
             // Check if there is more than 2 frontier neighbors
+            std::vector<int> index = {1, 3, 4, 6, 0, 2, 5, 7};
+
             for(int i = 0; i < neighbor0_index.size(); i++)
             {
                 for (int j = 0; j < edge0_vec.size(); j++)
                 {
-                    if (neighbor0_index.at(i) == edge0_vec.at(j))
+                    if (neighbor0_index.at(index[i]) == edge0_vec.at(j))
                     {
-                        if (frontier_group[0].setFrontierNeighbors(neighbor0_index.at(i)) == false){
-                            more_than_two_neighbors = true;
+                        if (frontier_group[0].setFrontierNeighbors(neighbor0_index.at(index[i])) == false){
+                            // more_than_two_neighbors = true;
                             break;
                         }
                     }
                 }
             }
-            if (more_than_two_neighbors){
-                continue;
-            }
+            // if (more_than_two_neighbors){
+            //     continue;
+            // }
 
-            // If less than 2 neighbors, continue adding to the region
             visited[edge0_vec.at(q)] = true;
             int previous_index = edge0_vec.at(q);
             int index_to_check = frontier_group[0].getFrontierNeighbors().first;
             int previous_vector_index = 0;
             bool checking_second_direction = false;
+
+            DEBUG(previous_index);
             
             // Continue adding to the region until there are no more neighbors
             while(index_to_check != 0){
@@ -142,17 +149,30 @@ void FrontExpl::find_regions()
                 // Check all the neighbors of the cell
                 for(int i = 0; i < neighbor0_index.size(); i++)
                 {
+                    bool quitting = false;
+
                     // If the neighbour is where we came from or it is within other region, skip it
-                    if (neighbor0_index.at(i) == previous_index){
+                    if (neighbor0_index.at(index[i]) == previous_index){
                         continue;
                     }
 
-                    if (neighbor0_index.at(i) == edge0_vec.at(q)){
+                    // If the left, right, top or bottom is a obstacle, then stop adding to the region in this direction, and switch direction if haven't already
+                    // DEBUG(neighbor0_index.at(index[i]));
+                    if ((i==0||i==1||i==2||i==3) && FE0_map.at(neighbor0_index.at(index[i])) == 1)
+                    {
+                        frontier_group.back().setFrontierNeighbors(2, 0);
+                        break;
+                    }
+
+                    if (neighbor0_index.at(index[i]) == edge0_vec.at(q)){
+                        // INFO(edge0_vec.at(q));
+                        // INFO(index_to_check);
+                        // INFO(previous_index);
                         loop = true;
                         break;
                     }
 
-                    if (visited[neighbor0_index.at(i)] == true){
+                    if (visited[neighbor0_index.at(index[i])] == true){
                         continue;
                     }
 
@@ -160,40 +180,48 @@ void FrontExpl::find_regions()
                     for (int j = 0; j < edge0_vec.size(); j++)
                     {
                         // Check if the neighbor is a frontier edge
-                        if (neighbor0_index.at(i) == edge0_vec.at(j))
+                        if (neighbor0_index.at(index[i]) == edge0_vec.at(j))
                         {
+                            // DEBUG(index_to_check);
                             previous_index = index_to_check; // consider the current cell as where we came from
-                            
-                            // If it is a frontier edge, set it as the next cell to check
-                            // Check if there is more than 2 frontier neighbors for this frontier edge
-                            // If there are more than 2 neighbors, consider this direction done
-                            // switch direction if haven't already
-                            // If already switched direction, stop
-                            if (frontier_group.back().setFrontierNeighbors(neighbor0_index.at(i)) == false){
-                                // Remove the last added cell since it has more than 2 neighbors
-                                frontier_group.back().setFrontierNeighbors(2, 0);
+                            frontier_group.back().setFrontierNeighbors(neighbor0_index.at(index[i]));
+                            // // If it is a frontier edge, set it as the next cell to check
+                            // // Check if there is more than 2 frontier neighbors for this frontier edge
+                            // if (frontier_group.back().setFrontierNeighbors(neighbor0_index.at(index[i])) == false){
+                            //     // Remove the last added cell since it has more than 2 neighbors
+                            //     // frontier_group.back().setFrontierNeighbors(2, 0);
+                            //     quitting = true;
 
-                                // stop, and change diretion if haven't already
-                                if (!checking_second_direction){
-                                    checking_second_direction = true;
-                                    previous_index = frontier_group[0].getIndex();
-                                    index_to_check = frontier_group[0].getFrontierNeighbors().second;
-                                    break;
-                                }
+                            //     // // stop, and change diretion if haven't already
+                            //     // if (!checking_second_direction){
+                            //     //     checking_second_direction = true;
+                            //     //     previous_index = frontier_group[0].getIndex();
+                            //     //     index_to_check = frontier_group[0].getFrontierNeighbors().second;
+                            //     //     break;
+                            //     // }
 
-                                // If we already changed direction, stop
-                                index_to_check = 0;
-                                break;
+                            //     // // If we already changed direction, stop
+                            //     // index_to_check = 0;
+                            //     // break;
 
                                 
-                            }
-                            index_to_check = neighbor0_index.at(i);
+                            // }
+                            index_to_check = neighbor0_index.at(index[i]);
+                            break;
+                            // if (quitting){
+                            //     break;
+                            // }
                         }
+                    }
+
+                    if (quitting){
+                        break;
                     }
                 }
                 
                 if (frontier_group.back().getFrontierNeighbors().second == 0){
                     // If no second neighbor, and we havent switched direction yet, switch direction
+                    DEBUG("Checking when it get to end: " << frontier_group.back().getIndex());
                     if (!checking_second_direction){
                         checking_second_direction = true;
                         previous_index = frontier_group[0].getIndex();
@@ -219,6 +247,12 @@ void FrontExpl::find_centroids(){
     for (std::pair<std::vector<FrontNode>, bool> frountier_pair : frontier_regions)
     {
         double length = frountier_pair.first.size() * resolution;
+
+        INFO(length);
+        for(int i = 0; i < frountier_pair.first.size(); i++){
+            INFO(frountier_pair.first.at(i).getIndex());
+        }
+        INFO(frountier_pair.second);
 
         if (length < ABSULUTE_MIN_REGION_LENGTH) {
             std::cout << "Region too small, skipping" << std::endl;
