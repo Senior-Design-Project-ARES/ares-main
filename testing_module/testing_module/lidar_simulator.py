@@ -15,6 +15,8 @@ from rclpy.node import Node
 from geometry_msgs.msg import PoseStamped
 from nav_msgs.msg import OccupancyGrid
 
+import random
+
 LIDAR_RADIUS = 3.0      # metres  (matches C++ LIDARRADIUS)
 ANGLE_RESOLUTION = 0.008  # radians (matches C++ ANGLERESOLUSION)
 
@@ -39,7 +41,7 @@ class LidarSimulatorNode(Node):
 
         self.lidar_map_publisher = self.create_publisher(OccupancyGrid, '/map', 10)
 
-        self.update_timer = self.create_timer(1/2, self.publish_map)
+        self.update_timer = self.create_timer(1/10, self.publish_map)
         # self._check_update_lidar_map()
 
     def _check_update_lidar_map(self):
@@ -92,6 +94,7 @@ class LidarSimulatorNode(Node):
         # self.get_logger().info(f"Map data sample: {grid_msg.data[:10]}")
 
         self.lidar_map_publisher.publish(grid_msg)
+        # self._check_update_lidar_map()
 
     def _pose_callback(self, msg: PoseStamped):
         self.robot_position = (msg.pose.position.x, msg.pose.position.y)
@@ -118,8 +121,8 @@ class LidarSimulatorNode(Node):
 
         obstacle_locations = []
 
-        angle = 0.0
-        while angle < 10.0 * math.pi:
+        angle = random.uniform(-0.02, 0)
+        while angle < 2.0 * math.pi:
             # Rotate unit arm (0, 1) by angle: dx = -sin(a), dy = cos(a)
             dx = -math.sin(angle)
             dy =  math.cos(angle)
@@ -137,10 +140,10 @@ class LidarSimulatorNode(Node):
                 cy = max(0, min(self.map_height - 1, int((ly - origin_y) / res)))
                 idx = cy * self.map_width + cx
 
-                # Skip cells already mapped (equivalent to getState != -1)
-                if self.lidar_map[idx] != -1:
-                    distance += cell_step
-                    continue
+                # # Skip cells already mapped (equivalent to getState != -1)
+                # if self.lidar_map[idx] != -1:
+                #     distance += cell_step
+                #     continue
 
                 # Truth-map collision check (replaces checkCellCollision)
                 if self.map_data[idx] > 0:
@@ -153,7 +156,7 @@ class LidarSimulatorNode(Node):
             angle += ANGLE_RESOLUTION
 
         for (ox, oy), dist in obstacle_locations:
-            self._update_around_point(ox, oy, 100, dist)
+            self._update_around_point(ox, oy, 1, dist)
 
     def _update_around_point(self, wx: float, wy: float, value: int, radius: float):
         """Set a cell (and a small neighbourhood scaled by radius) to value.
