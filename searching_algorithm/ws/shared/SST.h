@@ -23,7 +23,13 @@ class SST {
     public:
         SST(double delta_bn_, double delta_s_) : delta_bn(delta_bn_), delta_s(delta_s_) {};
         amp::Path planND(Eigen::VectorXd init_, Eigen::VectorXd goal_, amp::GridCSpace2D_T<int8_t> envMap);
-
+        std::map<amp::Node, StateAndControl> getNodes(){
+            return nodes;
+        };
+        std::shared_ptr<amp::Graph<double>> getGraphPtr(){
+            return graphPtr;
+        };
+        bool collisionCheck(const StateAndControl& point, amp::GridCSpace2D_T<int8_t> envMap);
     private:
         std::shared_ptr<amp::Graph<double>> graphPtr = std::make_shared<amp::Graph<double>>();
         std::map<amp::Node, StateAndControl> nodes;
@@ -32,6 +38,9 @@ class SST {
         StateAndControl extendSST(const amp::Node node);
         double delta_bn;
         double delta_s;
-        int iteration = 50000;
+        int iteration = 5000;
         DifferentialDrive agent;
+        double width = 0.2;  // Example width of the agent
+        double height = 0.2; // Example height of the agent
+        
 };

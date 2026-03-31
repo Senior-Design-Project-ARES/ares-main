@@ -16,7 +16,7 @@ int main(int argc, char** argv){
     amp::RandomCircularAgentsSpecification ma_spec;
     spec.x_max = 22.0;
     spec.y_max = 9.0;
-    ma_spec.n_agents = 3;
+    ma_spec.n_agents = 1;
     ma_spec.max_agent_radius = 0.15;
     ma_spec.min_agent_radius = 0.15;
     spec.n_obstacles = 60*1.5;
