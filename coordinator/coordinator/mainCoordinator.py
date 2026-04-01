@@ -189,11 +189,13 @@ class MainCoordinator(Node):
         except Exception as exc:
             self.get_logger().error(f'TrajectoryQuery call failed: {exc}')
             self.state = State.IDLE
+            self.planning_type = PlanningType.NONE
             return
 
         if response is None:
             self.get_logger().error('TrajectoryQuery returned no response.')
             self.state = State.IDLE
+            self.planning_type = PlanningType.NONE
             return
         
         self.get_logger().info(f"Received trajectory with status: {response.status}")
@@ -203,21 +205,26 @@ class MainCoordinator(Node):
             if self.state == State.PLANNING_FOR_TARGET_TEST:
                 self.get_logger().info("Trajectory to target planned failed.")
                 self.state = State.IDLE
+                self.planning_type = PlanningType.NONE
                 return
             
             if self.state == State.PLANNING_FOR_TARGET:
                 self.get_logger().info("Trajectory to target planned failed.")
                 self.stop_except_to_target_publisher.publish(Bool(data=False))
                 self.state = State.IDLE
+                self.planning_type = PlanningType.NONE
                 return
             
             if self.state == State.NORMAL_PLANNING:
                 self.get_logger().info("Trajectory planning failed.")
                 self.state = State.IDLE
+                self.planning_type = PlanningType.NONE
+
                 return
                 
             self.get_logger().warn(f"Trajectory planning failed with unknown status: {response.status}")
             self.state = State.IDLE
+            self.planning_type = PlanningType.NONE
             return
 
         if response.status.code == 2:
@@ -253,6 +260,7 @@ class MainCoordinator(Node):
             path_msg.poses.append(pose_stamped)
 
         self.path_publisher.publish(path_msg)
+        self.planning_type = PlanningType.NONE
         self.path_end[0] = path_msg.poses[-1].pose.position.x
         self.path_end[1] = path_msg.poses[-1].pose.position.y
         self.state = State.IDLE
