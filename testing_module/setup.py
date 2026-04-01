@@ -35,6 +35,7 @@ setup(
             f'rover_simulation = {package_name}.rover_simulator:main',
             f'lidar_simulation = {package_name}.lidar_simulator:main',
             f'visualization = {package_name}.visualization:main',
+            f'export_data = {package_name}.export_data:main',
         ],
     },
 )
