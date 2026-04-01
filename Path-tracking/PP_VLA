@@ -1,0 +1,436 @@
+#include <eigen3/Eigen/Dense>
+#include <fstream>
+#include <sstream>
+#include <vector>
+#include <string>
+#include <iostream>
+#include <cmath>
+
+struct Point {
+    double x;
+    double y;
+};
+
+// ---------------------- Converts Points to Matrix -------------------------
+Eigen::MatrixXd pointsToMatrix(const std::vector<Point>& pts)
+{
+    Eigen::MatrixXd M(pts.size(), 2);
+    for (size_t i = 0; i < pts.size(); ++i)
+    {
+        M(i, 0) = pts[i].x;
+        M(i, 1) = pts[i].y;
+    }
+    return M;
+}
+
+void writeVector(const std::string& filename, const Eigen::MatrixXd& data)
+{
+    std::ofstream file(filename);
+    if (!file.is_open())
+    {
+        std::cerr << "Failed to write " << filename << "\n";
+        return;
+    }
+
+    for (int i = 0; i < data.rows(); ++i)
+    {
+        for (int j = 0; j < data.cols(); ++j)
+        {
+            file << data(i, j);
+            if (j < data.cols() - 1)
+                file << ",";
+        }
+        file << "\n";
+    }
+}
+
+//------------------- Waypoint Reading Function ---------------------
+Eigen::MatrixXd readWaypoints(const std::string& filename)
+{
+    std::ifstream file(filename);
+    std::vector<Eigen::Vector2d> wp;
+
+    if (!file.is_open())
+    {
+        std::cerr << "Failed to open waypoints file: " << filename << "\n";
+        return Eigen::MatrixXd();
+    }
+
+    std::string line;
+    while (std::getline(file, line))
+    {
+        if (line.empty()) continue;
+
+        // Replace commas with spaces
+        for (auto &c : line) if (c == ',') c = ' ';
+
+        std::stringstream ss(line);
+        double x, y;
+        if (ss >> x >> y)
+            wp.emplace_back(x, y);
+        else
+            std::cerr << "Skipping invalid line in waypoints: " << line << "\n";
+    }
+
+    Eigen::MatrixXd waypoints(wp.size(), 2);
+    for (size_t i = 0; i < wp.size(); ++i)
+        waypoints.row(i) = wp[i];
+
+    return waypoints;
+}
+
+// ---------------- Cubic spline helper ----------------
+std::vector<double> cubicSpline(
+    const std::vector<double>& t,
+    const std::vector<double>& y,
+    const std::vector<double>& tq)
+{
+    int n = t.size();
+    std::vector<double> a(y), b(n), d(n), h(n);
+    std::vector<double> alpha(n), c(n+1), l(n+1), mu(n+1), z(n+1);
+
+    for (int i = 0; i < n - 1; i++)
+        h[i] = t[i+1] - t[i];
+
+    for (int i = 1; i < n - 1; i++)
+        alpha[i] = (3.0/h[i])*(a[i+1]-a[i]) - (3.0/h[i-1])*(a[i]-a[i-1]);
+
+    l[0] = 1.0;
+    mu[0] = z[0] = 0.0;
+
+    for (int i = 1; i < n - 1; i++) {
+        l[i] = 2.0*(t[i+1]-t[i-1]) - h[i-1]*mu[i-1];
+        mu[i] = h[i]/l[i];
+        z[i] = (alpha[i]-h[i-1]*z[i-1])/l[i];
+    }
+
+    l[n-1] = 1.0;
+    z[n-1] = c[n-1] = 0.0;
+
+    for (int j = n - 2; j >= 0; j--) {
+        c[j] = z[j] - mu[j]*c[j+1];
+        b[j] = (a[j+1]-a[j])/h[j] - h[j]*(c[j+1]+2.0*c[j])/3.0;
+        d[j] = (c[j+1]-c[j])/(3.0*h[j]);
+    }
+
+    // Evaluate spline
+    std::vector<double> result;
+    for (double xq : tq) {
+        int i = std::min(int(xq) - 1, n - 2);  // convert 1-based → 0-based
+        double dx = xq - t[i];
+        result.push_back(a[i] + b[i]*dx + c[i]*dx*dx + d[i]*dx*dx*dx);
+    }
+
+    return result;
+}
+
+// ---------------- Micropoints function ----------------
+Eigen::MatrixXd micropointsProd(const Eigen::MatrixXd& waypoints, int numSamples)
+{
+    int N = waypoints.rows();
+
+    // MATLAB-style parameter t = 1:N
+    std::vector<double> t(N);
+    for (int i = 0; i < N; i++)
+        t[i] = i + 1.0;
+
+    // Extract x and y
+    std::vector<double> x(N), y(N);
+    for (int i = 0; i < N; i++) {
+        x[i] = waypoints(i, 0);
+        y[i] = waypoints(i, 1);
+    }
+
+    // Query points (like linspace in MATLAB)
+    std::vector<double> tq(numSamples);
+    double step = double(N - 1) / (numSamples - 1);
+    for (int i = 0; i < numSamples; i++)
+        tq[i] = 1.0 + i * step;
+
+    // Spline evaluation
+    std::vector<double> xs = cubicSpline(t, x, tq);
+    std::vector<double> ys = cubicSpline(t, y, tq);
+
+    // Output as Eigen::MatrixXd (numSamples × 2)
+    Eigen::MatrixXd micro(xs.size(), 2);
+    for (size_t i = 0; i < xs.size(); i++) {
+        micro(i, 0) = xs[i];
+        micro(i, 1) = ys[i];
+    }
+
+    return micro;
+}
+
+
+Eigen::Vector2d findPointAtDistance(
+    const Eigen::MatrixXd& micropoints,
+    const Eigen::Vector2d& state,
+    double desired_dist,
+    double index)
+{
+    double desired_dist2 = desired_dist * desired_dist;
+
+    double best_error = std::numeric_limits<double>::infinity();
+    int best_idx = index;
+
+    for (int i = index; i < micropoints.rows(); ++i)
+    {
+        double dx = micropoints(i, 0) - state(0);
+        double dy = micropoints(i, 1) - state(1);
+        double dist2 = dx*dx + dy*dy;
+
+        double error = std::abs(dist2 - desired_dist2);
+
+        if (error < best_error)
+        {
+            best_error = error;
+            best_idx = i;
+        }
+    }
+
+    return Eigen::Vector2d(
+        micropoints(best_idx, 0),
+        micropoints(best_idx, 1)
+    );
+}
+
+
+double findClosestWaypointIndex(
+    const Eigen::Vector2d& backWheel_pos,
+    const Eigen::MatrixXd& waypoints)
+{
+    double minDistSq = std::numeric_limits<double>::infinity();
+    int closestIdx = -1;
+
+    const double x = backWheel_pos(0);
+    const double y = backWheel_pos(1);
+
+    for (int i = 0; i < waypoints.rows(); ++i)
+    {
+        double dx = waypoints(i, 0) - x;
+        double dy = waypoints(i, 1) - y;
+
+        double distSq = dx * dx + dy * dy;
+
+        if (distSq < minDistSq)
+        {
+            minDistSq = distSq;
+            closestIdx = i;
+        }
+    }
+
+    return static_cast<double>(closestIdx);
+}
+
+double curv_calc(int closest_idx, const Eigen::MatrixXd& microp, const Eigen::Vector3d& state)
+{
+    if (closest_idx + 3 >= microp.rows())
+    {
+        return 0.0; // no curvature near the end
+    }
+
+    int P3 = closest_idx + 3;
+    int P2 = closest_idx;
+
+    double x1 = state[0];
+    double x2 = microp(P2,0);
+    double x3 = microp(P3,0);
+    double y1 = state[1];
+    double y2 = microp(P2,1);
+    double y3 = microp(P3,1);
+
+    double curv = (2*std::abs((x2 - x1)*(y3 - y1) - (y2 - y1)*(x3 - x1))) / 
+    (std::sqrt((std::pow(x2 - x1, 2)+std::pow(y2 - y1, 2))*(std::pow(x3 - x2, 2)+std::pow(y3 - y2, 2))*(std::pow(x1 - x3, 2)+std::pow(y1 - y3, 2))));
+
+    return curv;
+}
+
+double linVel_calc(double curv)
+{
+    if(curv = 0.0)
+    {
+        return 0.1;
+    }
+
+    double linVel_min = 0.05;
+    double linVel_max = 0.2;
+
+    double linVel = linVel_max - curv * (linVel_max - linVel_min);
+
+    return linVel;
+}
+
+double LA_calc(double curv)
+{
+    if(curv = 0.0)
+    {
+        return 0.5;
+    }
+
+    double LA_min = 0.3;
+    double LA_max = 1;
+
+    double LA = LA_max - curv * (LA_max - LA_min);
+
+    return LA;
+}
+
+Eigen::Vector2d PP_single(const Eigen::Vector3d& state, const Eigen::MatrixXd& waypoints, int stopIF, double angVelClamp, int numSamples)
+{    
+    if (stopIF == 1)
+    {
+        Eigen::Vector2d controls;
+        controls << 0, 0;
+        return controls;
+
+    }
+    else
+    {
+        int numSamples = 100;
+        auto micropoints = micropointsProd(waypoints, numSamples);
+
+        const Eigen::Vector2d backWheel_pos = {state[0] - cos(state[2]) * 0.15, state[1] - sin(state[2]) * 0.15};
+
+        auto micro = micropointsProd(waypoints, numSamples);
+        writeVector("micropoints.txt", micro);
+
+        Eigen::MatrixXd microp = readWaypoints("micropoints.txt");
+
+        int closest_idx = findClosestWaypointIndex(backWheel_pos, microp);
+        double curv = curv_calc(closest_idx, microp, state);
+
+        if(curv>1)
+            curv=1;
+        
+        if(curv<-1)
+            curv = -1;
+
+        double linVel = linVel_calc(curv);
+        double LA = LA_calc(curv);
+        Eigen::Vector2d target = findPointAtDistance(microp, backWheel_pos, LA, closest_idx);
+        
+        long double dy = target(1) - backWheel_pos(1);
+        long double dx = target(0) - backWheel_pos(0);
+
+        double targ = std::atan2(dy, dx); 
+        double alpha = targ - state[2];
+        alpha = std::atan2(std::sin(alpha), std::cos(alpha));  ;                   
+
+        double kappa = (2 * std::sin(alpha)) / LA;
+        double angVel = kappa * linVel;
+
+        if(std::abs(alpha) > (45*(M_PI/180)))
+        {
+            if(alpha > 0)
+            {
+                angVel = 0.5;
+            }
+            if(alpha > 0)
+            {
+                angVel = -0.5;
+            }    
+            linVel = 0;
+        }
+
+        // ------------------ Store Controls in 3x1 Vector ----------------
+        Eigen::Vector2d controls;
+
+        controls << linVel, angVel;
+
+        return controls;
+    }
+}
+
+Eigen::Vector3d stateCalc(const Eigen::Vector2d& controls, const Eigen::Vector3d& state, double delta_t)
+{
+    Eigen::Vector3d newState;
+
+    double v = controls(0);
+    double w = controls(1);
+
+    // Update heading
+    newState(2) = state(2) + delta_t * w;
+
+    // Handle near-zero angular velocity (straight motion)
+    if (std::abs(w) < 1e-6)
+    {
+        newState(0) = state(0) + v * delta_t * std::cos(state(2));
+        newState(1) = state(1) + v * delta_t * std::sin(state(2));
+    }
+    else
+    {
+        double R = v / w;
+
+        newState(0) = state(0) + R * (std::sin(newState(2)) - std::sin(state(2)));
+        newState(1) = state(1) - R * (std::cos(newState(2)) - std::cos(state(2)));
+    }
+
+    return newState;
+}
+
+int stop_flag(const Eigen::Vector3d& state, const Eigen::MatrixXd& micropoints)
+{
+    if (micropoints.rows() == 0) {
+        // handle empty matrix case
+        std::cerr << "Error: micropoints is empty!\n";
+        return 0; // or set dist_last = 0 or some safe value
+    }
+
+    int last_idx = micropoints.rows() - 1;
+    double dist_last = std::sqrt(
+        std::pow(state(0) - micropoints(last_idx, 0), 2) +
+        std::pow(state(1) - micropoints(last_idx, 1), 2)
+    );
+
+    if(dist_last <= 0.3)
+    {
+        return 1;
+    }
+    else
+    {
+        return 0;
+    }
+}
+
+int main()
+{
+    Eigen::Vector3d state = {1,2,180*M_PI/180};
+
+    Eigen::MatrixXd waypoints = readWaypoints("waypoints1.txt");
+    int stopIF = 0;
+    int numSamples = 100;
+    double angVelClamp = 0.5;
+    double delta_time = 0.1;
+    int num_states = 1500;
+
+    Eigen::MatrixXd control_vec(2, num_states); 
+    Eigen::MatrixXd state_vec(3, num_states); 
+    
+    Eigen::Vector2d control;
+
+    // Path interpolation function
+    auto micropoints = micropointsProd(waypoints, numSamples);
+    writeVector("micropoints.txt", micropoints);
+
+    for(int i = 0; i < num_states; i++)
+    {
+        stopIF = stop_flag(state, micropoints);
+
+        control = PP_single(state, waypoints, stopIF, angVelClamp, numSamples);  
+        
+        control_vec.col(i) = control;
+
+        state_vec.col(i) = state;
+
+        state = stateCalc(control, state, delta_time);
+
+        std::cout << " linVel: " << control(0)
+          << " angVel: " << control(1)
+          << std::endl;
+    }    
+    writeVector("Controls_VLA.txt", control_vec);
+    writeVector("States_VLA.txt", state_vec);
+    
+    //control = PP_single(state, waypoints, linVel, LA); 
+    //std::cout << "control = [" << control(0) << ", " << control(1) << "]" << std::endl;
+}
