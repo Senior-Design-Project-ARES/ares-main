@@ -86,7 +86,7 @@ int stop_flag(const Eigen::Vector3d& state, const Eigen::MatrixXd& micropoints)
         std::pow(state(1) - micropoints(last_idx, 1), 2)
     );
 
-    if(dist_last <= 0.3)
+    if(dist_last <= 0.1)
     {
         return 1;
     }
@@ -191,11 +191,11 @@ Eigen::Vector2d PP_single(const Eigen::Vector3d& state, const Eigen::MatrixXd& m
         {
             if(alpha > 0)
             {
-                angVel = 0.05;
+                angVel = 1.0;
             }
-            if(alpha > 0)
+            if(alpha < 0)
             {
-                angVel = -0.05;
+                angVel = -1.0;
             }    
             linVel = 0;
         }
@@ -275,7 +275,7 @@ class PathTrackingNode : public rclcpp::Node
 
             Eigen::Vector3d state = {x, y, yaw};
 
-            double angVelClamp = 1;
+            double angVelClamp = 2;
 
             int stopIF = stop_flag(state, micropoints);
 
