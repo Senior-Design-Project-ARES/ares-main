@@ -3,12 +3,15 @@
 #include <cmath>
 #include <limits>
 #include <iostream>
+#include <filesystem>
+#include <memory>
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "nav_msgs/msg/path.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "std_msgs/msg/bool.hpp"
+#include "searching_and_planning/core/Config.h"
 
 using std::placeholders::_1;
 
@@ -72,7 +75,7 @@ Eigen::Vector2d findPointAtDistance(
     );
 }
 
-int stop_flag(const Eigen::Vector3d& state, const Eigen::MatrixXd& micropoints)
+int stop_flag(const Eigen::Vector3d& state, const Eigen::MatrixXd& micropoints, double stopDist)
 {
     if (micropoints.rows() == 0) {
         // handle empty matrix case
@@ -86,7 +89,7 @@ int stop_flag(const Eigen::Vector3d& state, const Eigen::MatrixXd& micropoints)
         std::pow(state(1) - micropoints(last_idx, 1), 2)
     );
 
-    if(dist_last <= 0.1)
+    if(dist_last <= stopDist)
     {
         return 1;
     }
@@ -120,30 +123,24 @@ double curv_calc(int closest_idx, const Eigen::MatrixXd& micropoints)
     return curv;
 }
 
-double linVel_calc(double curv)
+double linVel_calc(double curv, double linVel_min, double linVel_max)
 {
     if(curv == 0.0)
     {
-        return 0.1;
+        return linVel_min;
     }
-
-    double linVel_min = 0.05;
-    double linVel_max = 0.2;
 
     double linVel = linVel_max - curv * (linVel_max - linVel_min);
 
     return linVel;
 }
 
-double LA_calc(double curv)
+double LA_calc(double curv, double LA_min, double LA_max)
 {
     if(curv == 0.0)
     {
-        return 0.5;
+        return LA_max;
     }
-
-    double LA_min = 0.3;
-    double LA_max = 1;
 
     double LA = LA_max - curv * (LA_max - LA_min);
 
@@ -151,7 +148,7 @@ double LA_calc(double curv)
 }
 
 // Pure Pursuit controller
-Eigen::Vector2d PP_single(const Eigen::Vector3d& state, const Eigen::MatrixXd& micropoints, int stopIF, double angVelClamp)
+Eigen::Vector2d PP_single(const Eigen::Vector3d& state, const Eigen::MatrixXd& micropoints, int stopIF, double angVelClamp, double linVel_min, double linVel_max, double LA_min, double LA_max, double turnRateIP)
 {
     if (stopIF == 1)
     {
@@ -173,8 +170,8 @@ Eigen::Vector2d PP_single(const Eigen::Vector3d& state, const Eigen::MatrixXd& m
         if(curv<-1)
             curv = -1;
 
-        double linVel = linVel_calc(curv);
-        double LA = LA_calc(curv);
+        double linVel = linVel_calc(curv, linVel_min, linVel_max);
+        double LA = LA_calc(curv, LA_min, LA_max);
         Eigen::Vector2d target = findPointAtDistance(micropoints, backWheel_pos, LA, closest_idx);
         
         long double dy = target(1) - backWheel_pos(1);
@@ -191,11 +188,11 @@ Eigen::Vector2d PP_single(const Eigen::Vector3d& state, const Eigen::MatrixXd& m
         {
             if(alpha > 0)
             {
-                angVel = 1.0;
+                angVel = -turnRateIP;
             }
             if(alpha < 0)
             {
-                angVel = -1.0;
+                angVel = turnRateIP;
             }    
             linVel = 0;
         }
@@ -228,9 +225,16 @@ class PathTrackingNode : public rclcpp::Node
         geometry_msgs::msg::PoseStamped latest_pose_;
         bool pose_received_ = false;
         rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr sub_pos;
+        
+        // Configuration
+        std::unique_ptr<searching_and_planning::Config> config_;
 
     public:
         PathTrackingNode() : Node("pathTracking")
+        {
+            // Load configuration
+            std::string config_path = (std::filesystem::current_path() / "config" / "config.yaml").string();
+            config_ = std::make_unique<searching_and_planning::Config>(config_path);
         {
             // Subscribe to Pose
             sub_pos = this->create_subscription<geometry_msgs::msg::PoseStamped>("/current_pose", 10, std::bind(&PathTrackingNode::poseCallback, this, _1));
@@ -275,12 +279,10 @@ class PathTrackingNode : public rclcpp::Node
 
             Eigen::Vector3d state = {x, y, yaw};
 
-            double angVelClamp = 2;
-
-            int stopIF = stop_flag(state, micropoints);
+            int stopIF = stop_flag(state, micropoints, config_->stopDist);
 
             // Call function
-            Eigen::Vector2d control = PP_single(state, micropoints, stopIF, angVelClamp);
+            Eigen::Vector2d control = PP_single(state, micropoints, stopIF, config_->angVelClamp, config_->linVel_min, config_->linVel_max, config_->LA_min, config_->LA_max, config_->turnRateIP);
 
             // Publish command
             geometry_msgs::msg::Twist cmd;

@@ -54,5 +54,5 @@ path_tracking:
   LA_max: 1             # meters - maximum allowed lookahead
 
   # turn-in-place and stopping distance
-  turnRate: 1           # rad/s - turn-in-place angular rate
+  turnRateIP: 1         # rad/s - turn-in-place angular rate
   stopDist: 0.1         # meters - stopping distance at last waypoint

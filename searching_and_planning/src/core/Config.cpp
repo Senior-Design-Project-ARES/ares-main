@@ -18,7 +18,16 @@ Config::Config()
       x_min(0.0),
       x_max(4.6),
       y_min(0.0),
-      y_max(4.6)
+      y_max(4.6),
+      LA_const(0.5),
+      linVel_const(0.15),
+      angVelClamp(2.0),
+      linVel_min(0.05),
+      linVel_max(2.0),
+      LA_min(0.3),
+      LA_max(1.0),
+      turnRateIP(1.0),
+      stopDist(0.1)
 {
     std::cout << "Config initialized with default values" << std::endl;
 }
@@ -36,7 +45,16 @@ Config::Config(const std::string& yaml_path)
       x_min(0.0),
       x_max(4.6),
       y_min(0.0),
-      y_max(4.6)
+      y_max(4.6),
+      LA_const(0.5),
+      linVel_const(0.15),
+      angVelClamp(2.0),
+      linVel_min(0.05),
+      linVel_max(2.0),
+      LA_min(0.3),
+      LA_max(1.0),
+      turnRateIP(1.0),
+      stopDist(0.1)
 {
     // Initialize with defaults first, then try to load from YAML
     double temp_lidar_radius = lidar_radius;
@@ -51,6 +69,15 @@ Config::Config(const std::string& yaml_path)
     double temp_x_max = x_max;
     double temp_y_min = y_min;
     double temp_y_max = y_max;
+    double temp_LA_const = LA_const;
+    double temp_linVel_const = linVel_const;
+    double temp_angVelClamp = angVelClamp;
+    double temp_linVel_min = linVel_min;
+    double temp_linVel_max = linVel_max;
+    double temp_LA_min = LA_min;
+    double temp_LA_max = LA_max;
+    double temp_turnRateIP = turnRateIP;
+    double temp_stopDist = stopDist;
     
     // Try to load from YAML
     loadFromYaml(yaml_path,
@@ -65,7 +92,16 @@ Config::Config(const std::string& yaml_path)
                 temp_x_min,
                 temp_x_max,
                 temp_y_min,
-                temp_y_max);
+                temp_y_max,
+                temp_LA_const,
+                temp_linVel_const,
+                temp_angVelClamp,
+                temp_linVel_min,
+                temp_linVel_max,
+                temp_LA_min,
+                temp_LA_max,
+                temp_turnRateIP,
+                temp_stopDist);
     
     // Re-construct with loaded values
     const_cast<double&>(this->lidar_radius) = temp_lidar_radius;
@@ -80,6 +116,15 @@ Config::Config(const std::string& yaml_path)
     const_cast<double&>(this->x_max) = temp_x_max;
     const_cast<double&>(this->y_min) = temp_y_min;
     const_cast<double&>(this->y_max) = temp_y_max;
+    const_cast<double&>(this->LA_const) = temp_LA_const;
+    const_cast<double&>(this->linVel_const) = temp_linVel_const;
+    const_cast<double&>(this->angVelClamp) = temp_angVelClamp;
+    const_cast<double&>(this->linVel_min) = temp_linVel_min;
+    const_cast<double&>(this->linVel_max) = temp_linVel_max;
+    const_cast<double&>(this->LA_min) = temp_LA_min;
+    const_cast<double&>(this->LA_max) = temp_LA_max;
+    const_cast<double&>(this->turnRateIP) = temp_turnRateIP;
+    const_cast<double&>(this->stopDist) = temp_stopDist;
 }
 
 // ===== Helper: Load from YAML =====
@@ -95,7 +140,16 @@ void Config::loadFromYaml(const std::string& yaml_path,
                           double& x_min,
                           double& x_max,
                           double& y_min,
-                          double& y_max)
+                          double& y_max,
+                          double& LA_const,
+                          double& linVel_const,
+                          double& angVelClamp,
+                          double& linVel_min,
+                          double& linVel_max,
+                          double& LA_min,
+                          double& LA_max,
+                          double& turnRateIP,
+                          double& stopDist)
 {
     try {
         // Check if file exists
@@ -161,6 +215,39 @@ void Config::loadFromYaml(const std::string& yaml_path,
         }
         if (sp_config["y_max"]) {
             y_max = sp_config["y_max"].as<double>();
+        }
+        
+        // Load path tracking parameters
+        if (config["path_tracking"]) {
+            YAML::Node pt_config = config["path_tracking"];
+            
+            if (pt_config["LA_const"]) {
+                LA_const = pt_config["LA_const"].as<double>();
+            }
+            if (pt_config["linVel_const"]) {
+                linVel_const = pt_config["linVel_const"].as<double>();
+            }
+            if (pt_config["angVelClamp"]) {
+                angVelClamp = pt_config["angVelClamp"].as<double>();
+            }
+            if (pt_config["linVel_min"]) {
+                linVel_min = pt_config["linVel_min"].as<double>();
+            }
+            if (pt_config["linVel_max"]) {
+                linVel_max = pt_config["linVel_max"].as<double>();
+            }
+            if (pt_config["LA_min"]) {
+                LA_min = pt_config["LA_min"].as<double>();
+            }
+            if (pt_config["LA_max"]) {
+                LA_max = pt_config["LA_max"].as<double>();
+            }
+            if (pt_config["turnRateIP"]) {
+                turnRateIP = pt_config["turnRateIP"].as<double>();
+            }
+            if (pt_config["stopDist"]) {
+                stopDist = pt_config["stopDist"].as<double>();
+            }
         }
         
         LOG("Successfully loaded configuration from: " << yaml_path);

@@ -3,12 +3,15 @@
 #include <cmath>
 #include <limits>
 #include <iostream>
+#include <filesystem>
+#include <memory>
 
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "nav_msgs/msg/path.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "std_msgs/msg/bool.hpp"
+#include "searching_and_planning/core/Config.h"
 
 using std::placeholders::_1;
 
@@ -103,7 +106,8 @@ Eigen::Vector2d PP_single(
     double linVel,
     double LA,
     int stopIF,
-    double angVelClamp)
+    double angVelClamp,
+    double turnRateIP)
 {
     Eigen::Vector2d controls;
 
@@ -134,11 +138,11 @@ Eigen::Vector2d PP_single(
         {
             if(alpha > 0)
             {
-                angVel = 0.05;
+                angVel = -turnRateIP;
             }
-            if(alpha > 0)
+            if(alpha < 0)
             {
-                angVel = -0.05;
+                angVel = turnRateIP;
             }    
             linVel = 0;
         }
@@ -168,10 +172,16 @@ class PathTrackingNode : public rclcpp::Node
         geometry_msgs::msg::PoseStamped latest_pose_;
         bool pose_received_ = false;
         rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr sub_pos;
+        
+        // Configuration
+        std::unique_ptr<searching_and_planning::Config> config_;
 
     public:
         PathTrackingNode() : Node("pathTracking")
         {
+            // Load configuration
+            std::string config_path = (std::filesystem::current_path() / "config" / "config.yaml").string();
+            config_ = std::make_unique<searching_and_planning::Config>(config_path);
             // Subscribe to Pose
             sub_pos = this->create_subscription<geometry_msgs::msg::PoseStamped>("/current_pose", 10, std::bind(&PathTrackingNode::poseCallback, this, _1));
 
@@ -216,14 +226,14 @@ class PathTrackingNode : public rclcpp::Node
             Eigen::Vector3d state = {x, y, yaw};
 
             // Constants
-            double linVel = 0.15;
-            double LA = 0.5;
-            double angVelClamp = 1;
+            double linVel = config_->linVel_const;
+            double LA = config_->LA_const;
+            double angVelClamp = config_->angVelClamp;
 
             int stopIF = stop_flag(state, micropoints);
 
             // Call function
-            Eigen::Vector2d control = PP_single(state, micropoints, linVel, LA, stopIF, angVelClamp);
+            Eigen::Vector2d control = PP_single(state, micropoints, linVel, LA, stopIF, angVelClamp, config_->turnRateIP);
 
             // Publish command
             geometry_msgs::msg::Twist cmd;

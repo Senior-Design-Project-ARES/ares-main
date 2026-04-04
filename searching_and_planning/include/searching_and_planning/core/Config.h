@@ -53,7 +53,16 @@ public:
     const double y_min;                      // meters
     const double y_max;                      // meters
     
-private:
+    // Path tracking parameters (const)
+    const double LA_const;                   // meters - constant lookahead distance
+    const double linVel_const;               // m/s - constant linear velocity
+    const double angVelClamp;                // rad/s - maximum allowed angular velocity
+    const double linVel_min;                 // m/s - minimum allowed linear velocity
+    const double linVel_max;                 // m/s - maximum allowed linear velocity
+    const double LA_min;                     // meters - minimum allowed lookahead
+    const double LA_max;                     // meters - maximum allowed lookahead
+    const double turnRateIP;                 // rad/s - turn-in-place angular rate
+    const double stopDist;                   // meters - stopping distance at last waypoint
     /**
      * @brief Helper method to load configuration from YAML
      * 
@@ -74,7 +83,16 @@ private:
                             double& x_min,
                             double& x_max,
                             double& y_min,
-                            double& y_max);
+                            double& y_max,
+                            double& LA_const,
+                            double& linVel_const,
+                            double& angVelClamp,
+                            double& linVel_min,
+                            double& linVel_max,
+                            double& LA_min,
+                            double& LA_max,
+                            double& turnRateIP,
+                            double& stopDist);
 };
 
 }  // namespace searching_and_planning
