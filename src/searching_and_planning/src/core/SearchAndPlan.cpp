@@ -158,7 +158,7 @@ ares::Path2D ares::SearchAndPlanCore::runWithGoal(const Eigen::Vector2d current_
     MyGenericRRT my_rrt(0.05, 7500, 0.3);
 
     //initialize collision checker
-    Point2DCollisionCheckerGrid collision_checker(grid_map);
+    Point2DCollisionCheckerGrid collision_checker(grid_map, config);
 
     // plan path to next point
     ares::Path raw_path;
