@@ -235,7 +235,7 @@ class PathTrackingNode : public rclcpp::Node
             // Load configuration
             std::string config_path = (std::filesystem::current_path() / "config" / "config.yaml").string();
             config_ = std::make_unique<searching_and_planning::Config>(config_path);
-        {
+
             // Subscribe to Pose
             sub_pos = this->create_subscription<geometry_msgs::msg::PoseStamped>("/current_pose", 10, std::bind(&PathTrackingNode::poseCallback, this, _1));
 
