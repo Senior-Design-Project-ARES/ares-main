@@ -2,6 +2,7 @@
 
 // import ROS2 libraries
 #include "rclcpp/rclcpp.hpp"
+#include "ament_index_cpp/get_package_share_directory.hpp"
 
 // import message and service types
 #include "cartographer_ros_msgs/srv/trajectory_query.hpp"

@@ -364,8 +364,9 @@ void PathPlanningServer::targetCallback(const geometry_msgs::msg::PoseStamped::S
 int main(int argc, char **argv){
   rclcpp::init(argc, argv);
   
-  // Create configuration from YAML file in config folder relative to current working directory
-  std::string config_path = (std::filesystem::current_path() / "config" / "config.yaml").string();
+  // Get the package share directory and navigate to config file
+  std::string package_share_dir = ament_index_cpp::get_package_share_directory("searching_and_planning");
+  std::string config_path = (std::filesystem::path(package_share_dir)/ ".." / ".." / ".." / ".." / "config" / "config.yaml").string();
   LOG("Loading config from: " << config_path);
   searching_and_planning::Config config(config_path);
   

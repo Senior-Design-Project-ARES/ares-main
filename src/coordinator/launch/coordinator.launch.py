@@ -1,18 +1,30 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
 import os
+from ament_index_python.packages import get_package_share_directory
 import yaml
 
 
 def generate_launch_description():
-    config_path = os.path.join(os.getcwd(), 'config', 'config.yaml')
+    package_dir = get_package_share_directory('coordinator')
+    config_path = os.path.join(package_dir, '..', '..', '..', '..', 'config', 'config.yaml')
+    # config_path = os.path.join(os.getcwd(), 'config', 'config.yaml')
 
     with open(config_path, 'r') as f:
         config = yaml.safe_load(f)
 
     common_params = config.get('common_params', {})
+
+    vrpn_parms = config.get('vrpn', {})
     
     return LaunchDescription([
+        # Node(
+        #     package='vrpn_client_ros',
+        #     executable='vrpn_client_node',
+        #     output='screen',
+        #     emulate_tty=True,
+        #     parameters=[parameters_file_path],
+        # ),
         Node(
             package='coordinator',
             executable='coordinator_node',
