@@ -22,6 +22,15 @@ add_library(searching_and_planning
   src/tools/HelpfulClass.cpp
 )
 
+# Register target for export
+install(TARGETS searching_and_planning
+  EXPORT searching_and_planningTargets
+  LIBRARY DESTINATION lib
+  ARCHIVE DESTINATION lib
+  RUNTIME DESTINATION bin
+  INCLUDES DESTINATION include
+)
+
 target_include_directories(searching_and_planning PUBLIC
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>
@@ -29,6 +38,12 @@ target_include_directories(searching_and_planning PUBLIC
 
 ament_target_dependencies(
   searching_and_planning
+  rclcpp
+  cartographer_ros_msgs
+  geometry_msgs
+  nav_msgs
+  Eigen3
+  yaml-cpp
 )
 target_link_libraries(searching_and_planning Eigen3::Eigen yaml-cpp)
 
@@ -56,9 +71,24 @@ target_include_directories(path_planning PUBLIC
 )
 
 # Install targets
-install(TARGETS
-  path_planning
+install(TARGETS path_planning
   DESTINATION lib/${PROJECT_NAME}
+)
+
+# Install headers
+install(DIRECTORY include/ DESTINATION include)
+
+# Export targets for downstream packages
+ament_export_targets(searching_and_planningTargets HAS_LIBRARY_TARGET)
+
+# Export dependencies
+ament_export_dependencies(
+  rclcpp
+  cartographer_ros_msgs
+  geometry_msgs
+  nav_msgs
+  Eigen3
+  yaml-cpp
 )
 
 if(BUILD_TESTING)
