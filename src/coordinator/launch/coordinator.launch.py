@@ -23,7 +23,7 @@ def generate_launch_description():
         #     executable='vrpn_client_node',
         #     output='screen',
         #     emulate_tty=True,
-        #     parameters=[parameters_file_path],
+        #     parameters=[common_params, vrpn_parms],
         # ),
         Node(
             package='coordinator',
