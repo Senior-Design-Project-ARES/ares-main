@@ -5,7 +5,7 @@ common_params:
   # General parameters
   rover_id: 1                          # Unique identifier for the rover
   rover_name: "Taurus"                   # Name of the rover
-  debug: false                          # Enable debug mode for additional logging and visualization
+  debug: true                         # Enable debug mode for additional logging and visualization
 
 vrpn:
   server: 192.168.20.100
@@ -19,7 +19,7 @@ vrpn:
 
 searching_and_planning:
   # Sensor parameters
-  lidar_radius: 4.0                    # meters - LIDAR detection radius
+  lidar_radius: 1                    # meters - LIDAR detection radius
   min_region_length: 1.0               # meters - minimum region length
   absolute_min_region_length: 0.1      # meters - absolute minimum region length
   gap: 0.05                            # meters - gap parameter
