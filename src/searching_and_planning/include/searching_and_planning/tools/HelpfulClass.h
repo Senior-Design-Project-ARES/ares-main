@@ -2,7 +2,8 @@
 #include <cstdint>
 #include "searching_and_planning/tools/MyPath.h"
 #include "searching_and_planning/tools/ConfigurationSpace.h"
-#include "searching_and_planning/core/UsefulMacros.h"
+#include "searching_and_planning/core/Config.h"
+// #include "searching_and_planning/core/UsefulMacros.h"
 
 // #define GAP 0.05
 // #define GAPDECEN 0.1
@@ -42,25 +43,27 @@ class BaseCollisionChecker {
 
 class Point2DCollisionCheckerGrid : public BaseCollisionChecker<Eigen::VectorXd>{
     public:
-        Point2DCollisionCheckerGrid(const amp::GridCSpace2D_T<int8_t>& map_);
+        Point2DCollisionCheckerGrid(const amp::GridCSpace2D_T<int8_t>& map_, const searching_and_planning::Config& config_);
 
         bool isCollide(const Eigen::VectorXd& point_) override;
         bool isCollide2P(const Eigen::VectorXd& point1_, const Eigen::VectorXd& point2_) override;
 
     private:
         const amp::GridCSpace2D_T<int8_t>& map;
+        const searching_and_planning::Config& config;
 };
 
 class MultiAgentPoint2DCollisionCheckerGrid{
     public:
-        MultiAgentPoint2DCollisionCheckerGrid(const std::vector<amp::GridCSpace2D_T<int8_t>>& maps_)
-        : maps(maps_){}
+        MultiAgentPoint2DCollisionCheckerGrid(const std::vector<amp::GridCSpace2D_T<int8_t>>& maps_, const searching_and_planning::Config& config_)
+        : maps(maps_), config(config_){}
 
         bool isCollide(int agent_idx_, const Eigen::VectorXd& point_);
         bool isCollide2P(int agent_idx_, const Eigen::VectorXd& point1_, const Eigen::VectorXd& point2_);
 
     private:
         const std::vector<amp::GridCSpace2D_T<int8_t>>& maps;
+        const searching_and_planning::Config& config;
 };
 
 // class MultiAgentDisk2DCollisionChecker : public BaseCollisionChecker<Eigen::VectorXd>{
