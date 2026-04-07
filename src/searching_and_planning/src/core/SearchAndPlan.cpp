@@ -89,6 +89,9 @@ ares::Path2D ares::SearchAndPlanCore::runSingle(const Eigen::Vector2d current_lo
     }
     else{
         LOG("Found " << points.size() << " frontier points.");
+        for(size_t i = 0; i < points.size(); i++){
+            LOG("Frontier " << i << ": (" << points[i].first(0) << ", " << points[i].first(1) << "), size: " << points[i].second);
+        }
     }
     
     // determine next point to explore
@@ -175,10 +178,25 @@ ares::Path2D ares::SearchAndPlanCore::runWithGoal(const Eigen::Vector2d current_
 Eigen::Vector2d ares::SearchAndPlanCore::nextPoint(std::vector<std::pair<Eigen::Vector2d, int>>& point_of_interest, Eigen::Vector2d location){
     double distance = (location - point_of_interest[0].first).norm();
     int nextPoint = 0;
+
+    int large_or_close = 0; // 0 for close, 1 for large
+    if (distance < config.lidar_radius*1.2){
+        large_or_close = 1;
+    }
+
+    std::vector<std::string> large_or_close_str = {"close", "large"};
+
     for(size_t i = 1; i < point_of_interest.size(); i++){
         double temp_distance = (location - point_of_interest[i].first).norm();
 
-        if(distance < config.lidar_radius*1.2 && temp_distance < config.lidar_radius*1.2){
+        if(temp_distance < config.lidar_radius*1.2){
+            large_or_close = 1;
+            if (distance >= config.lidar_radius*1.2){
+                nextPoint = i;
+                distance = temp_distance;
+                continue;
+            }
+
             // Choose the point in the largest frontier region
             if(point_of_interest[i].second > point_of_interest[nextPoint].second){
                 nextPoint = i;
@@ -186,12 +204,14 @@ Eigen::Vector2d ares::SearchAndPlanCore::nextPoint(std::vector<std::pair<Eigen::
             }
             continue;
         }
-        else if(temp_distance < distance){
+        else if(distance >= config.lidar_radius*1.2 && temp_distance < distance){
             nextPoint = i;
             distance = temp_distance;
+            large_or_close = 0;
         }
     }
     Eigen::Vector2d return_point = point_of_interest[nextPoint].first;
     point_of_interest.erase(point_of_interest.begin() + nextPoint);
+    DEBUG("Next point to explore: (" << return_point(0) << ", " << return_point(1) << "), distance: " << distance << ", frontier size: " << point_of_interest[nextPoint].second << ", " << large_or_close_str[large_or_close]);
     return return_point;
 }
