@@ -1,16 +1,18 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
-import os
+from pathlib import Path
 import yaml
 
 
 def generate_launch_description():
-    config_path = os.path.join(os.getcwd(), 'config', 'config.yaml')
+    #note: changed this path to be relative to launch file -Ollie
+    config_path = Path(__file__).resolve().parents[3] / 'config' / 'config.yaml'
 
     with open(config_path, 'r') as f:
         config = yaml.safe_load(f)
 
     common_params = config.get('common_params', {})
+    path_tracking_params = config.get('path_tracking', {})
     
     return LaunchDescription([
         Node(
@@ -34,19 +36,19 @@ def generate_launch_description():
             output='screen',
             parameters=[common_params]
         ),
-        # Node(
-        #     package='path_tracking',
-        #     executable='pathTracking',
-        #     namespace=common_params.get('rover_name', 'Dora'),
-        #     output='screen',
-        #     parameters=[common_params]
-        # ),
+        Node(
+            package='path_tracking',
+            executable='pathTracking',
+            namespace=common_params.get('rover_name', 'Dora'),
+            output='screen',
+            parameters=[common_params,path_tracking_params]
+        ),
         Node(
             package='path_tracking',
             executable='pathTrackingVLA',
             namespace=common_params.get('rover_name', 'Dora'),
             output='screen',
-            parameters=[common_params]
+            parameters=[common_params,path_tracking_params]
         ),
         Node(
             package='path_tracking',
