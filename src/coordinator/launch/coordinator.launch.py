@@ -36,12 +36,12 @@ def generate_launch_description():
             output='screen',
             parameters=[common_params]
         ),
-        Node(
-            package='path_tracking',
-            executable='pathTracking',
-            namespace=common_params.get('rover_name', 'Dora'),
-            output='screen',
-            parameters=[common_params,path_tracking_params]
+        # Node(
+        #     package='path_tracking',
+        #     executable='pathTracking',
+        #     namespace=common_params.get('rover_name', 'Dora'),
+        #     output='screen',
+        #     parameters=[common_params,path_tracking_params]
         ),
         Node(
             package='path_tracking',
