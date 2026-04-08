@@ -145,7 +145,7 @@ double LA_calc(double curv, double LA_min, double LA_max)
 }
 
 // Pure Pursuit controller
-Eigen::Vector2d PP_single(const Eigen::Vector3d& state, const Eigen::MatrixXd& micropoints, int stopIF, double angVelClamp, double linVel_min, double linVel_max, double LA_min, double LA_max, double turnRate)
+Eigen::Vector2d PP_single(const Eigen::Vector3d& state, const Eigen::MatrixXd& micropoints, int stopIF, double angVelClamp, double linVel_min, double linVel_max, double LA_min, double LA_max, double turnRate, double trackingAngle)
 {
     if (stopIF == 1)
     {
@@ -181,7 +181,7 @@ Eigen::Vector2d PP_single(const Eigen::Vector3d& state, const Eigen::MatrixXd& m
         double kappa = (2 * std::sin(alpha)) / LA;
         double angVel = kappa * linVel;
 
-        if(std::abs(alpha) > (45*(M_PI/180)))
+        if(std::abs(alpha) > (trackingAngle*(M_PI/180)))
         {
             if(alpha < 0)
             {
@@ -246,6 +246,8 @@ class PathTrackingNode : public rclcpp::Node
             this->declare_parameter<double>("linVel_const", 0.15);
             this->declare_parameter<double>("turnRateInPlace", 1.0);
             this->declare_parameter<double>("stopDist", 0.1);
+            //this->declare_parameter<bool>("debug", false);
+            this->declare_parameter<double>("trackingAngle", 30.0)
 
             angVelClamp_ = this->get_parameter("angVelClamp").as_double();
             linVel_min_ = this->get_parameter("linVel_min").as_double();
@@ -256,6 +258,14 @@ class PathTrackingNode : public rclcpp::Node
             linVel_const_ = this->get_parameter("linVel_const").as_double();
             turnRate_ = this->get_parameter("turnRateInPlace").as_double();
             stopDist_ = this->get_parameter("stopDist").as_double();
+            //debug_ = this->get_parameter("debug").as_bool();
+            trackingAngle_ = this->get_parameter("trackingAngle").as_double();
+
+            // if(debug_){
+            //     std::cout << "path_tracking: successfully got config parameters." << std::endl;
+            // } else {
+            //     std::cout << "path_tracking: using default parameters." << std::endl;
+            // }
 
             // Subscribe to Pose
             sub_pos = this->create_subscription<geometry_msgs::msg::PoseStamped>("/current_pose", 10, std::bind(&PathTrackingNode::poseCallback, this, _1));
@@ -303,7 +313,7 @@ class PathTrackingNode : public rclcpp::Node
             int stopIF = stop_flag(state, micropoints, stopDist_);
 
             // Call function
-            Eigen::Vector2d control = PP_single(state, micropoints, stopIF, angVelClamp_, linVel_min_, linVel_max_, LA_min_, LA_max_, turnRate_);
+            Eigen::Vector2d control = PP_single(state, micropoints, stopIF, angVelClamp_, linVel_min_, linVel_max_, LA_min_, LA_max_, turnRate_, trackingAngle_);
 
             // Publish command
             geometry_msgs::msg::Twist cmd;
