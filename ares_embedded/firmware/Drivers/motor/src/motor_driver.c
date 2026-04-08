@@ -133,6 +133,23 @@ void motor_driver_init(const motor_driver_config_t *config, motor_driver_t *ctx)
     HAL_TIM_PWM_ConfigChannel(config->htim_pwm, &oc, config->channel_pwm);
     HAL_TIM_PWM_Start(config->htim_pwm, config->channel_pwm);
 
+    /* ── Enable pin: push-pull output, asserted HIGH immediately ── */
+    gpio_clk_enable(config->en_port);
+    gpio.Mode  = GPIO_MODE_OUTPUT_PP;
+    gpio.Pull  = GPIO_NOPULL;
+    gpio.Speed = GPIO_SPEED_FREQ_LOW;
+    gpio.Pin   = config->en_pin;
+    HAL_GPIO_Init(config->en_port, &gpio);
+    HAL_GPIO_WritePin(config->en_port, config->en_pin, GPIO_PIN_SET);
+
+    /* ── Status flag: input with pull-up (/SF is active-low, open-drain) ── */
+    gpio_clk_enable(config->sf_port);
+    gpio.Mode  = GPIO_MODE_INPUT;
+    gpio.Pull  = GPIO_PULLUP;
+    gpio.Speed = GPIO_SPEED_FREQ_LOW;
+    gpio.Pin   = config->sf_pin;
+    HAL_GPIO_Init(config->sf_port, &gpio);
+
     /* ── Populate runtime context ── */
     ctx->in1_port = config->in1_port;
     ctx->in1_pin  = config->in1_pin;
@@ -141,6 +158,10 @@ void motor_driver_init(const motor_driver_config_t *config, motor_driver_t *ctx)
     ctx->htim_pwm = config->htim_pwm;
     ctx->period   = config->htim_pwm->Init.Period;
     ctx->ch_pwm   = config->channel_pwm;
+    ctx->en_port  = config->en_port;
+    ctx->en_pin   = config->en_pin;
+    ctx->sf_port  = config->sf_port;
+    ctx->sf_pin   = config->sf_pin;
 }
 
 void motor_drive(motor_driver_t *ctx, motor_mode_t mode, uint8_t duty_percent)
@@ -190,6 +211,13 @@ void motor_drive(motor_driver_t *ctx, motor_mode_t mode, uint8_t duty_percent)
             __HAL_TIM_SET_COMPARE(ctx->htim_pwm, ctx->ch_pwm, 0u);
             break;
     }
+}
+
+uint8_t motor_get_fault(const motor_driver_t *ctx)
+{
+    if (!ctx) { return 0u; }
+    /* /SF is active-low: GPIO_PIN_RESET means the MC33926 has asserted a fault */
+    return (HAL_GPIO_ReadPin(ctx->sf_port, ctx->sf_pin) == GPIO_PIN_RESET) ? 1u : 0u;
 }
 
 void motor_all_coast(motor_driver_t ctx[], uint8_t count)

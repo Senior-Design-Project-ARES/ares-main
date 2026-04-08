@@ -6,13 +6,22 @@
  * @target  STM32H723ZG + MC33926
  *
  * Pure-C interface for controlling up to MOTOR_COUNT motors through the
- * MC33926 dual H-bridge IC.  Each channel uses two plain GPIO pins (IN1,
- * IN2) for direction and one timer-driven PWM pin (D2) for speed.
+ * MC33926 H-bridge IC.  This driver targets the Pololu Dual MC33926 Motor
+ * Driver Carrier operating in single-channel mode: both ICs on each carrier
+ * board are paralleled (M1ENx+M2ENx tied together, M1/SFx+M2/SFx tied
+ * together) to double the continuous current rating per motor.
+ *
+ * Each motor channel uses:
+ *   IN1, IN2   — direction (plain GPIO push-pull)
+ *   D2/PWM     — speed (timer alternate-function PWM)
+ *   EN         — carrier enable, must be held HIGH for outputs to be active
+ *   /SF        — open-drain active-low status flag (fault: overcurrent/overtemp)
  *
  * Typical call sequence:
  *   1. motor_timer_init()   — once per shared PWM timer
  *   2. motor_driver_init()  — once per motor channel
  *   3. motor_drive()        — every control tick
+ *   4. motor_get_fault()    — poll /SF as needed
  */
 
 #ifndef MOTOR_DRIVER_H
@@ -56,9 +65,21 @@ typedef struct {
     /* Speed control — PWM via timer alternate function */
     GPIO_TypeDef      *pwm_port;
     uint16_t           pwm_pin;
-    uint8_t            pwm_alternate;  /* e.g. GPIO_AF3_TIM8 */
+    uint8_t            pwm_alternate;  /* e.g. GPIO_AF1_TIM2 */
     TIM_HandleTypeDef *htim_pwm;
     uint32_t           channel_pwm;   /* e.g. TIM_CHANNEL_1 */
+
+    /* Enable pin — push-pull output, held HIGH to enable MC33926 outputs.
+     * In single-channel mode, wire M1EN and M2EN together on the carrier
+     * and connect to this pin. */
+    GPIO_TypeDef *en_port;
+    uint16_t      en_pin;
+
+    /* Status flag — input with pull-up; MC33926 asserts LOW on fault
+     * (overcurrent, overtemperature).  In single-channel mode, wire
+     * M1/SF and M2/SF together on the carrier (both are open-drain). */
+    GPIO_TypeDef *sf_port;
+    uint16_t      sf_pin;
 } motor_driver_config_t;
 
 /**
@@ -73,6 +94,10 @@ typedef struct {
     TIM_HandleTypeDef *htim_pwm;
     uint32_t           period;   /* ARR value, used for pulse scaling */
     uint32_t           ch_pwm;
+    GPIO_TypeDef      *en_port;
+    uint16_t           en_pin;
+    GPIO_TypeDef      *sf_port;
+    uint16_t           sf_pin;
 } motor_driver_t;
 
 /**
@@ -118,6 +143,18 @@ void motor_driver_init(const motor_driver_config_t *config, motor_driver_t *ctx)
  * @param duty_percent  Speed as a percentage of full output (0–100).
  */
 void motor_drive(motor_driver_t *ctx, motor_mode_t mode, uint8_t duty_percent);
+
+/**
+ * @brief Read the MC33926 status flag for a single motor channel.
+ *
+ * /SF is asserted LOW by the MC33926 on overcurrent or overtemperature.
+ * In single-channel mode, M1/SF and M2/SF must be wired together on the
+ * carrier; a fault on either IC will assert this pin.
+ *
+ * @param ctx  Initialized motor_driver_t handle.
+ * @return     1 if a fault is present, 0 if normal.
+ */
+uint8_t motor_get_fault(const motor_driver_t *ctx);
 
 /**
  * @brief Coast all motors in an array (outputs go high-impedance).

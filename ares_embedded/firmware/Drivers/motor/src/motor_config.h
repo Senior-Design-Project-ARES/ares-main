@@ -3,7 +3,15 @@
  * @brief   MC33926 hardware pin assignment table — STM32H723ZG Nucleo
  * @author  Aidan Murray
  * @date    2026-04-06
- * @target  STM32H723ZG + MC33926
+ * @target  STM32H723ZG + 4× Pololu Dual MC33926 Motor Driver Carrier
+ *
+ * Hardware configuration: 4 carrier boards, each in single-channel mode.
+ * Both MC33926 ICs on each carrier are paralleled for double current:
+ *   — M1EN + M2EN tied together  → driven by one EN GPIO (active high)
+ *   — M1/SF + M2/SF tied together → read by one /SF GPIO (active low, open-drain)
+ *   — M1IN1 + M2IN1 tied together → driven by one IN1 GPIO
+ *   — M1IN2 + M2IN2 tied together → driven by one IN2 GPIO
+ *   — M1D2  + M2D2  tied together → driven by one PWM pin
  *
  * This file is the single source of truth for physical wiring.  All GPIO
  * port/pin/AF selections live here; motor_driver.c and motor_bridge.c
@@ -66,11 +74,44 @@
  * datasheet recommends > 10 kHz for ultrasonic operation). */
 #define MOTOR_PWM_HZ        20000u
 
-/* SYSCLK = 64 MHz (HSI default, no PLL). APB1 prescaler = /1, so TIM2 clock
- * = 64 MHz. Verified from system_stm32h7xx.c and consistent with Vishnu's
- * motor_timer_init<20000u>(&htim1, TIM1, 64000000u). If PLL is configured
- * later, this value must be updated to match. */
-#define MOTOR_TIMER_CLK_HZ  64000000u
+/* APB1 timer clock = 96 MHz. SYSCLK=192MHz, AHB/2=96MHz, APB1/2=48MHz,
+ * timer x2 rule = 96 MHz. Verified from SystemClock_Config() in this repo. */
+#define MOTOR_TIMER_CLK_HZ  96000000u
+
+/* ── Enable and Status Flag GPIO assignments ──────────────────────────────
+ *
+ * One EN pin and one /SF pin per carrier board.
+ * EN  : push-pull output, driven HIGH by motor_driver_init().
+ * /SF : input with pull-up, active-low fault indicator.
+ *
+ * VERIFY THESE AGAINST YOUR ACTUAL PHYSICAL WIRING before building.
+ * Pin choices below are free from all other peripheral conflicts on the
+ * Nucleo-H723ZG (not used by encoders, UART, I2C, SWD, LEDs, or PWM).
+ */
+
+/* Motor 1 — FR */
+#define M1_EN_PORT   GPIOE
+#define M1_EN_PIN    GPIO_PIN_2   /* CN10 pin 25 */
+#define M1_SF_PORT   GPIOG
+#define M1_SF_PIN    GPIO_PIN_0   /* CN11 pin 55 */
+
+/* Motor 2 — FL */
+#define M2_EN_PORT   GPIOE
+#define M2_EN_PIN    GPIO_PIN_3   /* CN10 pin 27 */
+#define M2_SF_PORT   GPIOG
+#define M2_SF_PIN    GPIO_PIN_1   /* CN11 pin 57 */
+
+/* Motor 3 — RL */
+#define M3_EN_PORT   GPIOE
+#define M3_EN_PIN    GPIO_PIN_4   /* CN10 pin 29 */
+#define M3_SF_PORT   GPIOG
+#define M3_SF_PIN    GPIO_PIN_2   /* CN10 pin 55 */
+
+/* Motor 4 — RR */
+#define M4_EN_PORT   GPIOE
+#define M4_EN_PIN    GPIO_PIN_5   /* CN10 pin 31 */
+#define M4_SF_PORT   GPIOG
+#define M4_SF_PIN    GPIO_PIN_3   /* CN10 pin 57 */
 
 /* ── Direction GPIO assignments ───────────────────────────────────────────
  *
@@ -160,6 +201,10 @@
         .pwm_alternate = M1_PWM_AF,             \
         .htim_pwm      = (htim_ptr),            \
         .channel_pwm   = M1_PWM_CHANNEL,        \
+        .en_port       = M1_EN_PORT,            \
+        .en_pin        = M1_EN_PIN,             \
+        .sf_port       = M1_SF_PORT,            \
+        .sf_pin        = M1_SF_PIN,             \
     },                                          \
     /* M2 — FL */                               \
     {                                           \
@@ -172,6 +217,10 @@
         .pwm_alternate = M2_PWM_AF,             \
         .htim_pwm      = (htim_ptr),            \
         .channel_pwm   = M2_PWM_CHANNEL,        \
+        .en_port       = M2_EN_PORT,            \
+        .en_pin        = M2_EN_PIN,             \
+        .sf_port       = M2_SF_PORT,            \
+        .sf_pin        = M2_SF_PIN,             \
     },                                          \
     /* M3 — RL */                               \
     {                                           \
@@ -184,6 +233,10 @@
         .pwm_alternate = M3_PWM_AF,             \
         .htim_pwm      = (htim_ptr),            \
         .channel_pwm   = M3_PWM_CHANNEL,        \
+        .en_port       = M3_EN_PORT,            \
+        .en_pin        = M3_EN_PIN,             \
+        .sf_port       = M3_SF_PORT,            \
+        .sf_pin        = M3_SF_PIN,             \
     },                                          \
     /* M4 — RR */                               \
     {                                           \
@@ -196,6 +249,10 @@
         .pwm_alternate = M4_PWM_AF,             \
         .htim_pwm      = (htim_ptr),            \
         .channel_pwm   = M4_PWM_CHANNEL,        \
+        .en_port       = M4_EN_PORT,            \
+        .en_pin        = M4_EN_PIN,             \
+        .sf_port       = M4_SF_PORT,            \
+        .sf_pin        = M4_SF_PIN,             \
     },                                          \
 }
 
