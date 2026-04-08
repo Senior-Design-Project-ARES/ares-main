@@ -63,6 +63,13 @@ set(UART_SOURCES
     ${UART_DIR}/src/uart_print.c
 )
 
+# Motor driver sources (MC33926 H-bridge — direction GPIO + PWM speed)
+set(MOTOR_DIR ${FIRMWARE_DIR}/Drivers/motor)
+set(MOTOR_SOURCES
+    ${MOTOR_DIR}/src/motor_driver.c
+    ${MOTOR_DIR}/src/motor_bridge.c
+)
+
 ## Ethernet + LwIP (bare-metal, NO_SYS)
 set(ETHERNET_DIR ${FIRMWARE_DIR}/Drivers/ethernet)
 set(ETHERNET_SOURCES
@@ -101,6 +108,7 @@ add_executable(firmware.elf
     ${SYSTEM_SOURCES}
     ${ENCODER_SOURCES}
     ${UART_SOURCES}
+    ${MOTOR_SOURCES}
     ${ETHERNET_SOURCES}
     ${LWIP_CORE_SOURCES}
     ${LWIP_NETIF_SOURCES}
@@ -113,6 +121,7 @@ target_include_directories(firmware.elf PRIVATE
     ${SRC_DIR}
     ${ENCODER_DIR}/src
     ${UART_DIR}/src
+    ${MOTOR_DIR}/src
     ${ETHERNET_DIR}/src
     ${CMSIS_DEVICE_DIR}/Include
     ${CMSIS_CORE_DIR}/Include
