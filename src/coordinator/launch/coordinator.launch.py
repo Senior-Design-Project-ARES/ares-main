@@ -1,12 +1,12 @@
 from launch import LaunchDescription
 from launch_ros.actions import Node
-from pathlib import Path
+from os
 import yaml
 
 
 def generate_launch_description():
-    #note: changed this path to be relative to launch file -Ollie
-    config_path = Path(__file__).resolve().parents[3] / 'config' / 'config.yaml'
+    
+    config_path = os.path.join(os.getcwd(), 'config', 'config.yaml')
 
     with open(config_path, 'r') as f:
         config = yaml.safe_load(f)
