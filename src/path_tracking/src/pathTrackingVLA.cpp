@@ -224,6 +224,7 @@ class PathTrackingNode : public rclcpp::Node
         rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr sub_pos;
 
         // Path tracking parameters
+        double rover_id_;
         double angVelClamp_;
         double linVel_min_;
         double linVel_max_;
@@ -233,10 +234,12 @@ class PathTrackingNode : public rclcpp::Node
         double linVel_const_;
         double turnRate_;
         double stopDist_;
+        double trackingAngle_;
 
     public:
         PathTrackingNode() : Node("pathTracking")
         {
+            this->declare_parameter<int>("rover_id", -1);
             this->declare_parameter<double>("angVelClamp", 2.0);
             this->declare_parameter<double>("linVel_min", 0.05);
             this->declare_parameter<double>("linVel_max", 2.0);
@@ -246,9 +249,9 @@ class PathTrackingNode : public rclcpp::Node
             this->declare_parameter<double>("linVel_const", 0.15);
             this->declare_parameter<double>("turnRateInPlace", 1.0);
             this->declare_parameter<double>("stopDist", 0.1);
-            //this->declare_parameter<bool>("debug", false);
-            this->declare_parameter<double>("trackingAngle", 30.0)
+            this->declare_parameter<double>("trackingAngle", 30.0);
 
+            rover_id_ = this->get_parameter("rover_id").as_int();
             angVelClamp_ = this->get_parameter("angVelClamp").as_double();
             linVel_min_ = this->get_parameter("linVel_min").as_double();
             linVel_max_ = this->get_parameter("linVel_max").as_double();
@@ -258,14 +261,7 @@ class PathTrackingNode : public rclcpp::Node
             linVel_const_ = this->get_parameter("linVel_const").as_double();
             turnRate_ = this->get_parameter("turnRateInPlace").as_double();
             stopDist_ = this->get_parameter("stopDist").as_double();
-            //debug_ = this->get_parameter("debug").as_bool();
             trackingAngle_ = this->get_parameter("trackingAngle").as_double();
-
-            // if(debug_){
-            //     std::cout << "path_tracking: successfully got config parameters." << std::endl;
-            // } else {
-            //     std::cout << "path_tracking: using default parameters." << std::endl;
-            // }
 
             // Subscribe to Pose
             sub_pos = this->create_subscription<geometry_msgs::msg::PoseStamped>("/current_pose", 10, std::bind(&PathTrackingNode::poseCallback, this, _1));
