@@ -219,7 +219,7 @@ class OccupancyMapper(Node):
 
     def on_scan(self, scan: LaserScan):
         """Buffer scan for later processing."""
-        self.get_logger().logdebug(f'Received scan with timestamp {stamp_to_sec(scan.header.stamp):.3f}')  
+        self.get_logger().info(f'Received scan with timestamp {stamp_to_sec(scan.header.stamp):.3f}')  
         self.scan_buffer.append(scan)
 
     # -----------------------------------------------------------------------
