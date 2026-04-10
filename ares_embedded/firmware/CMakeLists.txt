@@ -103,7 +103,7 @@ set(LAN8742_SOURCES
 
 # Create executable target
 add_executable(firmware.elf
-    tests/move_motor.cpp
+    tests/controller.cpp
     ${HAL_SOURCES}
     ${SYSTEM_SOURCES}
     ${ENCODER_SOURCES}

@@ -90,6 +90,13 @@ void motor_timer_init(TIM_HandleTypeDef *htim, TIM_TypeDef *instance,
      * outputs are disabled by default until the Main Output Enable (MOE)
      * bit in the BDTR register is set.  Without this, PWM pins stay low. */
     __HAL_TIM_MOE_ENABLE(htim);
+
+    // /* Advanced-control timers keep outputs off until MOE is set.  GP timers
+    //  * (e.g. TIM2) do not use MOE for PWM; skip to avoid touching BDTR. */
+    // if (instance == TIM1 || instance == TIM8 || instance == TIM15 ||
+    //     instance == TIM16 || instance == TIM17) {
+    //     __HAL_TIM_MOE_ENABLE(htim);
+    // }
 }
 
 void motor_driver_init(const motor_driver_config_t *config, motor_driver_t *ctx)

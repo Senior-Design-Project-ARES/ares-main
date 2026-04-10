@@ -53,6 +53,24 @@
 
 #include "motor_driver.h"
 
+/*
+ * Logical wheel index: use the same value for motors[i] and encoder channel i
+ * (encoder_config.h g_encoder_hw[i], TIM assignment in the banner above).
+ *
+ *   i=0  M1  LR (left-rear)
+ *   i=1  M2  LF (left-front)
+ *   i=2  M3  RR (right-rear)
+ *   i=3  M4  RF (right-front)
+ */
+#define WHEEL_IDX_LR 0U
+#define WHEEL_IDX_LF 1U
+#define WHEEL_IDX_RR 2U
+#define WHEEL_IDX_RF 3U
+
+#if MOTOR_COUNT != 4
+#error "WHEEL_IDX_* assumes four wheels (see encoder_config.h ENCODER_COUNT)."
+#endif
+
 /* ── PWM timer ────────────────────────────────────────────────────────────
  *
  * TIM2 is on APB1L and has 4 independent channels — one per motor.
@@ -89,25 +107,25 @@
  * Nucleo-H723ZG (not used by encoders, UART, I2C, SWD, LEDs, or PWM).
  */
 
-/* Motor 1 — RL */
+/* Motor 1 — LR (left-rear) */
 #define M1_EN_PORT   GPIOE
 #define M1_EN_PIN    GPIO_PIN_2   /* CN10 pin 25 */
 #define M1_SF_PORT   GPIOG
 #define M1_SF_PIN    GPIO_PIN_0   /* CN11 pin 55 */
 
-/* Motor 2 — FL */
+/* Motor 2 — LF (left-front) */
 #define M2_EN_PORT   GPIOE
 #define M2_EN_PIN    GPIO_PIN_3   /* CN10 pin 27 */
 #define M2_SF_PORT   GPIOG
 #define M2_SF_PIN    GPIO_PIN_1   /* CN11 pin 57 */
 
-/* Motor 3 — RR */
+/* Motor 3 — RR (right-rear) */
 #define M3_EN_PORT   GPIOE
 #define M3_EN_PIN    GPIO_PIN_4   /* CN10 pin 29 */
 #define M3_SF_PORT   GPIOG
 #define M3_SF_PIN    GPIO_PIN_2   /* CN10 pin 55 */
 
-/* Motor 4 — FR */
+/* Motor 4 — RF (right-front) */
 #define M4_EN_PORT   GPIOE
 #define M4_EN_PIN    GPIO_PIN_5   /* CN10 pin 31 */
 #define M4_SF_PORT   GPIOG
@@ -120,25 +138,25 @@
  * connector pinout) and team allocation spreadsheet.
  */
 
-/* Motor 1 — RL (rear-left) */
+/* Motor 1 — LR (left-rear) */
 #define M1_IN1_PORT  GPIOC
-#define M1_IN1_PIN   GPIO_PIN_10  /* CN11 pin 1  */
+#define M1_IN1_PIN   GPIO_PIN_11  /* CN11 pin 1  */
 #define M1_IN2_PORT  GPIOC
-#define M1_IN2_PIN   GPIO_PIN_11  /* CN11 pin 2  */
+#define M1_IN2_PIN   GPIO_PIN_10  /* CN11 pin 2  */
 
-/* Motor 2 — FL (front-left) */
-#define M2_IN1_PORT  GPIOC
-#define M2_IN1_PIN   GPIO_PIN_12  /* CN11 pin 3  */
-#define M2_IN2_PORT  GPIOD
-#define M2_IN2_PIN   GPIO_PIN_2   /* CN11 pin 4  */
+/* Motor 2 — LF (left-front) */
+#define M2_IN1_PORT  GPIOD
+#define M2_IN1_PIN   GPIO_PIN_2  /* CN11 pin 3  */
+#define M2_IN2_PORT  GPIOC
+#define M2_IN2_PIN   GPIO_PIN_12   /* CN11 pin 4  */
 
-/* Motor 3 — RR (rear-right) */
+/* Motor 3 — RR (right-rear) */
 #define M3_IN1_PORT  GPIOF
 #define M3_IN1_PIN   GPIO_PIN_6   /* CN11 pin 9  */
 #define M3_IN2_PORT  GPIOF
 #define M3_IN2_PIN   GPIO_PIN_7   /* CN11 pin 11 */
 
-/* Motor 4 — FR (front-right) */
+/* Motor 4 — RF (right-front) */
 #define M4_IN1_PORT  GPIOD
 #define M4_IN1_PIN   GPIO_PIN_4   /* CN11 pin 39 */
 #define M4_IN2_PORT  GPIOD
@@ -151,7 +169,7 @@
  * All four pins verified against DS13313 Table 13.
  */
 
-/* Motor 1 — RL: TIM2_CH1 → PA15 (AF1) — CN11 pin 17
+/* Motor 1 — LR: TIM2_CH1 → PA15 (AF1) — CN11 pin 17
  * PA15 is also JTDI — if JTAG debugging is needed (not just SWD), use
  * PA5 (AF1) instead.  SWD (which ST-LINK uses) does not require PA15. */
 #define M1_PWM_PORT      GPIOA
@@ -159,19 +177,19 @@
 #define M1_PWM_AF        GPIO_AF1_TIM2
 #define M1_PWM_CHANNEL   TIM_CHANNEL_1
 
-/* Motor 2 — FL: TIM2_CH2 → PB3 (AF1) — CN7 pin 15 */
+/* Motor 2 — LF: TIM2_CH2 → PB3 (AF1) — CN7 pin 15 */
 #define M2_PWM_PORT      GPIOB
 #define M2_PWM_PIN       GPIO_PIN_3
 #define M2_PWM_AF        GPIO_AF1_TIM2
 #define M2_PWM_CHANNEL   TIM_CHANNEL_2
 
-/* Motor 3 — RR: TIM2_CH3 → PB10 (AF1) — CN10 pin 32 */
+/* Motor 3 — RR: TIM2_CH3 → PB10 (AF1) — CN10 pin 32 (right-rear) */
 #define M3_PWM_PORT      GPIOB
 #define M3_PWM_PIN       GPIO_PIN_10
 #define M3_PWM_AF        GPIO_AF1_TIM2
 #define M3_PWM_CHANNEL   TIM_CHANNEL_3
 
-/* Motor 4 — FR: TIM2_CH4 → PB11 (AF1) — CN10 pin 34 */
+/* Motor 4 — RF: TIM2_CH4 → PB11 (AF1) — CN10 pin 34 */
 #define M4_PWM_PORT      GPIOB
 #define M4_PWM_PIN       GPIO_PIN_11
 #define M4_PWM_AF        GPIO_AF1_TIM2
@@ -190,7 +208,7 @@
  */
 #define MOTOR_DRIVER_CONFIGS(htim_ptr)          \
 {                                               \
-    /* M1 — RL */                               \
+    /* M1 — LR */                               \
     {                                           \
         .in1_port      = M1_IN1_PORT,           \
         .in1_pin       = M1_IN1_PIN,            \
@@ -206,7 +224,7 @@
         .sf_port       = M1_SF_PORT,            \
         .sf_pin        = M1_SF_PIN,             \
     },                                          \
-    /* M2 — FL */                               \
+    /* M2 — LF */                               \
     {                                           \
         .in1_port      = M2_IN1_PORT,           \
         .in1_pin       = M2_IN1_PIN,            \
@@ -238,7 +256,7 @@
         .sf_port       = M3_SF_PORT,            \
         .sf_pin        = M3_SF_PIN,             \
     },                                          \
-    /* M4 — FR */                               \
+    /* M4 — RF */                               \
     {                                           \
         .in1_port      = M4_IN1_PORT,           \
         .in1_pin       = M4_IN1_PIN,            \

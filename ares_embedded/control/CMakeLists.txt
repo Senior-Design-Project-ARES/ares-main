@@ -30,6 +30,17 @@ target_compile_options(control PRIVATE
   -ffast-math
 )
 
+# Match firmware.elf ABI: without these, arm-none-eabi may build soft-float objects and
+# the linker rejects mixing them with -mfloat-abi=hard (VFP register arguments).
+if(CMAKE_CROSSCOMPILING)
+  target_compile_options(control PRIVATE
+    -mcpu=cortex-m7
+    -mthumb
+    -mfpu=fpv5-d16
+    -mfloat-abi=hard
+  )
+endif()
+
 # Host-only test executable (SITL). Not built when cross-compiling for firmware.
 if(NOT CMAKE_CROSSCOMPILING)
   add_executable(test_controller tests/test_controller.cpp)

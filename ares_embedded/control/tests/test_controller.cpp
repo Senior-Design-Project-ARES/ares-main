@@ -73,13 +73,15 @@ void wheel_dynamics_step(const float u[control::kNumWheels],
 void wheel_to_body(const float w[control::kNumWheels],
                    float& v_out, float& psi_out_deg) {
     constexpr float kDeg2Rad = 3.14159265f / 180.0f;
-    float v1 = w[0] * kDeg2Rad * control::kRadiusW1;
-    float v2 = w[1] * kDeg2Rad * control::kRadiusW2;
-    float v3 = w[2] * kDeg2Rad * control::kRadiusW3;
-    float v4 = w[3] * kDeg2Rad * control::kRadiusW4;
-    v_out = 0.25f * (v1 + v2 + v3 + v4);
-    float track_rear = control::kRearTrack;
-    float psi_dot_rad = (v4 - v3) / (track_rear > 1e-6f ? track_rear : 1e-6f);
+    /* w index order: LR, LF, RR, RF — match inverse_kinematics / motor_config. */
+    const float v_lr = w[0] * kDeg2Rad * control::kRadiusW1;
+    const float v_lf = w[1] * kDeg2Rad * control::kRadiusW2;
+    const float v_rr = w[2] * kDeg2Rad * control::kRadiusW3;
+    const float v_rf = w[3] * kDeg2Rad * control::kRadiusW4;
+    v_out = 0.25f * (v_lr + v_lf + v_rr + v_rf);
+    const float track_rear = control::kRearTrack;
+    const float psi_dot_rad =
+        (v_rr - v_lr) / (track_rear > 1e-6f ? track_rear : 1e-6f);
     psi_out_deg = psi_dot_rad * (180.0f / 3.14159265f);
 }
 

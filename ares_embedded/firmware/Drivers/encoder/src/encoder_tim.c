@@ -6,6 +6,8 @@
 
 static uint16_t g_last_counter[ENCODER_COUNT];
 
+const int8_t g_encoder_counts_sign_vs_motor_forward[ENCODER_COUNT] = {1, 1, 1, 1};
+
 static void enable_gpio_clock(GPIO_TypeDef *port)
 {
     if (port == GPIOA)
@@ -164,7 +166,8 @@ int32_t encoder_backend_get_and_reset_counts(uint8_t encoder_id)
         delta = 0;
     }
 
-    return delta;
+    const int32_t sgn = (int32_t)g_encoder_counts_sign_vs_motor_forward[encoder_id];
+    return delta * sgn;
 }
 
 #endif /* ENCODER_USE_TIM */

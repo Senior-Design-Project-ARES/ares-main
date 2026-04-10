@@ -13,12 +13,12 @@ namespace control {
 class WheelPid {
 public:
     WheelPid();
-    WheelPid(float Kp, float Ki, float Kd, float dt);
+    WheelPid(float Kp, float Ki, float Kd, float Kf, float dt);
 
     /**
      * Set gains and sample period.
      */
-    void set_gains(float Kp, float Ki, float Kd, float dt);
+    void set_gains(float Kp, float Ki, float Kd, float Kf, float dt);
 
     /**
      * One step: w_cmd and w_meas are wheel speed commands and measurements [deg/s].
@@ -36,12 +36,14 @@ public:
     float Kp() const { return Kp_; }
     float Ki() const { return Ki_; }
     float Kd() const { return Kd_; }
+    float Kf() const { return Kf_; }
     float dt() const { return dt_; }
 
 private:
     float Kp_{kKp};
     float Ki_{kKi};
     float Kd_{kKd};
+    float Kf_{kKf};
     float dt_{kDt};
     float ei_[kNumWheels]{};
     float e_prev_[kNumWheels]{};

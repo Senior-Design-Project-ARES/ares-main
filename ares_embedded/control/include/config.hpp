@@ -1,7 +1,7 @@
 #pragma once
 
 /**
- * @Author: Vishnu Duriseti
+ * @author: Vishnu Duriseti
  * Central controller parameters. 
  * Derived from MATLAB design (actuation_controller_sim.m, test.m).
  */
@@ -12,17 +12,22 @@ namespace control {
 constexpr float kDt = 0.01f;
 
 /// Wheel PID gains (analytical design: rise time, settling time, damping)
-constexpr float kKp = 0.0045f;
-constexpr float kKi = 0.0152f;
-constexpr float kKd = 0.0005f;
+// constexpr float kKp = 0.0045f;
+// constexpr float kKi = 0.0152f;
+// constexpr float kKd = 0.0005f;
+
+constexpr float kKp = 0.00001f;
+constexpr float kKi = 0.0001f;
+constexpr float kKd = 0.00000f;
+constexpr float kKf = 0.0008f;
 
 /// Wheel speed limit [deg/s] (command and output)
-constexpr float kWheelSpeedLimitDegPerS = 1000.0f;
+constexpr float kWheelSpeedLimitDegPerS = 2000.0f;
 
 /// Actuator output limit (same units as PID output; scale to your DAC/PWM)
 constexpr float kOutputLimit = 1.0f;
 
-/// IK geometry: wheel radii [m] (order: FR, FL, RL, RR)
+/// IK geometry: wheel radii [m] in LR, LF, RR, RF order (same as motors[] / inverse_kinematics)
 constexpr float kRadiusW1 = 0.15f;
 constexpr float kRadiusW2 = 0.15f;
 constexpr float kRadiusW3 = 0.15f;

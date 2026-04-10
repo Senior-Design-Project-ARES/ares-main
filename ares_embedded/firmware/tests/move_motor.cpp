@@ -24,7 +24,7 @@ void _init(void);
 
 namespace {
 
-constexpr uint8_t kDutyPercent = 10; // 10% duty cycle
+constexpr uint8_t kDutyPercent = 70; // 10% duty cycle
 
 } // namespace
 

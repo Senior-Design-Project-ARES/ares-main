@@ -57,11 +57,10 @@ void motor_bridge_init(const motor_bridge_config_t *config);
  * sign and magnitude.  Intended to be called every control tick
  * immediately after WheelPid::step().
  *
- * Wheel index convention (matches InverseKinematics and WheelPid):
- *   [0] = FR (front-right)
- *   [1] = FL (front-left)
- *   [2] = RL (rear-left)
- *   [3] = RR (rear-right)
+ * Array index `i` is passed straight to `motors[i]` (no reordering). Hardware
+ * corners (motor_config.h / encoders): [0]=LR, [1]=LF, [2]=RR, [3]=RF
+ * (L/R = side, F/R = front/rear axle). InverseKinematics / WheelPid use the
+ * same index order as `motors[]`.
  *
  * @param u_out   Signed actuator commands from WheelPid::step() (length 4).
  * @param motors  Initialized motor_driver_t array (length 4).

@@ -2,11 +2,16 @@
 #define ENCODER_CONFIG_H
 
 #include "stm32h7xx_hal.h"
+#include <stdint.h>
 
-#define ENCODER_PULSES_PER_REV  64U
-#define ENCODER_COUNTS_PER_REV  (ENCODER_PULSES_PER_REV * 4U)
+/*
+ * 64 CPR (motor shaft): vendor counts per revolution already at quadrature
+ * resolution. TIM encoder mode TI12 counts those edges — do not multiply by 4 here.
+ */
+#define ENCODER_COUNTS_PER_REV 64U
 
 #define ENCODER_COUNT 4U
+#define ENCODER_GEAR_RATIO 50U
 
 typedef struct
 {
@@ -31,8 +36,18 @@ typedef struct
 #define ENCODER_RCC_GET_BUS(val)      (((val) & ENCODER_RCC_BUS_MASK) >> ENCODER_RCC_BUS_SHIFT)
 #define ENCODER_RCC_GET_MASK(val)     ((val) & ~ENCODER_RCC_BUS_MASK)
 
+/*
+ * Per-channel sign applied to raw quadrature deltas before returning them.
+ * Use +1 when timer counts increase under that wheel's MOTOR_FORWARD; use -1
+ * if the encoder phases are wired so forward motion counts the other way.
+ *
+ * Index i matches motor_config.h: M1 LR, M2 LF, M3 RR, M4 RF (same as motors[i]).
+ * Defined in encoder_tim.c.
+ */
+extern const int8_t g_encoder_counts_sign_vs_motor_forward[ENCODER_COUNT];
+
 static const encoder_hw_config_t g_encoder_hw[ENCODER_COUNT] = {
-	/* M1 - TIM3, PC6/PC7, AF2 - CN10 pin 1 (A), pin 11 (B) */
+	/* M1 LR — TIM3, PC6/PC7, AF2 - CN10 pin 1 (A), pin 11 (B) */
 	{
 		TIM3,
 		GPIOC,
@@ -42,7 +57,7 @@ static const encoder_hw_config_t g_encoder_hw[ENCODER_COUNT] = {
 		GPIO_AF2_TIM3,
 		ENCODER_RCC_ENCODE(ENCODER_RCC_BUS_APB1L, RCC_APB1LENR_TIM3EN)
 	},
-	/* M2 - TIM1, PE9/PE11, AF1 - CN10 pin 4 (A), pin 6 (B) */
+	/* M2 LF — TIM1, PE9/PE11, AF1 - CN10 pin 4 (A), pin 6 (B) */
 	{
 		TIM1,
 		GPIOE,
@@ -52,7 +67,7 @@ static const encoder_hw_config_t g_encoder_hw[ENCODER_COUNT] = {
 		GPIO_AF1_TIM1,
 		ENCODER_RCC_ENCODE(ENCODER_RCC_BUS_APB2, RCC_APB2ENR_TIM1EN)
 	},
-	/* M3 - TIM4, PB6/PB7, AF2 - CN10 pin 14 (A), pin 16 (B) */
+	/* M3 RR — TIM4, PB6/PB7, AF2 - CN10 pin 14 (A), pin 16 (B) (right-rear) */
 	{
 		TIM4,
 		GPIOB,
@@ -62,7 +77,7 @@ static const encoder_hw_config_t g_encoder_hw[ENCODER_COUNT] = {
 		GPIO_AF2_TIM4,
 		ENCODER_RCC_ENCODE(ENCODER_RCC_BUS_APB1L, RCC_APB1LENR_TIM4EN)
 	},
-	/* M4 - TIM5, PA0/PA1, AF2 - CN11 pin 28 (A), pin 30 (B) [morpho header] */
+	/* M4 RF — TIM5, PA0/PA1, AF2 - CN11 pin 28 (A), pin 30 (B) [morpho header] */
 	{
 		TIM5,
 		GPIOA,

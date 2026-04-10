@@ -1,4 +1,6 @@
 #include "inverse_kinematics.hpp"
+
+#include <algorithm>
 #include <cmath>
 
 namespace control {
@@ -21,18 +23,19 @@ void InverseKinematics::set_geometry(float r1, float r2, float r3, float r4,
 
 void InverseKinematics::compute(float v_cmd, float yaw_rate_cmd_deg,
                                 float w_cmd[kNumWheels]) {
-    float psi_dot_rad = yaw_rate_cmd_deg * kDeg2Rad;
-    float half_track = rear_track_ * 0.5f;
+    const float psi_dot_rad = yaw_rate_cmd_deg * kDeg2Rad;
+    const float half_track  = rear_track_ * 0.5f;
 
-    float v1 = v_cmd;
-    float v2 = v_cmd;
-    float v3 = v_cmd - psi_dot_rad * half_track;
-    float v4 = v_cmd + psi_dot_rad * half_track;
+    /* Skid-steer: same speed on each side; left vs right split by yaw rate about
+     * vertical axis (positive yaw = CCW from above → right side faster forward).
+     * Indices: LR, LF, RR, RF (motor_config.h). */
+    const float v_left  = v_cmd - psi_dot_rad * half_track;
+    const float v_right = v_cmd + psi_dot_rad * half_track;
 
-    w_cmd[0] = (v1 / r1_) * kRad2Deg;
-    w_cmd[1] = (v2 / r2_) * kRad2Deg;
-    w_cmd[2] = (v3 / r3_) * kRad2Deg;
-    w_cmd[3] = (v4 / r4_) * kRad2Deg;
+    w_cmd[0] = (v_left / r1_) * kRad2Deg;   /* LR */
+    w_cmd[1] = (v_left / r2_) * kRad2Deg;   /* LF */
+    w_cmd[2] = (v_right / r3_) * kRad2Deg;  /* RR */
+    w_cmd[3] = (v_right / r4_) * kRad2Deg;  /* RF */
 }
 
 } // namespace control

@@ -11,13 +11,14 @@ namespace control {
 
 WheelPid::WheelPid() = default;
 
-WheelPid::WheelPid(float Kp, float Ki, float Kd, float dt)
-    : Kp_(Kp), Ki_(Ki), Kd_(Kd), dt_(dt) {}
+WheelPid::WheelPid(float Kp, float Ki, float Kd, float Kf, float dt)
+    : Kp_(Kp), Ki_(Ki), Kd_(Kd), Kf_(Kf), dt_(dt) {}
 
-void WheelPid::set_gains(float Kp, float Ki, float Kd, float dt) {
+void WheelPid::set_gains(float Kp, float Ki, float Kd, float Kf, float dt) {
     Kp_ = Kp;
     Ki_ = Ki;
     Kd_ = Kd;
+    Kf_ = Kf;
     dt_ = dt;
 }
 
@@ -28,7 +29,7 @@ void WheelPid::step(const float w_cmd[kNumWheels],
         float e = w_cmd[i] - w_meas[i];
         float de = (dt_ > 0.0f) ? (e - e_prev_[i]) / dt_ : 0.0f;
         ei_[i] += e * dt_;
-        float u = Kp_ * e + Ki_ * ei_[i] + Kd_ * de;
+        float u = Kp_ * e + Ki_ * ei_[i] + Kd_ * de + Kf_ * w_cmd[i];
         u_out[i] = u;
         e_prev_[i] = e;
     }

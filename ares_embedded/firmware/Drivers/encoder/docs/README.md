@@ -7,7 +7,7 @@ Bare-metal firmware for reading four quadrature encoders on the STM32H723ZGT6 (N
 ## Hardware
 
 - **MCU**: STM32H723ZGT6 on Nucleo-H723ZG
-- **Motor**: Pololu 37D 50:1 12V gearmotor, 64 CPR encoder (256 counts/rev in 4x mode)
+- **Motor**: Pololu 37D 50:1 12V gearmotor, 64 CPR encoder (**64 quadrature counts per motor-shaft rev**; TIM TI12 implements ×4 on the disk edges — `ENCODER_COUNTS_PER_REV` is 64, not 256)
 - **Clock**: 400 MHz, VOS1
 - **Debug/Flash**: ST-LINK V3 via OpenOCD
 
@@ -15,12 +15,14 @@ Bare-metal firmware for reading four quadrature encoders on the STM32H723ZGT6 (N
 
 ## Pin Assignments
 
-| Channel |   Timer   | CH1 Pin | CH2 Pin | Connector                   |
-|---------|-----------|---------|---------|-----------------------------|
-|   M1    | TIM3, AF2 |   PC6   |   PC7   | CN10 pin 1 (A), pin 11 (B)  |
-|   M2    | TIM1, AF1 |   PE9   |   PE11  | CN10 pin 4 (A), pin 6 (B)   |
-|   M3    | TIM4, AF2 |   PB6   |   PB7   | CN10 pin 14 (A), pin 16 (B) |
-|   M4    | TIM5, AF2 |   PA0   |   PA1   | CN11 pin 28 (A), pin 30 (B) — morpho header |
+| Ch / idx | Wheel |   Timer   | CH1 Pin | CH2 Pin | Connector                   |
+|----------|-------|-----------|---------|---------|-----------------------------|
+| M1 / 0   | LR    | TIM3, AF2 |   PC6   |   PC7   | CN10 pin 1 (A), pin 11 (B)  |
+| M2 / 1   | LF    | TIM1, AF1 |   PE9   |   PE11  | CN10 pin 4 (A), pin 6 (B)   |
+| M3 / 2   | RR    | TIM4, AF2 |   PB6   |   PB7   | CN10 pin 14 (A), pin 16 (B) |
+| M4 / 3   | RF    | TIM5, AF2 |   PA0   |   PA1   | CN11 pin 28 (A), pin 30 (B) — morpho header |
+
+Abbreviations: **L/R** = left/right side, **F/R** = front/rear axle (e.g. **RF** = right-front, **RR** = right-rear). Same index `i` as `motors[i]` in `motor_config.h` (`WHEEL_IDX_LR` … `WHEEL_IDX_RF`). Sign vs `MOTOR_FORWARD`: edit `g_encoder_counts_sign_vs_motor_forward[]` in `encoder_tim.c`.
 
 > **Note on M4 (PA0/PA1)**: These pins must be accessed via the morpho header (CN11 through-holes), not CN10 pin 29. CN10 pin 29 is also PA0 but has solder bridge SB75 and wake-up circuitry that corrupts encoder signals regardless of timer or alternate function used.
 
@@ -154,6 +156,5 @@ So a 2-count jitter = ~47 RPM of apparent noise. For smooth velocity feedback, a
 ## Encoder Constants
 
 ```c
-#define ENCODER_PULSES_PER_REV  64U       // motor encoder CPR
-#define ENCODER_COUNTS_PER_REV  256U      // 64 * 4 (quadrature x4 mode)
+#define ENCODER_COUNTS_PER_REV  64U   // motor-shaft CPR (quadrature counts; matches timer TI12)
 ```
