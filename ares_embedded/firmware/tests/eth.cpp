@@ -1,5 +1,7 @@
 /**
- * test_eth.cpp
+ * @file eth.cpp
+ * @brief test ethernet connectivity
+ * @author Josh Colgrove
  *
  * Host-side Ethernet connectivity test for the STM32 TCP echo server.
  *
