@@ -180,7 +180,7 @@ private:
             return;
 
         //create a matrix to store these waypoints
-        Eigen::MatrixXd waypoints(msg->poses.size(), 2);
+        Eigen::MatrixXd waypoints(numRelevantPoses, 2);
 
         //go through the waypoints message and pull out only waypoints that are for this rover
         size_t n = 0;
