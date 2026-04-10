@@ -173,7 +173,7 @@ void motor_drive(motor_driver_t *ctx, motor_mode_t mode, uint8_t duty_percent)
     /* Scale duty_percent → timer compare value.
      * pulse = duty_percent * (ARR + 1) / 100, clamped to ARR. */
     uint32_t pulse = (uint32_t)duty_percent * (ctx->period + 1u) / 100u;
-    if (pulse > ctx->period) { pulse = ctx->period; }
+    if (pulse > ctx->period + 1u) { pulse = ctx->period + 1u; } // clamp to ARR + 1
 
     switch (mode) {
         case MOTOR_COAST:
