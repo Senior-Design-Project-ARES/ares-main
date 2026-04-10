@@ -20,6 +20,9 @@
 #include "stm32h7xx_it.h"
 #include "stm32h7xx_hal.h"
 
+/* Defined in Drivers/ethernet/src/ethernetif.c when ethernet is enabled. */
+extern ETH_HandleTypeDef EthHandle;
+
 /** @addtogroup STM32H7xx_HAL_Examples
   * @{
   */
@@ -152,6 +155,14 @@ void SysTick_Handler(void)
 /*void PPP_IRQHandler(void)
 {
 }*/
+
+/**
+  * @brief This function handles Ethernet global interrupt.
+  */
+void ETH_IRQHandler(void)
+{
+  HAL_ETH_IRQHandler(&EthHandle);
+}
 
 /**
   * @}

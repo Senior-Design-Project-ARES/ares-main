@@ -154,3 +154,7 @@ _deps/
 *~
 .DS_Store
 
+# ares_embedded repo-specific files
+ares_embedded/logs/
+ares_embedded/prefix/
+ares_embedded/CMakeUserPresets.json

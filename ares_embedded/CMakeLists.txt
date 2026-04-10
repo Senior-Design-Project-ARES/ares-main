@@ -9,4 +9,11 @@ project(
 )
 
 add_subdirectory(control)
-add_subdirectory(firmware)
+
+# Firmware requires the ARM toolchain (e.g. -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/arm-none-eabi.cmake).
+# Without it, only the control library is built so you can test controller code with the host compiler.
+if(CMAKE_CROSSCOMPILING)
+  add_subdirectory(firmware)
+else()
+  message(STATUS "Skipping firmware (host build). Use -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/arm-none-eabi.cmake to build firmware.")
+endif()
