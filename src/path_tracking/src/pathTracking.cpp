@@ -72,7 +72,7 @@ Eigen::Vector2d findPointAtDistance(
     );
 }
 
-int stop_flag(const Eigen::Vector3d& state, const Eigen::MatrixXd& micropoints)
+int stop_flag(const Eigen::Vector3d& state, const Eigen::MatrixXd& micropoints, double stopDist)
 {
     if (micropoints.rows() == 0) {
         // handle empty matrix case
@@ -86,7 +86,7 @@ int stop_flag(const Eigen::Vector3d& state, const Eigen::MatrixXd& micropoints)
         std::pow(state(1) - micropoints(last_idx, 1), 2)
     );
 
-    if(dist_last <= 0.3)
+    if(dist_last <= stopDist)
     {
         return 1;
     }
@@ -103,7 +103,9 @@ Eigen::Vector2d PP_single(
     double linVel,
     double LA,
     int stopIF,
-    double angVelClamp)
+    double angVelClamp,
+    double turnRate,
+    double trackingAngle)
 {
     Eigen::Vector2d controls;
 
@@ -130,15 +132,15 @@ Eigen::Vector2d PP_single(
 
         double angVel = kappa * linVel;
 
-        if(std::abs(alpha) > (45*(M_PI/180)))
+        if(std::abs(alpha) > (trackingAngle*(M_PI/180)))
         {
-            if(alpha > 0)
+            if(alpha < 0)
             {
-                angVel = 0.05;
+                angVel = -turnRate;
             }
             if(alpha > 0)
             {
-                angVel = -0.05;
+                angVel = turnRate;
             }    
             linVel = 0;
         }
@@ -169,9 +171,34 @@ class PathTrackingNode : public rclcpp::Node
         bool pose_received_ = false;
         rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr sub_pos;
 
+        // Path tracking parameters
+        int rover_id_;
+        double LA_const_;
+        double linVel_const_;
+        double angVelClamp_;
+        double turnRate_;
+        double stopDist_;
+        double trackingAngle_;
+
     public:
         PathTrackingNode() : Node("pathTracking")
         {
+            this->declare_parameter<int>("rover_id",-1);
+            this->declare_parameter<double>("LA_const", 0.5);
+            this->declare_parameter<double>("linVel_const", 0.15);
+            this->declare_parameter<double>("angVelClamp", 2.0);
+            this->declare_parameter<double>("turnRateInPlace", 1.0);
+            this->declare_parameter<double>("stopDist", 0.1);
+            this->declare_parameter<double>("trackingAngle", 30.0);
+
+            rover_id_ = this->get_parameter("rover_id").as_int();
+            LA_const_ = this->get_parameter("LA_const").as_double();
+            linVel_const_ = this->get_parameter("linVel_const").as_double();
+            angVelClamp_ = this->get_parameter("angVelClamp").as_double();
+            turnRate_ = this->get_parameter("turnRateInPlace").as_double();
+            stopDist_ = this->get_parameter("stopDist").as_double();
+            trackingAngle_ = this->get_parameter("trackingAngle").as_double();
+
             // Subscribe to Pose
             sub_pos = this->create_subscription<geometry_msgs::msg::PoseStamped>("/current_pose", 10, std::bind(&PathTrackingNode::poseCallback, this, _1));
 
@@ -187,7 +214,8 @@ class PathTrackingNode : public rclcpp::Node
         void poseCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
         {
             latest_pose_ = *msg;
-            pose_received_ = true;
+            if(latest_pose_.pose.orientation.x == rover_id_){
+                pose_received_ = true;}
         }
 
     // pathCallback
@@ -215,15 +243,10 @@ class PathTrackingNode : public rclcpp::Node
 
             Eigen::Vector3d state = {x, y, yaw};
 
-            // Constants
-            double linVel = 0.15;
-            double LA = 0.5;
-            double angVelClamp = 1;
-
-            int stopIF = stop_flag(state, micropoints);
+            int stopIF = stop_flag(state, micropoints, stopDist_);
 
             // Call function
-            Eigen::Vector2d control = PP_single(state, micropoints, linVel, LA, stopIF, angVelClamp);
+            Eigen::Vector2d control = PP_single(state, micropoints, linVel_const_, LA_const_, stopIF, angVelClamp_, turnRate_, trackingAngle_);
 
             // Publish command
             geometry_msgs::msg::Twist cmd;

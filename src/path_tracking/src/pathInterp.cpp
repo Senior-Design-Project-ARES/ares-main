@@ -140,9 +140,20 @@ Eigen::MatrixXd micropointsProd(const Eigen::MatrixXd& waypoints, int numSamples
 
 // ---------------- ROS 2 Node ----------------
 class PathInterpolatorNode : public rclcpp::Node {
+private:
+    //rover id
+    int rover_id_;
+    std::string rover_name_;
+
 public:
     PathInterpolatorNode() : Node("pathInterp")
     {
+        //get rover ID and name from config file
+        this->declare_parameter<int>("rover_id", -1);
+        this->declare_parameter<std::string>("rover_name","Anon");
+        rover_id_ = this->get_parameter("rover_id").as_int();
+        rover_name_ = this->get_parameter("rover_name").as_string();
+
         micro_pub_ = this->create_publisher<nav_msgs::msg::Path>("micro_waypoints", 10);
 
         sub_wp_ = this->create_subscription<nav_msgs::msg::Path>("/planned_paths", 10, std::bind(&PathInterpolatorNode::waypointCallback, this, _1));
@@ -157,14 +168,29 @@ private:
         if (msg->poses.empty())
             return;
 
-        Eigen::MatrixXd waypoints(msg->poses.size(), 2);
-
-        for (size_t i = 0; i < msg->poses.size(); ++i)
-        {
-            waypoints(i, 0) = msg->poses[i].pose.position.x;
-            waypoints(i, 1) = msg->poses[i].pose.position.y;
+        //get the number of waypoints for this rover
+        size_t numRelevantPoses = 0;
+        for (size_t i = 0; i < msg->poses.size(); ++i){
+            if(msg->poses[i].pose.orientation.x == rover_id_){ //if the rover id for this waypoint matches
+                numRelevantPoses++; //iterate the number of relevant poses
+            }
         }
 
+        if(numRelevantPoses == 0)   //if there are no waypoints for the rover, do nothing
+            return;
+
+        //create a matrix to store these waypoints
+        Eigen::MatrixXd waypoints(numRelevantPoses, 2);
+
+        //go through the waypoints message and pull out only waypoints that are for this rover
+        size_t n = 0;
+        for (size_t i = 0; i < msg->poses.size(); ++i){ //go through all waypoints
+            if(msg->poses[i].pose.orientation.x == rover_id_){  //if the rover id for this waypoint matches
+                waypoints(n, 0) = msg->poses[i].pose.position.x;    //store the waypoint
+                waypoints(n, 1) = msg->poses[i].pose.position.y;
+                n++;    //iterate the index into the waypoints array
+            }
+        }
         int numSamples = 100;
         micro_ = micropointsProd(waypoints, numSamples);
 
