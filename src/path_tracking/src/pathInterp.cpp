@@ -143,16 +143,13 @@ class PathInterpolatorNode : public rclcpp::Node {
 private:
     //rover id
     int rover_id_;
-    std::string rover_name_;
 
 public:
     PathInterpolatorNode() : Node("pathInterp")
     {
         //get rover ID and name from config file
         this->declare_parameter<int>("rover_id", -1);
-        this->declare_parameter<std::string>("rover_name","Anon");
         rover_id_ = this->get_parameter("rover_id").as_int();
-        rover_name_ = this->get_parameter("rover_name").as_string();
 
         micro_pub_ = this->create_publisher<nav_msgs::msg::Path>("micro_waypoints", 10);
 
