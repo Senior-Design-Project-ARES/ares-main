@@ -30,7 +30,7 @@ def generate_launch_description():
     mapper = Node(
         package='simple_mapper',
         executable='occupancy_mapper',
-        namespace=common_params.get('rover_name', 'Dora'),
+        # namespace=common_params.get('rover_name', 'Dora'),
         name='occupancy_mapper',
         output='screen',
         parameters=[common_params]
