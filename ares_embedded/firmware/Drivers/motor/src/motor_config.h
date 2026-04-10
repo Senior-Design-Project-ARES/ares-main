@@ -34,7 +34,7 @@
  * ── CONSTRAINTS (do not reassign these resources) ─────────────────────────
  *
  *   TIM1  — M2 encoder (hardware quadrature, PE9/PE11)
- *   TIM3  — M1 encoder (hardware quadrature, PC6/PC7)
+ *   TIM3  — M1 encoder (hardware quadrature, PC6/CN7-1, PC7/CN7-11)
  *   TIM4  — M3 encoder (hardware quadrature, PB6/PB7)
  *   TIM5  — M4 encoder (hardware quadrature, PA0/PA1)
  *   PB8   — I2C1 SCL (IMU + INA260)
@@ -89,7 +89,7 @@
  * Nucleo-H723ZG (not used by encoders, UART, I2C, SWD, LEDs, or PWM).
  */
 
-/* Motor 1 — FR */
+/* Motor 1 — RL */
 #define M1_EN_PORT   GPIOE
 #define M1_EN_PIN    GPIO_PIN_2   /* CN10 pin 25 */
 #define M1_SF_PORT   GPIOG
@@ -101,13 +101,13 @@
 #define M2_SF_PORT   GPIOG
 #define M2_SF_PIN    GPIO_PIN_1   /* CN11 pin 57 */
 
-/* Motor 3 — RL */
+/* Motor 3 — RR */
 #define M3_EN_PORT   GPIOE
 #define M3_EN_PIN    GPIO_PIN_4   /* CN10 pin 29 */
 #define M3_SF_PORT   GPIOG
 #define M3_SF_PIN    GPIO_PIN_2   /* CN10 pin 55 */
 
-/* Motor 4 — RR */
+/* Motor 4 — FR */
 #define M4_EN_PORT   GPIOE
 #define M4_EN_PIN    GPIO_PIN_5   /* CN10 pin 31 */
 #define M4_SF_PORT   GPIOG
@@ -120,7 +120,7 @@
  * connector pinout) and team allocation spreadsheet.
  */
 
-/* Motor 1 — FR (front-right) */
+/* Motor 1 — RL (rear-left) */
 #define M1_IN1_PORT  GPIOC
 #define M1_IN1_PIN   GPIO_PIN_10  /* CN11 pin 1  */
 #define M1_IN2_PORT  GPIOC
@@ -132,13 +132,13 @@
 #define M2_IN2_PORT  GPIOD
 #define M2_IN2_PIN   GPIO_PIN_2   /* CN11 pin 4  */
 
-/* Motor 3 — RL (rear-left) */
+/* Motor 3 — RR (rear-right) */
 #define M3_IN1_PORT  GPIOF
 #define M3_IN1_PIN   GPIO_PIN_6   /* CN11 pin 9  */
 #define M3_IN2_PORT  GPIOF
 #define M3_IN2_PIN   GPIO_PIN_7   /* CN11 pin 11 */
 
-/* Motor 4 — RR (rear-right) */
+/* Motor 4 — FR (front-right) */
 #define M4_IN1_PORT  GPIOD
 #define M4_IN1_PIN   GPIO_PIN_4   /* CN11 pin 39 */
 #define M4_IN2_PORT  GPIOD
@@ -151,7 +151,7 @@
  * All four pins verified against DS13313 Table 13.
  */
 
-/* Motor 1 — FR: TIM2_CH1 → PA15 (AF1)
+/* Motor 1 — RL: TIM2_CH1 → PA15 (AF1) — CN11 pin 17
  * PA15 is also JTDI — if JTAG debugging is needed (not just SWD), use
  * PA5 (AF1) instead.  SWD (which ST-LINK uses) does not require PA15. */
 #define M1_PWM_PORT      GPIOA
@@ -159,19 +159,19 @@
 #define M1_PWM_AF        GPIO_AF1_TIM2
 #define M1_PWM_CHANNEL   TIM_CHANNEL_1
 
-/* Motor 2 — FL: TIM2_CH2 → PB3 (AF1) */
+/* Motor 2 — FL: TIM2_CH2 → PB3 (AF1) — CN7 pin 15 */
 #define M2_PWM_PORT      GPIOB
 #define M2_PWM_PIN       GPIO_PIN_3
 #define M2_PWM_AF        GPIO_AF1_TIM2
 #define M2_PWM_CHANNEL   TIM_CHANNEL_2
 
-/* Motor 3 — RL: TIM2_CH3 → PB10 (AF1) */
+/* Motor 3 — RR: TIM2_CH3 → PB10 (AF1) — CN10 pin 32 */
 #define M3_PWM_PORT      GPIOB
 #define M3_PWM_PIN       GPIO_PIN_10
 #define M3_PWM_AF        GPIO_AF1_TIM2
 #define M3_PWM_CHANNEL   TIM_CHANNEL_3
 
-/* Motor 4 — RR: TIM2_CH4 → PB11 (AF1) */
+/* Motor 4 — FR: TIM2_CH4 → PB11 (AF1) — CN10 pin 34 */
 #define M4_PWM_PORT      GPIOB
 #define M4_PWM_PIN       GPIO_PIN_11
 #define M4_PWM_AF        GPIO_AF1_TIM2
@@ -190,7 +190,7 @@
  */
 #define MOTOR_DRIVER_CONFIGS(htim_ptr)          \
 {                                               \
-    /* M1 — FR */                               \
+    /* M1 — RL */                               \
     {                                           \
         .in1_port      = M1_IN1_PORT,           \
         .in1_pin       = M1_IN1_PIN,            \
@@ -222,7 +222,7 @@
         .sf_port       = M2_SF_PORT,            \
         .sf_pin        = M2_SF_PIN,             \
     },                                          \
-    /* M3 — RL */                               \
+    /* M3 — RR */                               \
     {                                           \
         .in1_port      = M3_IN1_PORT,           \
         .in1_pin       = M3_IN1_PIN,            \
@@ -238,7 +238,7 @@
         .sf_port       = M3_SF_PORT,            \
         .sf_pin        = M3_SF_PIN,             \
     },                                          \
-    /* M4 — RR */                               \
+    /* M4 — FR */                               \
     {                                           \
         .in1_port      = M4_IN1_PORT,           \
         .in1_pin       = M4_IN1_PIN,            \
