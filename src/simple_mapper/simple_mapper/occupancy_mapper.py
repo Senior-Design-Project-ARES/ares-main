@@ -155,7 +155,7 @@ class OccupancyMapper(Node):
 
         self.scan_sub = self.create_subscription(
             LaserScan,
-            'scan',
+            '/scan',
             self.on_scan,
             10,
         )
