@@ -278,7 +278,8 @@ class PathTrackingNode : public rclcpp::Node
         void poseCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
         {
             latest_pose_ = *msg;
-            pose_received_ = true;
+            if(latest_pose_.pose.orientation.x == rover_id_){
+                pose_received_ = true;}
         }
 
     // pathCallback
