@@ -38,6 +38,7 @@ MEMORY
 {
   ITCMRAM    (xrw)    : ORIGIN = 0x00000000,   LENGTH = 64K
   RAM    (xrw)    : ORIGIN = 0x20000000,   LENGTH = 128K
+  RAM_D2  (xrw) : ORIGIN = 0x30000000, LENGTH = 288K
   ROM    (rx)    : ORIGIN = 0x08000000,   LENGTH = 1024K
 }
 
@@ -154,6 +155,27 @@ SECTIONS
     _ebss = .;         /* define a global symbol at bss end */
     __bss_end__ = _ebss;
   } >RAM
+
+
+  /* Ethernet DMA descriptors */
+
+  .RxDecripSection (NOLOAD) :
+  {
+    . = ALIGN(32);
+    *(.RxDecripSection)
+  } >RAM_D2
+
+  .TxDecripSection (NOLOAD) :
+  {
+    . = ALIGN(32);
+    *(.TxDecripSection)
+  } >RAM_D2
+
+  .Rx_PoolSection (NOLOAD) :
+  {
+    . = ALIGN(32);
+    *(.Rx_PoolSection)
+  } >RAM_D2
 
   /* User_heap_stack section, used to check that there is enough "RAM" Ram  type memory left */
   ._user_heap_stack :

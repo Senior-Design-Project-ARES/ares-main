@@ -1,3 +1,5 @@
+# This is my updated cmake file:
+
 # Firmware CMakeLists.txt for STM32H723ZG
 
 # Define paths (third_party submodule is full STM32CubeH7 repo)
@@ -9,6 +11,9 @@ set(INC_DIR ${FIRMWARE_DIR}/Inc)
 set(SRC_DIR ${FIRMWARE_DIR}/Src)
 set(STARTUP_DIR ${FIRMWARE_DIR}/startup)
 set(LINKER_DIR ${FIRMWARE_DIR}/linker)
+set(PHY_SOURCES ${THIRD_PARTY_DIR}/STM32CubeH7/Drivers/BSP/Components/lan8742/lan8742.c)
+set(LWIP_PORT_SOURCES ${SRC_DIR}/sys_arch.c)
+
 
 # CMSIS paths
 set(CMSIS_DEVICE_DIR ${CMSIS_DIR}/Device/ST/STM32H7xx)
@@ -27,6 +32,9 @@ set(HAL_SOURCES
     ${HAL_DIR}/Src/stm32h7xx_hal_rcc.c
     ${HAL_DIR}/Src/stm32h7xx_hal_tim.c
     ${HAL_DIR}/Src/stm32h7xx_hal_uart.c
+    ${HAL_DIR}/Src/stm32h7xx_hal_eth_ex.c
+    ${HAL_DIR}/Src/stm32h7xx_hal_pwr_ex.c
+    ${HAL_DIR}/Src/stm32h7xx_hal_rcc_ex.c
 )
 
 # System and startup files
@@ -34,6 +42,37 @@ set(SYSTEM_SOURCES
     ${SRC_DIR}/system_stm32h7xx.c
     ${SRC_DIR}/stm32h7xx_it.c
     ${STARTUP_DIR}/startup_stm32h723xx.s
+    ${SRC_DIR}/system_clock.c
+)
+
+# IP addressing and Ethernet files
+set(LWIP_DIR ${THIRD_PARTY_DIR}/lwip)
+set(LWIP_SOURCES
+    ${LWIP_DIR}/src/core/init.c
+    ${LWIP_DIR}/src/core/mem.c
+    ${LWIP_DIR}/src/core/memp.c
+    ${LWIP_DIR}/src/core/netif.c
+    ${LWIP_DIR}/src/core/pbuf.c
+    ${LWIP_DIR}/src/core/timeouts.c
+    ${LWIP_DIR}/src/core/udp.c
+    ${LWIP_DIR}/src/core/tcp.c
+    ${LWIP_DIR}/src/core/tcp_in.c
+    ${LWIP_DIR}/src/core/tcp_out.c
+    ${LWIP_DIR}/src/core/ipv4/ip4.c
+    ${LWIP_DIR}/src/core/ipv4/ip4_addr.c
+    ${LWIP_DIR}/src/core/ipv4/etharp.c
+    ${LWIP_DIR}/src/core/ipv4/ip4_frag.c
+    ${LWIP_DIR}/src/core/ipv4/icmp.c
+    ${LWIP_DIR}/src/core/ipv4/igmp.c
+    ${LWIP_DIR}/src/core/def.c
+    ${LWIP_DIR}/src/core/stats.c
+    ${LWIP_DIR}/src/netif/ethernet.c
+    ${LWIP_DIR}/src/core/inet_chksum.c
+    ${LWIP_DIR}/src/core/ip.c
+    
+)
+set(ETHERNET_SOURCES
+    ${SRC_DIR}/ethernetif.c
 )
 
 # Ensure C files are compiled as C, not C++
@@ -42,15 +81,19 @@ set_source_files_properties(${SRC_DIR}/stm32h7xx_it.c PROPERTIES LANGUAGE C)
 set_source_files_properties(${HAL_SOURCES} PROPERTIES LANGUAGE C)
 
 # Startup file must be compiled as assembly
-# set_source_files_properties(${STARTUP_DIR}/startup_stm32h723xx.s PROPERTIES
-#     LANGUAGE ASM
-# )
+set_source_files_properties(${STARTUP_DIR}/startup_stm32h723xx.s PROPERTIES
+    LANGUAGE ASM
+)
 
 # Create executable target
 add_executable(firmware.elf
     main.cpp
     ${HAL_SOURCES}
     ${SYSTEM_SOURCES}
+    ${PHY_SOURCES}
+    ${LWIP_SOURCES}
+    ${ETHERNET_SOURCES}
+    ${LWIP_PORT_SOURCES}
 )
 
 # Include directories
@@ -61,6 +104,9 @@ target_include_directories(firmware.elf PRIVATE
     ${CMSIS_CORE_DIR}/Include
     ${HAL_DIR}/Inc
     ${HAL_DIR}/Inc/Legacy
+    ${THIRD_PARTY_DIR}/STM32CubeH7/Drivers/BSP/Components/lan8742
+    ${THIRD_PARTY_DIR}/lwip/src/include
+    ${LWIP_DIR}/src/include/arch
 )
 
 # Compile definitions
