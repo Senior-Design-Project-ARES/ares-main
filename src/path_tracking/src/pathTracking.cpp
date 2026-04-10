@@ -136,11 +136,11 @@ Eigen::Vector2d PP_single(
         {
             if(alpha < 0)
             {
-                angVel = turnRate;
+                angVel = -turnRate;
             }
             if(alpha > 0)
             {
-                angVel = -turnRate;
+                angVel = turnRate;
             }    
             linVel = 0;
         }

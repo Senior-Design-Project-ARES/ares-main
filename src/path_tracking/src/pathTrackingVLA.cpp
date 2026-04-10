@@ -185,11 +185,11 @@ Eigen::Vector2d PP_single(const Eigen::Vector3d& state, const Eigen::MatrixXd& m
         {
             if(alpha < 0)
             {
-                angVel = turnRate;
+                angVel = -turnRate;
             }
             if(alpha > 0)
             {
-                angVel = -turnRate;
+                angVel = turnRate;
             }    
             linVel = 0;
         }
