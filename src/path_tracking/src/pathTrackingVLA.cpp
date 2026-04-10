@@ -107,6 +107,11 @@ double curv_calc(int closest_idx, const Eigen::MatrixXd& micropoints)
     int P2 = closest_idx + 3;
     int P1 = closest_idx;
 
+    if(closest_idx + 40 < micropoints.rows()){
+        P3 = closest_idx + 40;
+        P2 = closest_idx + 20;
+    }
+    
     double x1 = micropoints(P1,0);
     double x2 = micropoints(P2,0);
     double x3 = micropoints(P3,0);
