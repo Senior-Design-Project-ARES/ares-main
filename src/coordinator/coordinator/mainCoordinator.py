@@ -182,6 +182,12 @@ class MainCoordinator(Node):
             self.planning_type = PlanningType.NORMAL
             # self.need_new_path = True
 
+        if (self.path2target_planned and (pose[0]-self.target_location[0])**2 + (pose[1]-self.target_location[1])**2 < self.replanning_threshold**2):
+            self.get_logger().info("Target reached! Stopping rover.")
+            self.stop_publisher.publish(Bool(data=True))
+            self.state = State.STOPPED
+            self.should_exit = True
+
 
     def planning_response_callback(self, future):
         try:

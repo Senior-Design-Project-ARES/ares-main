@@ -53,8 +53,9 @@
 //     return true; // Point is inside this obstacle
 // }
 
-Point2DCollisionCheckerGrid::Point2DCollisionCheckerGrid(const amp::GridCSpace2D_T<int8_t>& map_)
-: map(map_){
+Point2DCollisionCheckerGrid::Point2DCollisionCheckerGrid(const amp::GridCSpace2D_T<int8_t>& map_, const searching_and_planning::Config& config_)
+: map(map_),
+  config(config_){
     std::vector<std::pair<double,double>> bounds;
     bounds.push_back({map.x0Bounds().first, map.x0Bounds().second});
     bounds.push_back({map.x1Bounds().first, map.x1Bounds().second});
@@ -69,7 +70,7 @@ bool Point2DCollisionCheckerGrid::isCollide2P(const Eigen::VectorXd& point1_, co
     Eigen::VectorXd one_2_two = point2_ - point1_;
     double distance = one_2_two.norm();
     int sec_num = 1;
-    while(distance/sec_num > GAP){
+    while(distance/sec_num > config.gap){
         for(int i = 0; i < sec_num; i++){
             Eigen::VectorXd check_location = point1_ + one_2_two*(1+2*i)/(sec_num*2);
             if (isCollide(check_location))
@@ -90,7 +91,7 @@ bool MultiAgentPoint2DCollisionCheckerGrid::isCollide2P(int agent_idx_, const Ei
     Eigen::VectorXd one_2_two = point2_ - point1_;
     double distance = one_2_two.norm();
     int sec_num = 1;
-    while(distance/sec_num > GAP){
+    while(distance/sec_num > config.gap){
         for(int i = 0; i < sec_num; i++){
             Eigen::VectorXd check_location = point1_ + one_2_two*(1+2*i)/(sec_num*2);
             if (isCollide(agent_idx_, check_location))
