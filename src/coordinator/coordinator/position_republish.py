@@ -1,6 +1,6 @@
 import rclpy
 from rclpy.node import Node
-import tf2_py as tf2
+from tf_transformations import euler_from_quaternion
 
 from geometry_msgs.msg import PoseStamped
 
@@ -20,16 +20,20 @@ class PositionRepublish(Node):
         new_msg = PoseStamped()
         new_msg.header = msg.header
         
-        theta = tf2.transformations.euler_from_quaternion([
+        theta = euler_from_quaternion([
             msg.pose.orientation.x,
             msg.pose.orientation.y,
             msg.pose.orientation.z,
             msg.pose.orientation.w
-        ])[2]  # Yaw
+        ])[2]
 
-        new_msg.pose.position = msg.pose.position
+
+        # self.get_logger().info(f"Received angle: {euler[0]}, {euler[1]}, {euler[2]}, Rover ID: {self.rover_id}")
+
+        new_msg.pose.position.x = msg.pose.position.x
+        new_msg.pose.position.y = msg.pose.position.y
         new_msg.pose.position.z = theta  # Store yaw in z position
-        new_msg.pose.orientation.x = self.rover_id  # Store rover ID in orientation w
+        new_msg.pose.orientation.x = float(self.rover_id)  # Store rover ID in orientation w
 
         self.position_publisher.publish(new_msg)
 
