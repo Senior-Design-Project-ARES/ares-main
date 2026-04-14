@@ -9,6 +9,7 @@ static uint8_t            g_uart_initialised = 0U;
 
 static void uart_gpio_init(void)
 {
+    println("GPIO INIT CALLED");
     __HAL_RCC_USART3_CLK_ENABLE();
     __HAL_RCC_GPIOD_CLK_ENABLE();
 
@@ -51,6 +52,7 @@ void print_init(void)
         g_uart_initialised = 1U;
     }
     __HAL_UART_ENABLE(&g_huart3);
+    println("Print INIT Called");
 }
 
 static void uart_vprint(const char *fmt, va_list args, uint8_t add_newline)
@@ -113,12 +115,15 @@ uint8_t uart_try_read_byte(uint8_t *out_byte)
 
 uint8_t uart_read_byte_blocking(uint8_t *out_byte)
 {
+    println("Reading started");
     if (!g_uart_initialised || out_byte == NULL)
     {
+    	println("reading ended");
         return 0U;
     }
 
     HAL_UART_Receive(&g_huart3, out_byte, 1U, HAL_MAX_DELAY);
+    println("Reading ended");
     return 1U;
 }
 

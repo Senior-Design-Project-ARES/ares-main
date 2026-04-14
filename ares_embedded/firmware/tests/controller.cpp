@@ -171,71 +171,21 @@ void run_ramp(float v_start_m_s, float v_end_m_s, float yaw_start_deg_s,
 
 int main(void)
 {
-    uint8_t rx_byte;
     HAL_Init();
-    
     print_init();
-    dwt_cycle_counter_init();
-    encoder_driver_init(HAL_GetTick());
 
-    static TIM_HandleTypeDef htim_pwm = {};
-    motor_timer_init(&htim_pwm, MOTOR_PWM_TIMER, MOTOR_PWM_HZ, MOTOR_TIMER_CLK_HZ);
+    uint8_t byte;
 
-    static motor_driver_config_t configs[MOTOR_COUNT] = MOTOR_DRIVER_CONFIGS(&htim_pwm);
-    static motor_driver_t        motors[MOTOR_COUNT]  = {};
-
-    for (int i = 0; i < MOTOR_COUNT; ++i) {
-        motor_driver_init(&configs[i], &motors[i]);
-    }
-
-    control::InverseKinematics ik;
-    control::WheelPid          pid(control::kKp, control::kKi, control::kKd, control::kKf, control::kDt);
-    pid.reset();
-
-    // constexpr uint32_t kTestMs       = 10000U;
-    // constexpr float    kForwardV     = 2.0f;  /* m/s at start */
-    // constexpr float    kReverseV     = -2.0f; /* m/s at end */
-    // constexpr float    kRampYawDegS  = 0.f;   /* straight line: yaw = 0 */
-
-    // println("test 1 — straight ramp v: %.2f->%.2f m/s over %lu ms", kForwardV,
-    //         kReverseV, static_cast<unsigned long>(kTestMs));
-
-    // run_ramp(kForwardV, kReverseV, kRampYawDegS, kRampYawDegS, kTestMs, &ik, &pid,
-    //          motors);
-
-    // motor_all_brake(motors, MOTOR_COUNT);
-    // println("pause 1 s");
-    // HAL_Delay(1000U);
-
-    // pid.reset();
-
-    constexpr uint32_t kTurnMs       = 10000U;
-    constexpr float    kTurnV        = 0.0f; /* m/s, constant */
-    constexpr float    kTurnYawDegS  = 35.f;  /* deg/s, constant */
-
-    println("test 2 — turn: v=%.2f m/s, yaw=%.1f deg/s for %lu ms", kTurnV,
-            kTurnYawDegS, static_cast<unsigned long>(kTurnMs));
-    run_ramp(kTurnV, kTurnV, kTurnYawDegS, kTurnYawDegS, kTurnMs, &ik, &pid, motors);
-
-    motor_all_brake(motors, MOTOR_COUNT);
-    println("done — motors brake");
-
-    GPIO_PinState last = GPIO_PIN_RESET;
-    
-    println("UART ABOUT TO START");
+    println("UART TEST START");
 
     while (1)
     {
-         uint8_t byte;
-         
-         println("UART TEST START");
+    	println("while loop started");
+        uart_read_byte_blocking(&byte);
 
-         (uart_read_byte_blocking(&byte));
-         //println("RX: %c", byte);
-         // toggle LED
-	 HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
-	 
-	 println("UART TEST COMPLETE");
+        HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+        
+        println("UART TEST COMPLETE");
     }
 }
 
