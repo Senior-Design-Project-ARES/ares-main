@@ -171,7 +171,9 @@ void run_ramp(float v_start_m_s, float v_end_m_s, float yaw_start_deg_s,
 
 int main(void)
 {
+    uint8_t rx_byte;
     HAL_Init();
+    
     print_init();
     dwt_cycle_counter_init();
     encoder_driver_init(HAL_GetTick());
@@ -218,8 +220,22 @@ int main(void)
     motor_all_brake(motors, MOTOR_COUNT);
     println("done — motors brake");
 
-    while (true) {
-        HAL_Delay(500U);
+    GPIO_PinState last = GPIO_PIN_RESET;
+    
+    println("UART ABOUT TO START");
+
+    while (1)
+    {
+         uint8_t byte;
+         
+         println("UART TEST START");
+
+         (uart_read_byte_blocking(&byte));
+         //println("RX: %c", byte);
+         // toggle LED
+	 HAL_GPIO_TogglePin(GPIOA, GPIO_PIN_5);
+	 
+	 println("UART TEST COMPLETE");
     }
 }
 

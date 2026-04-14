@@ -37,6 +37,7 @@ void println(const char *fmt, ...);
  * @return 1 if a byte was received, 0 if no data was available.
  */
 uint8_t uart_try_read_byte(uint8_t *out_byte);
+uint8_t uart_read_byte_blocking(uint8_t *out_byte);
 
 #ifdef __cplusplus
 }

@@ -13,9 +13,19 @@ static void uart_gpio_init(void)
     __HAL_RCC_GPIOD_CLK_ENABLE();
 
     GPIO_InitTypeDef GPIO_InitStruct = {0};
-    GPIO_InitStruct.Pin              = GPIO_PIN_8 | GPIO_PIN_9;
+    
+    // TX (PD8)
+    GPIO_InitStruct.Pin              = GPIO_PIN_8;
     GPIO_InitStruct.Mode             = GPIO_MODE_AF_PP;
-    GPIO_InitStruct.Pull             = GPIO_PULLUP;
+    GPIO_InitStruct.Pull             = GPIO_NOPULL;
+    GPIO_InitStruct.Speed            = GPIO_SPEED_FREQ_VERY_HIGH;
+    GPIO_InitStruct.Alternate        = GPIO_AF7_USART3;
+    HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
+    
+    // RX (PD9)
+    GPIO_InitStruct.Pin              = GPIO_PIN_9;
+    GPIO_InitStruct.Mode             = GPIO_MODE_AF_PP;
+    GPIO_InitStruct.Pull             = GPIO_NOPULL;
     GPIO_InitStruct.Speed            = GPIO_SPEED_FREQ_VERY_HIGH;
     GPIO_InitStruct.Alternate        = GPIO_AF7_USART3;
     HAL_GPIO_Init(GPIOD, &GPIO_InitStruct);
@@ -26,7 +36,7 @@ void print_init(void)
     uart_gpio_init();
 
     g_huart3.Instance          = USART3;
-    g_huart3.Init.BaudRate     = 115200;
+    g_huart3.Init.BaudRate     = 9600;
     g_huart3.Init.WordLength   = UART_WORDLENGTH_8B;
     g_huart3.Init.StopBits     = UART_STOPBITS_1;
     g_huart3.Init.Parity       = UART_PARITY_NONE;
@@ -40,6 +50,7 @@ void print_init(void)
     {
         g_uart_initialised = 1U;
     }
+    __HAL_UART_ENABLE(&g_huart3);
 }
 
 static void uart_vprint(const char *fmt, va_list args, uint8_t add_newline)
@@ -98,6 +109,17 @@ uint8_t uart_try_read_byte(uint8_t *out_byte)
 
     HAL_StatusTypeDef st = HAL_UART_Receive(&g_huart3, out_byte, 1U, 0U);
     return (st == HAL_OK) ? 1U : 0U;
+}
+
+uint8_t uart_read_byte_blocking(uint8_t *out_byte)
+{
+    if (!g_uart_initialised || out_byte == NULL)
+    {
+        return 0U;
+    }
+
+    HAL_UART_Receive(&g_huart3, out_byte, 1U, HAL_MAX_DELAY);
+    return 1U;
 }
 
 // Provide __io_putchar for STM32Cube syscalls.c so printf/newlib route here.
