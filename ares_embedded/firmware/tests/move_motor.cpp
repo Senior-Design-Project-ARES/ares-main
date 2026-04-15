@@ -15,7 +15,7 @@
 #include "motor_config.h"
 #include "motor_driver.h"
 
-#include "uart_print.h"
+#include "uart_driver.h"
 
 extern "C" {
 void SystemInit(void);
@@ -31,7 +31,7 @@ constexpr uint8_t kDutyPercent = 70; // 10% duty cycle
 int main(void)
 {
     HAL_Init();
-    print_init();
+    uart_driver_init_default();
 
     static TIM_HandleTypeDef htim_pwm = {};
     motor_timer_init(&htim_pwm, MOTOR_PWM_TIMER, MOTOR_PWM_HZ, MOTOR_TIMER_CLK_HZ);

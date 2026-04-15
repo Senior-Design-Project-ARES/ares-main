@@ -11,7 +11,7 @@
 #include "stm32h7xx_hal_gpio_ex.h"
 #include "ares_control.hpp" // custom control library
 #include "encoder_driver.h" // encoder driver
-#include "uart_print.h"     // simple UART debug printing
+#include "uart_driver.h"
 #include "ethernet_driver.h" // ethernet driver
 
 extern "C" {
@@ -370,7 +370,7 @@ int main(void)
 {
     // HAL initialization
     HAL_Init();
-    print_init();  // enable USART3 debug prints (115200 8N1 over ST-LINK)
+    uart_driver_init_default(); /* USART3 PD8/9 @ 115200 (ST-Link VCP style) */
 
     yellow_led_init();
     red_led_init();

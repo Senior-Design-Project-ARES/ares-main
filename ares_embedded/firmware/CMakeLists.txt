@@ -57,10 +57,10 @@ set(ENCODER_SOURCES
     ${ENCODER_DIR}/src/encoder_driver.c
 )
 
-# UART print driver sources (USART3 debug output)
+# UART driver (configurable USART + printf-style I/O)
 set(UART_DIR ${FIRMWARE_DIR}/Drivers/uart)
 set(UART_SOURCES
-    ${UART_DIR}/src/uart_print.c
+    ${UART_DIR}/src/uart_driver.c
 )
 
 # Motor driver sources (MC33926 H-bridge — direction GPIO + PWM speed)
@@ -103,7 +103,7 @@ set(LAN8742_SOURCES
 
 # Create executable target
 add_executable(firmware.elf
-    tests/controller.cpp
+    tests/keyboard.cpp
     ${HAL_SOURCES}
     ${SYSTEM_SOURCES}
     ${ENCODER_SOURCES}

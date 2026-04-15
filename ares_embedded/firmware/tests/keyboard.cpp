@@ -21,7 +21,7 @@
 #include "motor_config.h"
 #include "motor_driver.h"
 
-#include "uart_print.h"
+#include "uart_driver.h"
 
 extern "C" {
 void SystemInit(void);
@@ -159,7 +159,7 @@ static uint8_t poll_teleop_command(teleop_cmd_t *out_cmd)
 int main(void)
 {
     HAL_Init();
-    print_init();
+    uart_driver_init_default();
     encoder_driver_init(HAL_GetTick());
 
     static TIM_HandleTypeDef htim_pwm = {};

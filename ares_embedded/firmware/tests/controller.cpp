@@ -21,7 +21,7 @@
 #include "motor_config.h"
 #include "motor_driver.h"
 
-#include "uart_print.h"
+#include "uart_driver.h"
 
 extern "C" {
 void SystemInit(void);
@@ -174,7 +174,7 @@ void run_ramp(float v_start_m_s, float v_end_m_s, float yaw_start_deg_s,
 int main(void)
 {
     HAL_Init();
-    print_init();
+    uart_driver_init_default();
     dwt_cycle_counter_init();
     encoder_driver_init(HAL_GetTick());
 
