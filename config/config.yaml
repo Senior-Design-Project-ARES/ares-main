@@ -57,3 +57,21 @@ path_tracking:
   turnRateInPlace: 0.5           # rad/s - turn-in-place angular rate
   stopDist: 0.1         # meters - stopping distance at last waypoint
   trackingAngle: 15.0     # degrees - path tracking cone
+
+
+simple_mapper:
+  #Map Values
+  map_frame: "map"
+  resolution: 0.02
+  width: 250
+  height: 250
+  max_log: 50.0
+  min_log: -10.0
+  range_min: 0.15
+  publish_rate: 2.0
+  occ_radius_cells: 1
+  start_padding_cells: 5
+
+  #Offset Values from Vicon location
+  laser_offset_x: 0.0
+  laser_offset_y: 0.0
