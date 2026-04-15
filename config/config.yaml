@@ -40,3 +40,20 @@ searching_and_planning:
   
   # Note: Make sure X and Y have the same resolution
   # Resolution = (x_max - x_min) / map_width = (y_max - y_min) / map_height
+
+path_tracking:
+  # CLA params
+  LA_const: 0.5         # meters - constant lookahead
+  linVel_const: 0.15    # m/s - constant linear velocity
+
+  # VLA params
+  angVelClamp: 2.0        # rad/s - maximum allowed angular vel
+  linVel_min: 0.05      # m/s - minimum allowed linear vel
+  linVel_max: 0.2         # m/s - maximum allowed linear vel
+  LA_min: 0.3           # meters - minimum allowed lookahead
+  LA_max: 0.7             # meters - maximum allowed lookahead
+
+  # turn-in-place and stopping distance
+  turnRateInPlace: 0.2           # rad/s - turn-in-place angular rate
+  stopDist: 0.1         # meters - stopping distance at last waypoint
+  trackingAngle: 15.0     # degrees - If turning angle is greater than trackingAngle then turn in place
