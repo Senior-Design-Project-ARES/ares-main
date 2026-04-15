@@ -95,7 +95,7 @@ static const encoder_hw_config_t g_encoder_hw[ENCODER_COUNT] = {
 		GPIO_PIN_1,
 		GPIO_AF2_TIM5,
 		ENCODER_RCC_ENCODE(ENCODER_RCC_BUS_APB1L, RCC_APB1LENR_TIM5EN),
-		4U
+		0U
 	}
 };
 

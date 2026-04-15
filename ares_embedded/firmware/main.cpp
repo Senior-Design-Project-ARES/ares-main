@@ -241,6 +241,18 @@ void poll_uart_teleop_and_run(float *axial_vel_m_s, float *turning_rate_deg_s)
      HAL_Init();
      uart_driver_init_default();
      dwt_cycle_counter_init();
+
+     /* Hold ETH PHY in reset to silence the 50 MHz RMII REFCLK on PA1 (SB57).
+      * PC8 = LAN8742A nRST on Nucleo-H723ZG — verify against UM2407 Table 22. */
+     __HAL_RCC_GPIOC_CLK_ENABLE();
+     GPIO_InitTypeDef phy_rst = {0};
+     phy_rst.Pin   = GPIO_PIN_8;
+     phy_rst.Mode  = GPIO_MODE_OUTPUT_PP;
+     phy_rst.Pull  = GPIO_NOPULL;
+     phy_rst.Speed = GPIO_SPEED_FREQ_LOW;
+     HAL_GPIO_Init(GPIOC, &phy_rst);
+     HAL_GPIO_WritePin(GPIOC, GPIO_PIN_8, GPIO_PIN_RESET);
+
      encoder_driver_init(HAL_GetTick());
  
      static TIM_HandleTypeDef htim_pwm = {};
