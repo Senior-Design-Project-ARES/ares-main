@@ -28,7 +28,8 @@ setup(
     entry_points={
     'console_scripts': [
         'occupancy_mapper = simple_mapper.occupancy_mapper:main',
-        'occupancy_mapper_static = simple_mapper.occupancy_mapper_static:main',  # ← add this
+        'occupancy_mapperV1 = simple_mapper.occupancy_mapperV1:main',
+        'occupancy_mapperV2 = simple_mapper.occupancy_mapperV2:main',
     ],
 },
 )

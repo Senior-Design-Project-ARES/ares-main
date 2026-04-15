@@ -127,8 +127,8 @@ class OccupancyMapper(Node):
         self.log = np.zeros((self.height, self.width), dtype=np.float32)
 
         # Origin set once from first Vicon pose
-        self.origin_x = 0
-        self.origin_y = 0
+        self.origin_x = 0.0
+        self.origin_y = 0.0
 
         # Latest Vicon pose
         self.current_pose: PoseStamped | None = None
