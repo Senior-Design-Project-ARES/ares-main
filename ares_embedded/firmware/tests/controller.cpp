@@ -1,6 +1,7 @@
 /**
  * @file controller.cpp
  * @brief Closed-loop wheel PID:
+ * @author: Vishnu Duriseti
  *
  * Uses ares_control.hpp (IK + WheelPid + Limits). IK wheel order matches
  * motors[] (LR, LF, RR, RF). Control runs every control::kDt; encoder is
@@ -54,7 +55,7 @@ void apply_actuator_to_motors(const float u_out[control::kNumWheels],
         const float   mag  = std::fabs(u) * 100.f;
         const uint8_t duty = static_cast<uint8_t>(mag);
 
-        print("mag: %f | duty: %d ", mag, static_cast<int>(duty));
+        // print("mag: %f | duty: %d ", mag, static_cast<int>(duty));
 
         if (duty == 0u) {
             motor_drive(&motors[i], MOTOR_BRAKE, 0u);
@@ -79,7 +80,7 @@ void wheel_meas_deg_per_s_hw(float w_meas_hw[control::kNumWheels], float dt_samp
     const int32_t c_lr = encoder_driver_get_and_reset_counts(WHEEL_IDX_LR);
     const int32_t c_lf = encoder_driver_get_and_reset_counts(WHEEL_IDX_LF);
     const int32_t c_rr = -encoder_driver_get_and_reset_counts(WHEEL_IDX_RR);
-    const int32_t c_rf = -encoder_driver_get_and_reset_counts(WHEEL_IDX_RF);
+    const int32_t c_rf = -encoder_driver_get_and_reset_counts(WHEEL_IDX_RR); // TODO: change to WHEEL_IDX_RF or fix encoder shit
 
     const int32_t counts[4] = {c_lr, c_lf, c_rr, c_rf};
 
@@ -132,8 +133,8 @@ void run_ramp(float v_start_m_s, float v_end_m_s, float yaw_start_deg_s,
             const uint32_t enc0 = DWT->CYCCNT;
             wheel_meas_deg_per_s_hw(w_meas_hw, dt_enc_s);
             const uint32_t enc1 = DWT->CYCCNT;
-            enc_us = cycles_to_us(enc1 - enc0);
-            last_enc_ms = now;
+            enc_us              = cycles_to_us(enc1 - enc0);
+            last_enc_ms         = now;
         }
 
         /* IK → PID → motors (includes mag/duty UART inside apply_actuator). */
@@ -157,11 +158,12 @@ void run_ramp(float v_start_m_s, float v_end_m_s, float yaw_start_deg_s,
 
         print("v=%f yaw=%f | w_cmd: %f, %f, %f, %f", v_cmd_m_s, yaw_cmd_deg_s,
               w_cmd[0], w_cmd[1], w_cmd[2], w_cmd[3]);
-        print(" | w_meas_hw: %f, %f, %f, %f", w_meas_hw[0], w_meas_hw[1], w_meas_hw[2],
-              w_meas_hw[3]);
-        print(" | u_hw: %f, %f, %f, %f", u_hw[0], u_hw[1], u_hw[2], u_hw[3]);
-        println(" | enc: %lu us | ctrl: %lu us | loop: %lu us", enc_us, ctrl_us,
-                loop_us);
+        println(" | w_meas_hw: %f, %f, %f, %f", w_meas_hw[0], w_meas_hw[1],
+              w_meas_hw[2], w_meas_hw[3]);
+        // print(" | u_hw: %f, %f, %f, %f", u_hw[0], u_hw[1], u_hw[2], u_hw[3]);
+        // println(" | enc: %lu us | ctrl: %lu us | loop: %lu us",
+        //         (unsigned long)enc_us, (unsigned long)ctrl_us,
+        //         (unsigned long)loop_us);
 
         HAL_Delay(static_cast<uint32_t>(control::kDt * 1000.f));
     }
@@ -190,30 +192,18 @@ int main(void)
     control::WheelPid          pid(control::kKp, control::kKi, control::kKd, control::kKf, control::kDt);
     pid.reset();
 
-    // constexpr uint32_t kTestMs       = 10000U;
-    // constexpr float    kForwardV     = 2.0f;  /* m/s at start */
-    // constexpr float    kReverseV     = -2.0f; /* m/s at end */
-    // constexpr float    kRampYawDegS  = 0.f;   /* straight line: yaw = 0 */
+    HAL_Delay(5000U); /* safety delay */
 
-    // println("test 1 — straight ramp v: %.2f->%.2f m/s over %lu ms", kForwardV,
-    //         kReverseV, static_cast<unsigned long>(kTestMs));
+    /* Straight ramp: v [m/s], yaw 0, duration ms */
+    run_ramp(1.0f, 1.0f, 0.f, 0.f, 10000U, &ik, &pid, motors);
 
-    // run_ramp(kForwardV, kReverseV, kRampYawDegS, kRampYawDegS, kTestMs, &ik, &pid,
-    //          motors);
+    run_ramp(1.0f, 0.0f, 0.f, 0.f, 10000U, &ik, &pid, motors);
 
-    // motor_all_brake(motors, MOTOR_COUNT);
-    // println("pause 1 s");
-    // HAL_Delay(1000U);
+    /* Forward + constant yaw */
+    run_ramp(1.0f, 1.0f, 35.f, 35.f, 10000U, &ik, &pid, motors);
 
-    // pid.reset();
-
-    constexpr uint32_t kTurnMs       = 10000U;
-    constexpr float    kTurnV        = 0.0f; /* m/s, constant */
-    constexpr float    kTurnYawDegS  = 35.f;  /* deg/s, constant */
-
-    println("test 2 — turn: v=%.2f m/s, yaw=%.1f deg/s for %lu ms", kTurnV,
-            kTurnYawDegS, static_cast<unsigned long>(kTurnMs));
-    run_ramp(kTurnV, kTurnV, kTurnYawDegS, kTurnYawDegS, kTurnMs, &ik, &pid, motors);
+    /* Turn in place */
+    run_ramp(0.f, 0.f, 50.f, 50.f, 10000U, &ik, &pid, motors);
 
     motor_all_brake(motors, MOTOR_COUNT);
     println("done — motors brake");
