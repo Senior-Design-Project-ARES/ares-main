@@ -3,7 +3,11 @@
 #include <cmath>
 #include <limits>
 #include <iostream>
+#include <string>
+#include <unistd.h>
 
+#include "telemBinary.hpp"
+#include "telemUart.hpp"
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "nav_msgs/msg/path.hpp"
@@ -98,20 +102,20 @@ int stop_flag(const Eigen::Vector3d& state, const Eigen::MatrixXd& micropoints, 
 
 double curv_calc(int closest_idx, const Eigen::MatrixXd& micropoints)
 {
-    int P3 = 0;
-    int P2 = 1;
-    if (closest_idx + 40 < micropoints.rows())
+    if (closest_idx + 6 >= micropoints.rows())
     {
+        return 0.0; // no curvature near the end
+    }
+
+    int P3 = closest_idx + 6;
+    int P2 = closest_idx + 3;
+    int P1 = closest_idx;
+
+    if(closest_idx + 40 < micropoints.rows()){
         P3 = closest_idx + 40;
         P2 = closest_idx + 20;
     }
-    else
-    {
-        return 0.7;
-    }
-
-    int P1 = closest_idx;
-
+    
     double x1 = micropoints(P1,0);
     double x2 = micropoints(P2,0);
     double x3 = micropoints(P3,0);
@@ -150,7 +154,7 @@ double LA_calc(double curv, double LA_min, double LA_max)
 }
 
 // Pure Pursuit controller
-Eigen::Vector2d PP_single(const Eigen::Vector3d& state, const Eigen::MatrixXd& micropoints, int stopIF, double angVelClamp, double linVel_min, double linVel_max, double LA_min, double LA_max, double turnRate, double trackingAngle_)
+Eigen::Vector2d PP_single(const Eigen::Vector3d& state, const Eigen::MatrixXd& micropoints, int stopIF, double angVelClamp, double linVel_min, double linVel_max, double LA_min, double LA_max, double turnRate, double trackingAngle)
 {
     if (stopIF == 1)
     {
@@ -186,13 +190,13 @@ Eigen::Vector2d PP_single(const Eigen::Vector3d& state, const Eigen::MatrixXd& m
         double kappa = (2 * std::sin(alpha)) / LA;
         double angVel = kappa * linVel;
 
-        if(std::abs(alpha) > (trackingAngle_*(M_PI/180)))
+        if(std::abs(alpha) > (trackingAngle*(M_PI/180)))
         {
             if(alpha < 0)
             {
                 angVel = -turnRate;
             }
-            if(alpha > 0)
+            if(alpha < 0)
             {
                 angVel = turnRate;
             }    
@@ -229,6 +233,7 @@ class PathTrackingNode : public rclcpp::Node
         rclcpp::Subscription<geometry_msgs::msg::PoseStamped>::SharedPtr sub_pos;
 
         // Path tracking parameters
+        double rover_id_;
         double angVelClamp_;
         double linVel_min_;
         double linVel_max_;
@@ -239,11 +244,14 @@ class PathTrackingNode : public rclcpp::Node
         double turnRate_;
         double stopDist_;
         double trackingAngle_;
-        int rover_id_;
+        bool uart_enabled_{true};
+        std::string uart_device_{telem_uart::kDefaultDevice};
+        unsigned long uart_baud_{telem_uart::kDefaultBaud};
 
     public:
         PathTrackingNode() : Node("pathTracking")
         {
+            this->declare_parameter<int>("rover_id", -1);
             this->declare_parameter<double>("angVelClamp", 2.0);
             this->declare_parameter<double>("linVel_min", 0.05);
             this->declare_parameter<double>("linVel_max", 2.0);
@@ -254,9 +262,11 @@ class PathTrackingNode : public rclcpp::Node
             this->declare_parameter<double>("turnRateInPlace", 1.0);
             this->declare_parameter<double>("stopDist", 0.1);
             this->declare_parameter<double>("trackingAngle", 30.0);
-            this->declare_parameter<int>("rover_id", -1);
+            this->declare_parameter<bool>("uart_enabled", true);
+            this->declare_parameter<std::string>("uart_device", telem_uart::kDefaultDevice);
+            this->declare_parameter<int>("uart_baud", static_cast<int>(telem_uart::kDefaultBaud));
 
-
+            rover_id_ = this->get_parameter("rover_id").as_int();
             angVelClamp_ = this->get_parameter("angVelClamp").as_double();
             linVel_min_ = this->get_parameter("linVel_min").as_double();
             linVel_max_ = this->get_parameter("linVel_max").as_double();
@@ -267,7 +277,9 @@ class PathTrackingNode : public rclcpp::Node
             turnRate_ = this->get_parameter("turnRateInPlace").as_double();
             stopDist_ = this->get_parameter("stopDist").as_double();
             trackingAngle_ = this->get_parameter("trackingAngle").as_double();
-            rover_id_ = this->get_parameter("rover_id").as_int();
+            uart_enabled_ = this->get_parameter("uart_enabled").as_bool();
+            uart_device_ = this->get_parameter("uart_device").as_string();
+            uart_baud_ = static_cast<unsigned long>(this->get_parameter("uart_baud").as_int());
 
             // Subscribe to Pose
             sub_pos = this->create_subscription<geometry_msgs::msg::PoseStamped>("/current_pose", 10, std::bind(&PathTrackingNode::poseCallback, this, _1));
@@ -277,6 +289,39 @@ class PathTrackingNode : public rclcpp::Node
 
             // Publish to cmd_vel
             pub_ = this->create_publisher<geometry_msgs::msg::Twist>("cmd_vel", 10);
+
+            if (!uart_enabled_)
+            {
+                RCLCPP_INFO(this->get_logger(), "UART disabled (uart_enabled:=false); cmd_vel still published.");
+            }
+            else
+            {
+                std::string open_err;
+                uart_fd_ = telem_uart::open_serial(uart_device_, uart_baud_, &open_err);
+                uart_last_open_error_ = open_err;
+                if (uart_fd_ < 0)
+                {
+                    RCLCPP_ERROR(
+                        this->get_logger(),
+                        "UART open failed: device=%s baud=%lu | %s | Hints: ENOENT=wrong path or UART disabled; "
+                        "EACCES=add user to dialout and re-login; EBUSY=another process has the port (see fuser/lsof).",
+                        uart_device_.c_str(), uart_baud_, open_err.c_str());
+                }
+                else
+                {
+                    uart_last_open_error_.clear();
+                    RCLCPP_INFO(this->get_logger(), "UART opened on %s @ %lu", uart_device_.c_str(), uart_baud_);
+                }
+            }
+        }
+
+        ~PathTrackingNode() override
+        {
+            if (uart_fd_ >= 0)
+            {
+                close(uart_fd_);
+                uart_fd_ = -1;
+            }
         }
 
     // Pose callback
@@ -284,8 +329,8 @@ class PathTrackingNode : public rclcpp::Node
         void poseCallback(const geometry_msgs::msg::PoseStamped::SharedPtr msg)
         {
             latest_pose_ = *msg;
-            if(latest_pose_.pose.orientation.x == rover_id_)
-                pose_received_ = true;
+            if(latest_pose_.pose.orientation.x == rover_id_){
+                pose_received_ = true;}
         }
 
     // pathCallback
@@ -325,12 +370,55 @@ class PathTrackingNode : public rclcpp::Node
             cmd.angular.z = control(1);
             pub_->publish(cmd);
 
-            RCLCPP_INFO(this->get_logger(), "Linear Velocity: %f", control(0));
-            RCLCPP_INFO(this->get_logger(), "Angular Velocity: %f", control(1));
+            const double axial_vel = control(0);
+            const double turning_rate = control(1);
+            const telem_binary::TelemFrame frame = telem_binary::encode_control_pair(axial_vel, turning_rate);
+            const std::string encoded_control = telem_binary::frame_to_hex(frame);
+
+            if (uart_fd_ >= 0)
+            {
+                if (telem_uart::write_all(uart_fd_, &frame, sizeof(frame)))
+                {
+                    if (log_control_hex_)
+                    {
+                        if (!uart_first_tx_logged_)
+                        {
+                            uart_first_tx_logged_ = true;
+                            RCLCPP_INFO(
+                                this->get_logger(),
+                                "UART: first telemetry frame sent (%zu bytes). Further hex lines are throttled.",
+                                sizeof(frame));
+                        }
+                        RCLCPP_INFO_THROTTLE(
+                            this->get_logger(), *this->get_clock(), 500,
+                            "Control(UART): %s", encoded_control.c_str());
+                    }
+                }
+                else
+                {
+                    RCLCPP_WARN_THROTTLE(
+                        this->get_logger(), *this->get_clock(), 2000,
+                        "UART write failed: %s", encoded_control.c_str());
+                }
+            }
+            else
+            {
+                // When the port never opened, INFO lines were easy to miss; keep a throttled WARN so
+                // dialout/re-login issues are obvious without enabling DEBUG.
+                const char *reason = uart_last_open_error_.empty() ? "(no error text captured)" : uart_last_open_error_.c_str();
+                RCLCPP_WARN_THROTTLE(
+                    this->get_logger(), *this->get_clock(), 5000,
+                    "UART not transmitting (port not open). Last open error: %s | encoded: %s",
+                    reason, encoded_control.c_str());
+            }
         }
 
         rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr sub_wp;
         rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr pub_;
+        int uart_fd_{-1};
+        bool log_control_hex_{true};
+        bool uart_first_tx_logged_{false};
+        std::string uart_last_open_error_;
 };
 
 int main(int argc, char** argv)
