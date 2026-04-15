@@ -80,7 +80,7 @@ void wheel_meas_deg_per_s_hw(float w_meas_hw[control::kNumWheels], float dt_samp
     const int32_t c_lr = encoder_driver_get_and_reset_counts(WHEEL_IDX_LR);
     const int32_t c_lf = encoder_driver_get_and_reset_counts(WHEEL_IDX_LF);
     const int32_t c_rr = -encoder_driver_get_and_reset_counts(WHEEL_IDX_RR);
-    const int32_t c_rf = -encoder_driver_get_and_reset_counts(WHEEL_IDX_RR); // TODO: change to WHEEL_IDX_RF or fix encoder shit
+    const int32_t c_rf = -encoder_driver_get_and_reset_counts(WHEEL_IDX_RF); // TODO: change to WHEEL_IDX_RF or fix encoder shit
 
     const int32_t counts[4] = {c_lr, c_lf, c_rr, c_rf};
 

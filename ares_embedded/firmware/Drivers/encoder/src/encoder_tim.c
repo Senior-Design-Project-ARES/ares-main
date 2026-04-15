@@ -92,7 +92,9 @@ static void configure_timer(const encoder_hw_config_t *cfg)
     tim->PSC = 0U;
     tim->ARR = 0xFFFFU;
 
-    tim->CCMR1 |= TIM_CCMR1_CC1S_0 | TIM_CCMR1_CC2S_0;
+    tim->CCMR1 |= TIM_CCMR1_CC1S_0 | TIM_CCMR1_CC2S_0
+              | ((cfg->ic_filter & 0xFU) << TIM_CCMR1_IC1F_Pos)
+              | ((cfg->ic_filter & 0xFU) << TIM_CCMR1_IC2F_Pos);
 
     tim->CCER |= TIM_CCER_CC1E | TIM_CCER_CC2E;
     tim->CCER &= ~(TIM_CCER_CC1P | TIM_CCER_CC1NP | TIM_CCER_CC2P | TIM_CCER_CC2NP);
