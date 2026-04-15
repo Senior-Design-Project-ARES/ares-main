@@ -133,6 +133,9 @@ class OccupancyMapper(Node):
         # Latest Vicon pose
         self.current_pose: PoseStamped | None = None
 
+        self.scan_count = 0
+        self.map_exist = False
+
         # ---- TF broadcasters --------------------------------------------------
         # Static broadcaster for frames that never move
         self.static_br = StaticTransformBroadcaster(self)
@@ -148,14 +151,14 @@ class OccupancyMapper(Node):
 
         self.pose_sub = self.create_subscription(
             PoseStamped,
-            '/Wand/pose',
+            'pose',
             self.on_pose,
             10,
         )
 
         self.scan_sub = self.create_subscription(
             LaserScan,
-            '/scan',
+            'scan',
             self.on_scan,
             10,
         )
@@ -335,12 +338,17 @@ class OccupancyMapper(Node):
                 for (cx, cy) in cells:
                     self._mark_free(cx, cy)
 
+        self.scan_count += 1
+        
+        if self.scan_count > 10:
+            self.map_exist = True
+
     # -----------------------------------------------------------------------
     # Map publisher
     # -----------------------------------------------------------------------
 
     def publish_map(self):
-        if self.origin_x is None:
+        if self.origin_x is None or not self.map_exist:
             return
 
         msg                           = OccupancyGrid()
@@ -362,7 +370,19 @@ class OccupancyMapper(Node):
 
         np.clip(scaled, -1, 100, out=scaled)
 
-        msg.data = scaled.flatten().tolist()
+        data = scaled.flatten().tolist()
+
+        for i in range(len(data)):
+            if data[i] < 0:
+                data[i] = -1
+
+            elif data[i] < 50:
+                data[i] = 0
+                
+            else:
+                data[i] = 1
+
+        msg.data = data
         self.map_pub.publish(msg)
 
 
