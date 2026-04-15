@@ -32,9 +32,24 @@ typedef struct
     uint32_t      baud_rate;
 } uart_driver_config_t;
 
+typedef struct
+{
+    uint32_t irq_rx_bytes;
+    uint32_t err_overrun;
+    uint32_t err_framing;
+    uint32_t err_noise;
+    uint32_t err_parity;
+    uint32_t ring_overflow;
+} uart_driver_rx_stats_t;
+
 /**
- * Board default: USART3, PD8/PD9, 115200 8N1 (copy and override fields for
- * custom pins while keeping the same peripheral/baud if desired).
+ * ST-LINK VCP mapping on NUCLEO-H723ZG: USART3, PD8/PD9, 115200 8N1.
+ * This is the USART path used by `uart_try_read_byte` when selected.
+ */
+extern const uart_driver_config_t uart_driver_config_stlink_vcp;
+
+/**
+ * Board default config used by `uart_driver_init_default()`.
  */
 extern const uart_driver_config_t uart_driver_config_debug_default;
 
@@ -52,6 +67,7 @@ void uart_driver_init_default(void);
 
 void print(const char *fmt, ...);
 void println(const char *fmt, ...);
+uint8_t uart_write_bytes(const uint8_t *data, uint16_t len, uint32_t timeout_ms);
 
 /**
  * Non-blocking receive (same semantics as the former `uart_try_read_byte`).
@@ -59,6 +75,9 @@ void println(const char *fmt, ...);
  * @return 1 if a byte was stored in @p out_byte, else 0.
  */
 uint8_t uart_try_read_byte(uint8_t *out_byte);
+void uart_driver_irq_handler(void);
+void uart_driver_get_rx_stats(uart_driver_rx_stats_t *out_stats);
+void uart_driver_reset_rx_stats(void);
 
 #ifdef __cplusplus
 }

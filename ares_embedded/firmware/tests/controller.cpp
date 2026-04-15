@@ -80,7 +80,7 @@ void wheel_meas_deg_per_s_hw(float w_meas_hw[control::kNumWheels], float dt_samp
     const int32_t c_lr = encoder_driver_get_and_reset_counts(WHEEL_IDX_LR);
     const int32_t c_lf = encoder_driver_get_and_reset_counts(WHEEL_IDX_LF);
     const int32_t c_rr = -encoder_driver_get_and_reset_counts(WHEEL_IDX_RR);
-    const int32_t c_rf = -encoder_driver_get_and_reset_counts(WHEEL_IDX_RR); // TODO: change to WHEEL_IDX_RF or fix encoder shit
+    const int32_t c_rf = -encoder_driver_get_and_reset_counts(WHEEL_IDX_RF); // TODO: change to WHEEL_IDX_RF or fix encoder shit
 
     const int32_t counts[4] = {c_lr, c_lf, c_rr, c_rf};
 
@@ -150,6 +150,8 @@ void run_ramp(float v_start_m_s, float v_end_m_s, float yaw_start_deg_s,
             u_hw, u_hw, control::kNumWheels, -control::kOutputLimit,
             control::kOutputLimit);
 
+        // Debug hack: mirror RR command onto RF.
+        u_hw[3] = u_hw[2];
         apply_actuator_to_motors(u_hw, motors);
         const uint32_t ctrl1 = DWT->CYCCNT;
 

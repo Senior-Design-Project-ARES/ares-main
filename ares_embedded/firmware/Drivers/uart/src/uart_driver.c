@@ -7,8 +7,20 @@
 
 static UART_HandleTypeDef g_huart;
 static uint8_t            g_uart_initialised = 0U;
+static volatile uint16_t  g_rx_head          = 0U;
+static volatile uint16_t  g_rx_tail          = 0U;
 
-const uart_driver_config_t uart_driver_config_debug_default = {
+static volatile uint32_t g_irq_rx_bytes      = 0U;
+static volatile uint32_t g_err_overrun       = 0U;
+static volatile uint32_t g_err_framing       = 0U;
+static volatile uint32_t g_err_noise         = 0U;
+static volatile uint32_t g_err_parity        = 0U;
+static volatile uint32_t g_ring_overflow     = 0U;
+
+enum { UART_RX_RING_SIZE = 512 };
+static uint8_t g_rx_ring[UART_RX_RING_SIZE];
+
+const uart_driver_config_t uart_driver_config_stlink_vcp = {
     .instance  = USART3,
     .tx_port   = GPIOD,
     .tx_pin    = GPIO_PIN_8,
@@ -17,6 +29,9 @@ const uart_driver_config_t uart_driver_config_debug_default = {
     .alternate = GPIO_AF7_USART3,
     .baud_rate = 115200U,
 };
+
+const uart_driver_config_t uart_driver_config_debug_default =
+    uart_driver_config_stlink_vcp;
 
 static void uart_rcc_gpio_enable(GPIO_TypeDef *port)
 {
@@ -136,6 +151,33 @@ static void uart_gpio_af_pin(GPIO_TypeDef *port, uint16_t pin, uint8_t alternate
     HAL_GPIO_Init(port, &gpio);
 }
 
+static IRQn_Type uart_instance_to_irqn(USART_TypeDef *inst)
+{
+    if (inst == USART1) { return USART1_IRQn; }
+    if (inst == USART2) { return USART2_IRQn; }
+    if (inst == USART3) { return USART3_IRQn; }
+    if (inst == UART4) { return UART4_IRQn; }
+    if (inst == UART5) { return UART5_IRQn; }
+    if (inst == USART6) { return USART6_IRQn; }
+    if (inst == UART7) { return UART7_IRQn; }
+    if (inst == UART8) { return UART8_IRQn; }
+    if (inst == UART9) { return UART9_IRQn; }
+    if (inst == USART10) { return USART10_IRQn; }
+    if (inst == LPUART1) { return LPUART1_IRQn; }
+    return NonMaskableInt_IRQn;
+}
+
+static void uart_ring_push(uint8_t byte)
+{
+    const uint16_t next = (uint16_t)((g_rx_head + 1U) % UART_RX_RING_SIZE);
+    if (next == g_rx_tail) {
+        ++g_ring_overflow;
+        return;
+    }
+    g_rx_ring[g_rx_head] = byte;
+    g_rx_head = next;
+}
+
 void uart_driver_init(const uart_driver_config_t *cfg)
 {
     if (g_uart_initialised)
@@ -179,6 +221,23 @@ void uart_driver_init(const uart_driver_config_t *cfg)
 
     if (HAL_UART_Init(&g_huart) == HAL_OK)
     {
+        g_rx_head = 0U;
+        g_rx_tail = 0U;
+        g_irq_rx_bytes = 0U;
+        g_err_overrun = 0U;
+        g_err_framing = 0U;
+        g_err_noise = 0U;
+        g_err_parity = 0U;
+        g_ring_overflow = 0U;
+
+        const IRQn_Type irqn = uart_instance_to_irqn(c->instance);
+        if (irqn >= 0) {
+            HAL_NVIC_SetPriority(irqn, 5U, 0U);
+            HAL_NVIC_EnableIRQ(irqn);
+        }
+
+        __HAL_UART_ENABLE_IT(&g_huart, UART_IT_RXNE);
+        __HAL_UART_ENABLE_IT(&g_huart, UART_IT_ERR);
         g_uart_initialised = 1U;
     }
 }
@@ -235,6 +294,15 @@ void println(const char *fmt, ...)
     va_end(args);
 }
 
+uint8_t uart_write_bytes(const uint8_t *data, uint16_t len, uint32_t timeout_ms)
+{
+    if (!g_uart_initialised || data == NULL || len == 0U)
+    {
+        return 0U;
+    }
+    return (HAL_UART_Transmit(&g_huart, (uint8_t *)data, len, timeout_ms) == HAL_OK) ? 1U : 0U;
+}
+
 uint8_t uart_try_read_byte(uint8_t *out_byte)
 {
     if (!g_uart_initialised || out_byte == NULL)
@@ -242,8 +310,70 @@ uint8_t uart_try_read_byte(uint8_t *out_byte)
         return 0U;
     }
 
-    HAL_StatusTypeDef st = HAL_UART_Receive(&g_huart, out_byte, 1U, 0U);
-    return (st == HAL_OK) ? 1U : 0U;
+    if (g_rx_head != g_rx_tail) {
+        *out_byte = g_rx_ring[g_rx_tail];
+        g_rx_tail = (uint16_t)((g_rx_tail + 1U) % UART_RX_RING_SIZE);
+        return 1U;
+    }
+
+    return 0U;
+}
+
+void uart_driver_irq_handler(void)
+{
+    if (!g_uart_initialised || g_huart.Instance == NULL) {
+        return;
+    }
+
+    USART_TypeDef *uart = g_huart.Instance;
+    const uint32_t err_mask = USART_ISR_ORE | USART_ISR_FE | USART_ISR_NE | USART_ISR_PE;
+
+    while (1) {
+        const uint32_t isr = uart->ISR;
+
+        if ((isr & err_mask) != 0U) {
+            if ((isr & USART_ISR_ORE) != 0U) { ++g_err_overrun; }
+            if ((isr & USART_ISR_FE) != 0U) { ++g_err_framing; }
+            if ((isr & USART_ISR_NE) != 0U) { ++g_err_noise; }
+            if ((isr & USART_ISR_PE) != 0U) { ++g_err_parity; }
+            uart->ICR = USART_ICR_ORECF | USART_ICR_FECF | USART_ICR_NECF | USART_ICR_PECF;
+        }
+
+        if ((isr & USART_ISR_RXNE_RXFNE) == 0U) {
+            break;
+        }
+
+        uart_ring_push((uint8_t)(uart->RDR & 0xFFU));
+        ++g_irq_rx_bytes;
+    }
+}
+
+void uart_driver_get_rx_stats(uart_driver_rx_stats_t *out_stats)
+{
+    if (out_stats == NULL) {
+        return;
+    }
+
+    __disable_irq();
+    out_stats->irq_rx_bytes = g_irq_rx_bytes;
+    out_stats->err_overrun  = g_err_overrun;
+    out_stats->err_framing  = g_err_framing;
+    out_stats->err_noise    = g_err_noise;
+    out_stats->err_parity   = g_err_parity;
+    out_stats->ring_overflow = g_ring_overflow;
+    __enable_irq();
+}
+
+void uart_driver_reset_rx_stats(void)
+{
+    __disable_irq();
+    g_irq_rx_bytes = 0U;
+    g_err_overrun = 0U;
+    g_err_framing = 0U;
+    g_err_noise = 0U;
+    g_err_parity = 0U;
+    g_ring_overflow = 0U;
+    __enable_irq();
 }
 
 int __io_putchar(int ch)

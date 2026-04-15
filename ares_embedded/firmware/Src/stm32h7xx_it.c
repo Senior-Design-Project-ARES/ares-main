@@ -19,6 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "stm32h7xx_it.h"
 #include "stm32h7xx_hal.h"
+#include "uart_driver.h"
 
 /* Defined in Drivers/ethernet/src/ethernetif.c when ethernet is enabled. */
 extern ETH_HandleTypeDef EthHandle;
@@ -162,6 +163,11 @@ void SysTick_Handler(void)
 void ETH_IRQHandler(void)
 {
   HAL_ETH_IRQHandler(&EthHandle);
+}
+
+void USART3_IRQHandler(void)
+{
+  uart_driver_irq_handler();
 }
 
 /**

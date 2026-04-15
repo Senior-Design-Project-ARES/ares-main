@@ -11,7 +11,7 @@
  #include <algorithm>
  #include <cmath>
  #include <cstdint>
-#include <cstring>
+ #include <cstdlib>
  
  #include "stm32h7xx.h"
  #include "stm32h7xx_hal.h"
@@ -30,22 +30,6 @@
  }
  
  namespace {
- 
- /** Enable DWT cycle counter (CPU cycles between reads). Call after clocks are up. */
- void dwt_cycle_counter_init(void)
- {
-     CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;
-     DWT->CYCCNT = 0;
-     DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;
- }
- 
- uint32_t cycles_to_us(uint32_t cycles)
- {
-     const uint32_t hz = HAL_RCC_GetSysClockFreq();
-     return hz ? static_cast<uint32_t>((static_cast<uint64_t>(cycles) * 1000000ULL) /
-                                       static_cast<uint64_t>(hz))
-               : 0U;
- }
  
  /** u in [-1, 1] → duty 0–100 %, sign → direction. */
  void apply_actuator_to_motors(const float u_out[control::kNumWheels],
@@ -67,9 +51,36 @@
          }
      }
  }
+
+/** Brake all wheels (no UART / red link — do not run closed-loop). */
+void stop_all_motors(motor_driver_t *motors)
+{
+    if (motors == nullptr) {
+        return;
+    }
+    for (int i = 0; i < control::kNumWheels; ++i) {
+        motor_drive(&motors[i], MOTOR_BRAKE, 0u);
+    }
+ }
  
  /** Encoder sample period [ms] (2 Hz). */
  constexpr uint32_t kEncoderSamplePeriodMs = 10U;
+constexpr uint8_t  kLineBufferSize        = 64U;
+constexpr uint32_t kUartTimeoutMs         = 700U;
+
+enum class RxState : uint8_t
+{
+    kNoRx = 0U,
+    kDecodeOk,
+    kDecodeFail
+};
+
+enum class LedHealth : uint8_t
+{
+    kRed = 0U,
+    kYellow,
+    kGreen
+};
  
  /** Output-shaft deg/s from encoder delta over dt_sample_s [s] since last read. */
  void wheel_meas_deg_per_s_hw(float w_meas_hw[control::kNumWheels], float dt_sample_s)
@@ -98,61 +109,35 @@ struct ControlRuntime
     uint32_t last_enc_ms{0U};
 };
  
-// Binary command format (little-endian):
-// magic u16 (0xA55A), axial_vel_m_s f32, turning_rate_deg_s f32, crc16_ccitt u16.
-constexpr uint16_t kCmdMagic = 0xA55AU;
- 
-#pragma pack(push, 1)
-struct TeleopCmdFrame
+bool parse_ascii_cmd_line(const char *line, float *vx, float *yaw_rate)
 {
-    uint16_t magic;
-    float    axial_vel_m_s;
-    float    turning_rate_deg_s;
-    uint16_t crc;
-};
-#pragma pack(pop)
- 
-static_assert(sizeof(TeleopCmdFrame) == 12U, "Unexpected TeleopCmdFrame size");
- 
-uint16_t crc16_ccitt(const uint8_t *data, uint32_t len)
-{
-    uint16_t crc = 0xFFFFU;
-    for (uint32_t i = 0U; i < len; ++i) {
-        crc ^= static_cast<uint16_t>(data[i]) << 8;
-        for (uint8_t b = 0U; b < 8U; ++b) {
-            crc = (crc & 0x8000U) ? static_cast<uint16_t>((crc << 1) ^ 0x1021U)
-                                  : static_cast<uint16_t>(crc << 1);
-        }
-    }
-    return crc;
-}
- 
-bool decode_teleop_frame(const uint8_t *raw, float *axial_vel_m_s,
-                         float *turning_rate_deg_s)
-{
-    if (raw == nullptr || axial_vel_m_s == nullptr || turning_rate_deg_s == nullptr) {
+    if (line == nullptr || vx == nullptr || yaw_rate == nullptr) {
         return false;
     }
- 
-    TeleopCmdFrame frame{};
-    std::memcpy(&frame, raw, sizeof(frame));
-    if (frame.magic != kCmdMagic) {
+    if (line[0] != 'V' && line[0] != 'v') {
         return false;
     }
- 
-    const uint16_t got_crc = frame.crc;
-    frame.crc              = 0U;
-    const uint16_t exp_crc =
-        crc16_ccitt(reinterpret_cast<const uint8_t *>(&frame), sizeof(frame) - sizeof(frame.crc));
-    if (got_crc != exp_crc) {
+
+    char *end = nullptr;
+    const float parsed_vx = std::strtof(line + 1, &end);
+    if (end == (line + 1) || *end != ',') {
         return false;
     }
- 
-    *axial_vel_m_s    = frame.axial_vel_m_s;
-    *turning_rate_deg_s = frame.turning_rate_deg_s;
+    ++end;
+    if (*end != 'Y' && *end != 'y') {
+        return false;
+    }
+    ++end;
+    const float parsed_yaw = std::strtof(end, &end);
+    if (end == nullptr || *end != '\0') {
+        return false;
+    }
+
+    *vx = parsed_vx;
+    *yaw_rate = parsed_yaw;
     return true;
 }
- 
+
 void run(float axial_vel_m_s, float turning_rate_deg_s,
          control::InverseKinematics *ik, control::WheelPid *pid,
          motor_driver_t *motors, ControlRuntime *rt)
@@ -163,8 +148,6 @@ void run(float axial_vel_m_s, float turning_rate_deg_s,
  
     float    w_cmd[control::kNumWheels]{};
     float    u_hw[control::kNumWheels]{};
-    uint32_t enc_us = 0U;
-    const uint32_t loop0 = DWT->CYCCNT;
     const uint32_t now = HAL_GetTick();
     const bool take_enc =
         (rt->last_enc_ms == 0U) || ((now - rt->last_enc_ms) >= kEncoderSamplePeriodMs);
@@ -173,14 +156,10 @@ void run(float axial_vel_m_s, float turning_rate_deg_s,
             (rt->last_enc_ms == 0U)
                 ? std::max(static_cast<float>(now) * 0.001f, control::kDt)
                 : std::max(static_cast<float>(now - rt->last_enc_ms) * 0.001f, control::kDt);
-        const uint32_t enc0 = DWT->CYCCNT;
         wheel_meas_deg_per_s_hw(rt->w_meas_hw, dt_enc_s);
-        const uint32_t enc1 = DWT->CYCCNT;
-        enc_us              = cycles_to_us(enc1 - enc0);
         rt->last_enc_ms     = now;
     }
  
-    const uint32_t ctrl0 = DWT->CYCCNT;
     ik->compute(axial_vel_m_s, turning_rate_deg_s, w_cmd);
     control::Limits::clamp_wheel_commands(w_cmd, w_cmd, control::kNumWheels,
                                           -control::kWheelSpeedLimitDegPerS,
@@ -189,49 +168,80 @@ void run(float axial_vel_m_s, float turning_rate_deg_s,
     control::Limits::clamp_wheel_commands(
         u_hw, u_hw, control::kNumWheels, -control::kOutputLimit,
         control::kOutputLimit);
+        
+    u_hw[3] = u_hw[2]; // motor mirror hack
     apply_actuator_to_motors(u_hw, motors);
-    const uint32_t ctrl1 = DWT->CYCCNT;
- 
-    const uint32_t ctrl_us = cycles_to_us(ctrl1 - ctrl0);
-    const uint32_t loop_us = cycles_to_us(ctrl1 - loop0);
-    print("cmd v=%f yaw=%f | w_cmd: %f, %f, %f, %f", axial_vel_m_s, turning_rate_deg_s,
-          w_cmd[0], w_cmd[1], w_cmd[2], w_cmd[3]);
-    println(" | w_meas: %f, %f, %f, %f | enc=%lu us ctrl=%lu us loop=%lu us",
-            rt->w_meas_hw[0], rt->w_meas_hw[1], rt->w_meas_hw[2], rt->w_meas_hw[3],
-            (unsigned long)enc_us, (unsigned long)ctrl_us, (unsigned long)loop_us);
  }
  
-void poll_uart_teleop_and_run(float *axial_vel_m_s, float *turning_rate_deg_s)
+RxState poll_uart_ascii_cmd(float *axial_vel_m_s, float *turning_rate_deg_s)
 {
     if (axial_vel_m_s == nullptr || turning_rate_deg_s == nullptr) {
-        return;
+        return RxState::kNoRx;
     }
 
-    static uint8_t rx_buf[sizeof(TeleopCmdFrame)]{};
+    static char    line_buf[kLineBufferSize]{};
     static uint8_t idx = 0U;
     uint8_t byte = 0U;
+    bool got_rx = false;
+    bool decode_ok = false;
+    bool decode_fail = false;
+
     while (uart_try_read_byte(&byte)) {
-        rx_buf[idx++] = byte;
-        if (idx < sizeof(rx_buf)) {
+        got_rx = true;
+        if (byte == '\r') {
+            continue;
+        }
+        if (byte != '\n') {
+            if (idx < static_cast<uint8_t>(kLineBufferSize - 1U)) {
+                line_buf[idx++] = static_cast<char>(byte);
+            } else {
+                idx = 0U;
+                decode_fail = true;
+            }
             continue;
         }
 
-        float new_v = 0.f;
-        float new_yaw = 0.f;
-        if (decode_teleop_frame(rx_buf, &new_v, &new_yaw)) {
-            *axial_vel_m_s     = new_v;
-            *turning_rate_deg_s = new_yaw;
-            println("rx cmd: v=%f yaw=%f", *axial_vel_m_s, *turning_rate_deg_s);
-            idx = 0U;
-            continue;
+        line_buf[idx] = '\0';
+        if (idx > 0U && parse_ascii_cmd_line(line_buf, axial_vel_m_s, turning_rate_deg_s)) {
+            decode_ok = true;
+        } else if (idx > 0U) {
+            decode_fail = true;
         }
-
-        // Sliding-window resync for noisy/unaligned streams.
-        for (uint8_t i = 1U; i < idx; ++i) {
-            rx_buf[i - 1U] = rx_buf[i];
-        }
-        idx = static_cast<uint8_t>(idx - 1U);
+        idx = 0U;
     }
+
+    if (decode_ok) {
+        return RxState::kDecodeOk;
+    }
+    if (decode_fail) {
+        return RxState::kDecodeFail;
+    }
+    return got_rx ? RxState::kDecodeFail : RxState::kNoRx;
+}
+
+void leds_init(void)
+{
+    __HAL_RCC_GPIOB_CLK_ENABLE();
+    __HAL_RCC_GPIOE_CLK_ENABLE();
+
+    GPIO_InitTypeDef gpio{};
+    gpio.Mode  = GPIO_MODE_OUTPUT_PP;
+    gpio.Pull  = GPIO_NOPULL;
+    gpio.Speed = GPIO_SPEED_FREQ_LOW;
+
+    gpio.Pin = GPIO_PIN_0;
+    HAL_GPIO_Init(GPIOB, &gpio);
+    gpio.Pin = GPIO_PIN_14;
+    HAL_GPIO_Init(GPIOB, &gpio);
+    gpio.Pin = GPIO_PIN_1;
+    HAL_GPIO_Init(GPIOE, &gpio);
+}
+
+void set_led_health(LedHealth health)
+{
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_0, (health == LedHealth::kGreen) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOE, GPIO_PIN_1, (health == LedHealth::kYellow) ? GPIO_PIN_SET : GPIO_PIN_RESET);
+    HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, (health == LedHealth::kRed) ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }
 
  } // namespace
@@ -240,8 +250,8 @@ void poll_uart_teleop_and_run(float *axial_vel_m_s, float *turning_rate_deg_s)
  {
      HAL_Init();
      uart_driver_init_default();
-     dwt_cycle_counter_init();
      encoder_driver_init(HAL_GetTick());
+    leds_init();
  
      static TIM_HandleTypeDef htim_pwm = {};
      motor_timer_init(&htim_pwm, MOTOR_PWM_TIMER, MOTOR_PWM_HZ, MOTOR_TIMER_CLK_HZ);
@@ -257,16 +267,40 @@ void poll_uart_teleop_and_run(float *axial_vel_m_s, float *turning_rate_deg_s)
      control::WheelPid          pid(control::kKp, control::kKi, control::kKd, control::kKf, control::kDt);
      pid.reset();
  
-    HAL_Delay(5000U); /* safety delay */
-    println("teleop loop start (binary cmd frames over UART)");
+   HAL_Delay(5000U); /* safety delay */
 
     ControlRuntime rt{};
     float          axial_vel_cmd_m_s   = 0.f;
     float          turning_rate_cmd_deg_s = 0.f;
+   uint32_t       last_uart_rx_ms = HAL_GetTick();
+   LedHealth      led_health = LedHealth::kRed;
+   set_led_health(led_health);
 
     while (true) {
-        poll_uart_teleop_and_run(&axial_vel_cmd_m_s, &turning_rate_cmd_deg_s);
-        run(axial_vel_cmd_m_s, turning_rate_cmd_deg_s, &ik, &pid, motors, &rt);
+        const uint32_t now_ms = HAL_GetTick();
+        const RxState status = poll_uart_ascii_cmd(&axial_vel_cmd_m_s, &turning_rate_cmd_deg_s);
+
+        if (status == RxState::kDecodeOk) {
+            led_health = LedHealth::kGreen;
+            last_uart_rx_ms = now_ms;
+        } else if (status == RxState::kDecodeFail) {
+            led_health = LedHealth::kYellow;
+            last_uart_rx_ms = now_ms;
+        } else if ((now_ms - last_uart_rx_ms) > kUartTimeoutMs) {
+            led_health = LedHealth::kRed;
+        }
+        set_led_health(led_health);
+
+        static LedHealth prev_led = LedHealth::kGreen;
+        if (led_health == LedHealth::kRed) {
+            stop_all_motors(motors);
+            if (prev_led != LedHealth::kRed) {
+                pid.reset();
+            }
+        } else {
+            run(axial_vel_cmd_m_s, turning_rate_cmd_deg_s, &ik, &pid, motors, &rt);
+        }
+        prev_led = led_health;
         HAL_Delay(static_cast<uint32_t>(control::kDt * 1000.f));
      }
  }

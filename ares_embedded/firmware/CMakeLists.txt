@@ -104,6 +104,9 @@ set(LAN8742_SOURCES
 # Create executable target
 add_executable(firmware.elf
     # tests/keyboard.cpp
+    # tests/cmd.cpp
+    # tests/uart_echo.cpp
+    # tests/controller.cpp
     main.cpp
     ${HAL_SOURCES}
     ${SYSTEM_SOURCES}
