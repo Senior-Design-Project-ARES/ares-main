@@ -324,6 +324,14 @@ class PathTrackingNode : public rclcpp::Node
             cmd.linear.y = rover_id;
             cmd.angular.z = control(1);
             pub_->publish(cmd);
+            
+            /*
+            std::cout << "Linear Velocity: " << control(0) << std::endl;
+            std::cout << "Angular Velocity: " << control(1) << std::endl;
+            */
+            
+            RCLCPP_INFO(this->get_logger(), "Linear Velocity: %f", control(0));
+            RCLCPP_INFO(this->get_logger(), "Angular Velocity: %f", control(1));
         }
 
         rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr sub_wp;
