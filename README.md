@@ -1,31 +1,38 @@
-# ares-main
+# ARES Main
 
-Install ROS2 Humble from https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html assuming you are using Ubuntu 22.04, if you are on another OS you can find other install instructions from that same link.
+ARES (Autonomous Rover Exploration System) - A ROS2 Humble-based autonomous rover system with LIDAR mapping, path planning, and VRPN tracking.
 
-When installing make sure to not install both the Base install and the Desktop install only do the Desktop install. Also make sure to get the Dev tools as they will be needed to build our package.
+## Installation & Setup
 
-once you have ros2 installed then you can run,  
+### Prerequisites
+- **OS:** Ubuntu 22.04 (or find other OS instructions [here](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html))
 
+### 1. Install ROS2 Humble
+Follow the [official ROS2 Humble installation guide](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html) for Ubuntu 22.04.
+
+**Important:** Install the **Desktop install** (not Base install) and ensure you get the dev tools, as they are needed to build this project.
+
+### 2. Install Dependencies
 ```bash
-sudo apt-get install ros-humble-ros-gz
-sudo apt install ros-humble-ros-gz-bridge
+sudo apt-get install ros-humble-vrpn
+sudo apt-get install ros-humble-cartographer-ros
+sudo apt-get install python3-colcon-common-extensions
+```
+
+### 3. Build the Project
+```bash
 source /opt/ros/humble/setup.bash
 colcon build 
 ```
 
-To build the project. next run
-
+### 4. Source the Project
 ```bash
 source install/local_setup.bash
 ```
 
-to source the project. Finally run the launch file which sets up the gazebo simulation and runs the ros2 code.
-
+### 5. Launch the Rover System
 ```bash
-ros2 launch ares-main sim.launch.py
-ros2 launch fast_lio mapping.launch.py use_sim_time:=true config_file:=test.yaml
-ros2 run pc_modifier modifier
-ign topic -t "/cmd_vel" -m ignition.msgs.Twist -p "linear: {x: 0.5}, angular: {z: 0.1}"
+ros2 launch coordinator coordinator.launch.py
 ```
 
 
