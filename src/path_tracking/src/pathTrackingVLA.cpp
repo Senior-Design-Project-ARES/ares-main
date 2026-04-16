@@ -195,7 +195,7 @@ Eigen::Vector2d PP_single(const Eigen::Vector3d& state, const Eigen::MatrixXd& m
             {
                 angVel = -turnRate;
             }
-            if(alpha < 0)
+            if(alpha > 0)
             {
                 angVel = turnRate;
             }    
@@ -370,7 +370,7 @@ class PathTrackingNode : public rclcpp::Node
             pub_->publish(cmd);
 
             const double axial_vel = control(0);
-            const double turning_rate = control(1);
+            const double turning_rate = 180/3.14159 * control(1);
             char cmd_line[64];
             const int cmd_len = uart_ascii_cmd::format_ascii_cmd(cmd_line, sizeof(cmd_line), axial_vel, turning_rate);
             if (cmd_len <= 0 || static_cast<size_t>(cmd_len) >= sizeof(cmd_line))
