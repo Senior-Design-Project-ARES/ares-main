@@ -1,0 +1,58 @@
+rover:
+  name: rover1
+  world_frame_id: area_of_interest
+
+cameras:
+  left:
+    device: /dev/video0
+    calibration: ../calibration/left.yaml
+    image_size: [1920, 1080]
+    pixel_format: YUYV
+    output_encoding: mono8
+    pose:
+      xyz_m: [0.0, 0.0, 0.0]
+      rpy_rad: [-1.57079632679, 0.0, 0.0]
+
+  center:
+    device: /dev/video2
+    calibration: ../calibration/center.yaml
+    image_size: [1920, 1080]
+    pixel_format: YUYV
+    output_encoding: mono8
+    pose:
+      xyz_m: [0.0, 0.0, 0.0]
+      rpy_rad: [-1.57079632679, 0.0, -1.57079632679]
+
+  right:
+    device: /dev/video4
+    calibration: ../calibration/right.yaml
+    image_size: [1920, 1080]
+    pixel_format: YUYV
+    output_encoding: mono8
+    pose:
+      xyz_m: [0.0, 0.0, 0.0]
+      rpy_rad: [-1.57079632679, 0.0, -3.14159265359]
+
+target:
+  tag_family: 36h11
+  tag_ids: [0, 1, 2, 3, 4, 5]
+  tag_size_m: 0.12
+  cube_size_m: 0.15
+  max_jump_m: 0.14
+
+apriltag:
+  image_transport: raw
+  qos_profile: sensor_data
+  max_hamming: 0
+  pose_estimation_method: pnp
+  detector:
+    threads: 1
+    decimate: 1.0
+    blur: 0.0
+    refine: true
+    sharpening: 0.25
+    debug: false
+
+pipeline:
+  publish_rate_hz: 30.0
+  max_tag_age_sec: 0.25
