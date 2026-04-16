@@ -303,6 +303,10 @@ class OccupancyMapper(Node):
         angle = scan.angle_min
 
         for r in scan.ranges:
+            if r > scan.range_max or r < scan.range_min:
+                angle += scan.angle_increment
+                continue
+
             a = laser_yaw + angle
             angle += scan.angle_increment
 
