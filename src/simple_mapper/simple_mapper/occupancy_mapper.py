@@ -121,8 +121,6 @@ class OccupancyMapper(Node):
         self.laser_offset_x = float(self.get_parameter('laser_offset_x').value)
         self.laser_offset_y = float(self.get_parameter('laser_offset_y').value)
 
-        self.laser_offset_y = -0.153
-
         # ---- internal state ---------------------------------------------------
         self.log = np.zeros((self.height, self.width), dtype=np.float32)
 
@@ -133,7 +131,7 @@ class OccupancyMapper(Node):
         # Scans buffer: holds unprocessed scans waiting for a matched pose
         # Vicon buffer: holds recent poses for interpolation
         # At 12 Hz lidar, 20 unprocessed scans = ~1.6 seconds backlog before dropping
-        self.scan_buffer: deque  = deque(maxlen=20)
+        self.scan_buffer: deque  = deque(maxlen=2)
         # At 60 Hz vicon, 120 poses = 2 seconds of history
         self.pose_buffer: deque  = deque(maxlen=120)
 
@@ -148,14 +146,14 @@ class OccupancyMapper(Node):
 
         self.pose_sub = self.create_subscription(
             PoseStamped,
-            '/Wand/pose',
+            'pose',
             self.on_pose,
             10,
         )
 
         self.scan_sub = self.create_subscription(
             LaserScan,
-            '/scan',
+            'scan',
             self.on_scan,
             10,
         )
@@ -235,13 +233,16 @@ class OccupancyMapper(Node):
             return None
 
         pose_list = list(self.pose_buffer)
-        times     = [stamp_to_sec(p.header.stamp) for p in pose_list]
+        times = np.asarray(
+            [stamp_to_sec(p.header.stamp) for p in pose_list],
+            dtype=np.float64,
+        )
 
         # self.get_logger().info(f'--- SCAN BUFFER ({len(scan_times)} msgs) ---')
         # for t in scan_times:
         #     self.get_logger().info(f'  scan_t: {t:.6f}')
 
-        self.get_logger().info(f'--- POSE BUFFER ({len(times)} msgs) ---')
+        # self.get_logger().info(f'--- POSE BUFFER ({len(times)} msgs {len(pose_list)}) ---')
         # for t in times:
         #     self.get_logger().info(f'  pose_t: {t:.6f}')
 
@@ -249,24 +250,43 @@ class OccupancyMapper(Node):
         after    = None
         before_t = -float('inf')
         after_t  =  float('inf')
+        before_i = None
+        after_i  = None
 
-        for p, t in zip(pose_list, times):
-            if t <= query_t and t > before_t:
-                before   = p
-                before_t = t
-            if t > query_t and t < after_t:
-                after   = p
-                after_t = t
+        # Find bracket indices in O(log n) using NumPy's binary search.
+        after_pos = int(np.searchsorted(times, query_t, side='right'))
+        before_pos = after_pos - 1
+
+        if before_pos >= 0:
+            before_i = before_pos
+            before_t = float(times[before_pos])
+            before = pose_list[before_pos]
+
+        if after_pos < len(pose_list):
+            after_i = after_pos
+            after_t = float(times[after_pos])
+            after = pose_list[after_pos]
 
         # Fall back to nearest single pose
         if before is None and after is None:
+            self.get_logger().warn('fuck, no before and after')
             return None
-        if before is None:
-            return after if abs(after_t - query_t) < self.MAX_SYNC_DELTA_SEC else None
-        if after is None:
-            return before if abs(query_t - before_t) < self.MAX_SYNC_DELTA_SEC else None
+        # if before is None:
+        #     return after if abs(after_t - query_t) < self.MAX_SYNC_DELTA_SEC else None
+        # if after is None:
+        #     return before if abs(query_t - before_t) < self.MAX_SYNC_DELTA_SEC else None
 
-        print("Something wrong")
+        if abs(after_t - query_t) <= abs(query_t - before_t):
+            # self.get_logger().info(f'a: {after_i}')
+            # self.get_logger().info(f'{abs(after_t - query_t)}')
+            return after
+        elif abs(after_t - query_t) > abs(query_t - before_t):
+            # self.get_logger().info(f'b: {before_i}')
+            # self.get_logger().info(f'{abs(query_t - before_t)}')
+            return before
+        else:
+            self.get_logger().warn('fuck, fuck')
+            return None
 
         # Bracket too wide — Vicon gap, use nearest
         if (after_t - before_t) > self.MAX_SYNC_DELTA_SEC:
@@ -374,6 +394,9 @@ class OccupancyMapper(Node):
         angle = scan.angle_min
 
         for i, r in enumerate(scan.ranges):
+            if r > scan.range_max or r < scan.range_min:
+                angle += scan.angle_increment
+                continue
 
             # Exact capture time for this ray
             ray_t = (stamp_to_sec(scan.header.stamp)
@@ -465,6 +488,7 @@ class OccupancyMapper(Node):
 
         # Work through every buffered scan
         while self.scan_buffer:
+            self.get_logger().info(f'Scan buffer size: {len(self.scan_buffer)}')
             scan = self.scan_buffer.popleft()
 
             # Quick check: does a usable pose exist for this scan?
