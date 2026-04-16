@@ -34,9 +34,9 @@ def generate_launch_description():
     )
 
     mapper = Node(
-        package='simple_mapper',
-        executable='occupancy_mapperV1',
-        name='occupancy_mapperV1',
+        package='simple_mapper_cpp',
+        executable='occupancy_mapper',
+        name='occupancy_mapper',
         output='screen',
         parameters=[common_params, lidar_params]
 
