@@ -1,5 +1,5 @@
 rover:
-  name: rover1
+  name: Taurus
   world_frame_id: area_of_interest
 
 cameras:
