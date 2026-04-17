@@ -72,6 +72,7 @@ def _make_nodes(context, *args, **kwargs):
 
         v4l2_params = {
             "video_device": video_device,
+            "framerate": 1.0,
             "camera_info_url": resolve_camera_info_url(config_path, calibration),
             "camera_frame_id": camera_frame_id(cfg, camera_name),
             "image_size": image_size,
