@@ -60,7 +60,7 @@ struct Runtime {
 };
 
 constexpr uint32_t kEncoderSamplePeriodMs = 20U;
-constexpr uint32_t kPrintPeriodMs         = 500U;
+constexpr uint32_t kPrintPeriodMs         = 10U;
 constexpr uint32_t kCmdTimeoutMs          = 60000U;
 constexpr float    kLinearStepMps         = 0.05f;
 constexpr float    kLinearMinMps          = 0.05f;
