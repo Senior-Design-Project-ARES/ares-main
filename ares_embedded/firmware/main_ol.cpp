@@ -7,7 +7,9 @@
  *  - firmware/tests/keyboard.cpp: WASD/arrow serial teleop UX
  *
  * Controls over USART3 (115200 8N1):
- *   W/S forward/reverse, A/D left/right, Space or X stop.
+ *   W/S forward/reverse (clears turn — pure axial until A/D).
+ *   A/D yaw only while W or S is active (forward+turn / reverse+turn).
+ *   Space or X stop.
  *   I/K increase/decrease linear speed setpoint magnitude.
  *   O/L increase/decrease turning-rate setpoint magnitude.
  */
@@ -74,16 +76,17 @@ constexpr float clampf(float value, float lo, float hi)
 
 const char *teleop_cmd_name(const TeleopState &teleop)
 {
-    if (teleop.axial_dir > 0 && teleop.turn_dir > 0) {
+    const int8_t td = (teleop.axial_dir != 0) ? teleop.turn_dir : 0;
+    if (teleop.axial_dir > 0 && td > 0) {
         return "FORWARD+LEFT";
     }
-    if (teleop.axial_dir > 0 && teleop.turn_dir < 0) {
+    if (teleop.axial_dir > 0 && td < 0) {
         return "FORWARD+RIGHT";
     }
-    if (teleop.axial_dir < 0 && teleop.turn_dir > 0) {
+    if (teleop.axial_dir < 0 && td > 0) {
         return "REVERSE+LEFT";
     }
-    if (teleop.axial_dir < 0 && teleop.turn_dir < 0) {
+    if (teleop.axial_dir < 0 && td < 0) {
         return "REVERSE+RIGHT";
     }
     if (teleop.axial_dir > 0) {
@@ -91,12 +94,6 @@ const char *teleop_cmd_name(const TeleopState &teleop)
     }
     if (teleop.axial_dir < 0) {
         return "REVERSE";
-    }
-    if (teleop.turn_dir > 0) {
-        return "LEFT";
-    }
-    if (teleop.turn_dir < 0) {
-        return "RIGHT";
     }
     return "STOP";
 }
@@ -160,10 +157,10 @@ void update_command_from_mode(const TeleopState &teleop, float *vx_mps, float *y
         return;
     }
 
-    *vx_mps = 0.0f;
-    *yaw_degps = 0.0f;
-    *vx_mps = static_cast<float>(teleop.axial_dir) * teleop.linear_speed_m_s;
-    *yaw_degps = static_cast<float>(teleop.turn_dir) * teleop.turn_rate_deg_s;
+    *vx_mps     = static_cast<float>(teleop.axial_dir) * teleop.linear_speed_m_s;
+    *yaw_degps = (teleop.axial_dir != 0)
+                     ? static_cast<float>(teleop.turn_dir) * teleop.turn_rate_deg_s
+                     : 0.0f;
 }
 
 bool poll_teleop_input(TeleopState *teleop, bool *had_decode_error)
@@ -186,13 +183,35 @@ bool poll_teleop_input(TeleopState *teleop, bool *had_decode_error)
 
             switch (c) {
                 case 'w':
-                case 'W': teleop->axial_dir = 1; got_update = true; break;
+                case 'W':
+                    teleop->axial_dir = 1;
+                    teleop->turn_dir  = 0;
+                    got_update        = true;
+                    break;
                 case 's':
-                case 'S': teleop->axial_dir = -1; got_update = true; break;
+                case 'S':
+                    teleop->axial_dir = -1;
+                    teleop->turn_dir  = 0;
+                    got_update        = true;
+                    break;
                 case 'a':
-                case 'A': teleop->turn_dir = 1; got_update = true; break;
+                case 'A':
+                    if (teleop->axial_dir != 0) {
+                        teleop->turn_dir = 1;
+                    } else {
+                        teleop->turn_dir = 0;
+                    }
+                    got_update = true;
+                    break;
                 case 'd':
-                case 'D': teleop->turn_dir = -1; got_update = true; break;
+                case 'D':
+                    if (teleop->axial_dir != 0) {
+                        teleop->turn_dir = -1;
+                    } else {
+                        teleop->turn_dir = 0;
+                    }
+                    got_update = true;
+                    break;
                 case 'x':
                 case 'X':
                 case ' ':
@@ -244,10 +263,32 @@ bool poll_teleop_input(TeleopState *teleop, bool *had_decode_error)
         }
 
         switch (c) {
-            case 'A': teleop->axial_dir = 1; got_update = true; break;
-            case 'B': teleop->axial_dir = -1; got_update = true; break;
-            case 'C': teleop->turn_dir = -1; got_update = true; break;
-            case 'D': teleop->turn_dir = 1; got_update = true; break;
+            case 'A':
+                teleop->axial_dir = 1;
+                teleop->turn_dir  = 0;
+                got_update        = true;
+                break;
+            case 'B':
+                teleop->axial_dir = -1;
+                teleop->turn_dir  = 0;
+                got_update        = true;
+                break;
+            case 'C':
+                if (teleop->axial_dir != 0) {
+                    teleop->turn_dir = -1;
+                } else {
+                    teleop->turn_dir = 0;
+                }
+                got_update = true;
+                break;
+            case 'D':
+                if (teleop->axial_dir != 0) {
+                    teleop->turn_dir = 1;
+                } else {
+                    teleop->turn_dir = 0;
+                }
+                got_update = true;
+                break;
             default: *had_decode_error = true; break;
         }
         esc_state = 0U;
@@ -338,7 +379,7 @@ int main(void)
     const uint32_t boot_ms = HAL_GetTick();
     println("[%lu ms] Open-loop keyboard teleop ready (USART3 @115200).",
           static_cast<unsigned long>(boot_ms));
-    println("[%lu ms] WASD/arrows drive, Space/X stop, I/K linear speed, O/L turn-rate.",
+    println("[%lu ms] W/S=axial (clears turn). A/D=yaw only while moving. Space/X stop. I/K O/L tune.",
           static_cast<unsigned long>(boot_ms));
 
     while (true) {
@@ -367,7 +408,7 @@ int main(void)
             rt.w_cmd, rt.w_cmd, control::kNumWheels, -control::kWheelSpeedLimitDegPerS,
             control::kWheelSpeedLimitDegPerS);
 
-        if (teleop.axial_dir == 0 && teleop.turn_dir == 0) {
+        if (teleop.axial_dir == 0) {
             stop_all_motors(motors);
         } else {
             apply_open_loop_to_motors(rt.w_cmd, motors);
