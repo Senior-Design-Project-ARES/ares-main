@@ -281,23 +281,27 @@ void set_led_health(LedHealth health)
     HAL_GPIO_WritePin(GPIOB, GPIO_PIN_14, (health == LedHealth::kRed) ? GPIO_PIN_SET : GPIO_PIN_RESET);
 }
 
-void print_status(const TeleopState &teleop, const Runtime &rt, float vx_mps, float yaw_degps)
+void print_status(uint32_t t_ms, const TeleopState &teleop, const Runtime &rt, float vx_mps,
+                  float yaw_degps)
 {
     println(
-        "CMD=%s vx=%.2f[m/s] yaw=%.1f[deg/s] tuning(v=%.2f, yaw=%.1f)",
+        "[%lu ms] CMD=%s vx=%.2f[m/s] yaw=%.1f[deg/s] tuning(v=%.2f, yaw=%.1f)",
+        static_cast<unsigned long>(t_ms),
         teleop_cmd_name(teleop),
         vx_mps,
         yaw_degps,
         teleop.linear_speed_m_s,
         teleop.turn_rate_deg_s);
     println(
-        "W_CMD deg/s LR=%.1f LF=%.1f RR=%.1f RF=%.1f",
+        "[%lu ms] W_CMD deg/s LR=%.1f LF=%.1f RR=%.1f RF=%.1f",
+        static_cast<unsigned long>(t_ms),
         rt.w_cmd[WHEEL_IDX_LR],
         rt.w_cmd[WHEEL_IDX_LF],
         rt.w_cmd[WHEEL_IDX_RR],
         rt.w_cmd[WHEEL_IDX_RF]);
     println(
-        "W_ENC deg/s LR=%.1f LF=%.1f RR=%.1f RF=%.1f",
+        "[%lu ms] W_ENC deg/s LR=%.1f LF=%.1f RR=%.1f RF=%.1f",
+        static_cast<unsigned long>(t_ms),
         rt.w_meas[WHEEL_IDX_LR],
         rt.w_meas[WHEEL_IDX_LF],
         rt.w_meas[WHEEL_IDX_RR],
@@ -331,8 +335,11 @@ int main(void)
     set_led_health(led_health);
 
     HAL_Delay(5000U);  // safety delay
-    println("Open-loop keyboard teleop ready (USART3 @115200).");
-    println("WASD/arrows drive, Space/X stop, I/K linear speed, O/L turn-rate.");
+    const uint32_t boot_ms = HAL_GetTick();
+    println("[%lu ms] Open-loop keyboard teleop ready (USART3 @115200).",
+          static_cast<unsigned long>(boot_ms));
+    println("[%lu ms] WASD/arrows drive, Space/X stop, I/K linear speed, O/L turn-rate.",
+          static_cast<unsigned long>(boot_ms));
 
     while (true) {
         const uint32_t now_ms = HAL_GetTick();
@@ -377,7 +384,7 @@ int main(void)
 
         if ((now_ms - rt.last_print_ms) >= kPrintPeriodMs || got_cmd) {
             rt.last_print_ms = now_ms;
-            print_status(teleop, rt, vx_mps, yaw_degps);
+            print_status(now_ms, teleop, rt, vx_mps, yaw_degps);
         }
 
         HAL_Delay(static_cast<uint32_t>(control::kDt * 1000.0f));
