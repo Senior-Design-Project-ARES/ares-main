@@ -172,7 +172,7 @@ int main(void)
         motor_driver_init(&configs[i], &motors[i]);
     }
 
-    constexpr uint8_t kTeleopDutyPercent      = 30U; /* forward / reverse */
+    constexpr uint8_t kTeleopDutyPercent      = 100U; /* forward / reverse */
     constexpr uint8_t kTeleopTurnDutyPercent = 10U; /* left / right */
     constexpr uint32_t kPulsePrintPeriodMs = 500U;
     constexpr uint32_t kCmdTimeoutMs       = 60000U;

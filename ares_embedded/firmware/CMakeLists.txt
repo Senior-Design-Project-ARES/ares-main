@@ -103,8 +103,8 @@ set(LAN8742_SOURCES
 
 # Create executable target
 add_executable(firmware.elf
-    # tests/keyboard.cpp
-    main.cpp
+    tests/keyboard.cpp
+    # main.cpp
     ${HAL_SOURCES}
     ${SYSTEM_SOURCES}
     ${ENCODER_SOURCES}
