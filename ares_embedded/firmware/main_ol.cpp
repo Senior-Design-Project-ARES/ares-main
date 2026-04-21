@@ -1,6 +1,7 @@
 /**
  * @file main_ol.cpp
- * @brief Open-loop keyboard teleop using IK + encoder reporting over UART.
+ * @brief Keyboard teleop: IK + encoder reporting over UART; optional closed-loop PID
+ *        with wheel-domain Sugeno gain scheduling (see control::kSugenoEnabled).
  *
  * Merges:
  *  - firmware/main.cpp: IK wheel command path and encoder speed conversion
@@ -52,11 +53,12 @@ struct TeleopState {
 };
 
 struct Runtime {
-    float    w_cmd[control::kNumWheels]{};
-    float    w_meas[control::kNumWheels]{};
-    uint32_t last_enc_ms{0U};
-    uint32_t last_cmd_ms{0U};
-    uint32_t last_print_ms{0U};
+    float                          w_cmd[control::kNumWheels]{};
+    float                          w_meas[control::kNumWheels]{};
+    uint32_t                       last_enc_ms{0U};
+    uint32_t                       last_cmd_ms{0U};
+    uint32_t                       last_print_ms{0U};
+    control::SugenoWheelErrorState sugeno{};
 };
 
 constexpr uint32_t kEncoderSamplePeriodMs = 20U;
@@ -110,6 +112,27 @@ void stop_all_motors(motor_driver_t *motors)
     }
     for (int i = 0; i < control::kNumWheels; ++i) {
         motor_drive(&motors[i], MOTOR_BRAKE, 0u);
+    }
+}
+
+/** PID output u in [-kOutputLimit, kOutputLimit] → duty 0–100 % (same as main.cpp). */
+void apply_pid_output_to_motors(const float u_out[control::kNumWheels], motor_driver_t *motors)
+{
+    if (motors == nullptr) {
+        return;
+    }
+    for (int i = 0; i < control::kNumWheels; ++i) {
+        const float   u    = u_out[i];
+        const float   mag  = std::fabs(u) * 100.0f;
+        const uint8_t duty = static_cast<uint8_t>(mag);
+
+        if (duty == 0U) {
+            motor_drive(&motors[i], MOTOR_BRAKE, 0U);
+        } else if (u > 0.0f) {
+            motor_drive(&motors[i], MOTOR_FORWARD, duty);
+        } else {
+            motor_drive(&motors[i], MOTOR_REVERSE, duty);
+        }
     }
 }
 
@@ -355,8 +378,10 @@ int main(void)
     }
 
     control::InverseKinematics ik;
+    control::WheelPid pid(control::kKp, control::kKi, control::kKd, control::kKf, control::kDt);
+    pid.reset();
     TeleopState teleop{};
-    Runtime rt{};
+    Runtime     rt{};
     rt.last_cmd_ms = HAL_GetTick();
     rt.last_print_ms = rt.last_cmd_ms;
     LedHealth led_health = LedHealth::kRed;
@@ -390,17 +415,6 @@ int main(void)
         float yaw_degps = 0.0f;
         update_command_from_mode(teleop, &vx_mps, &yaw_degps);
 
-        ik.compute(vx_mps, yaw_degps, rt.w_cmd);
-        control::Limits::clamp_wheel_commands(
-            rt.w_cmd, rt.w_cmd, control::kNumWheels, -control::kWheelSpeedLimitDegPerS,
-            control::kWheelSpeedLimitDegPerS);
-
-        if (teleop.axial_dir == 0 && teleop.turn_dir == 0) {
-            stop_all_motors(motors);
-        } else {
-            apply_open_loop_to_motors(rt.w_cmd, motors);
-        }
-
         if ((rt.last_enc_ms == 0U) || ((now_ms - rt.last_enc_ms) >= kEncoderSamplePeriodMs)) {
             const float dt_enc_s =
                 (rt.last_enc_ms == 0U)
@@ -408,6 +422,30 @@ int main(void)
                     : std::max(static_cast<float>(now_ms - rt.last_enc_ms) * 0.001f, control::kDt);
             wheel_meas_deg_per_s(rt.w_meas, dt_enc_s);
             rt.last_enc_ms = now_ms;
+        }
+
+        ik.compute(vx_mps, yaw_degps, rt.w_cmd);
+        control::Limits::clamp_wheel_commands(
+            rt.w_cmd, rt.w_cmd, control::kNumWheels, -control::kWheelSpeedLimitDegPerS,
+            control::kWheelSpeedLimitDegPerS);
+
+        if (teleop.axial_dir == 0 && teleop.turn_dir == 0) {
+            stop_all_motors(motors);
+            pid.reset();
+            control::sugeno_wheel_error_reset(&rt.sugeno);
+        } else if (control::kSugenoEnabled != 0) {
+            float u_hw[control::kNumWheels]{};
+            const auto g = control::sugeno_gains_from_wheel_errors(&rt.sugeno, rt.w_cmd, rt.w_meas,
+                                                                     control::kDt);
+            pid.set_gains(control::kKp * g.Kp_mult, control::kKi * g.Ki_mult,
+                          control::kKd * g.Kd_mult, control::kKf, control::kDt);
+            pid.step(rt.w_cmd, rt.w_meas, u_hw);
+            control::Limits::clamp_wheel_commands(u_hw, u_hw, control::kNumWheels,
+                                                  -control::kOutputLimit, control::kOutputLimit);
+            u_hw[3] = u_hw[2];  // motor mirror (match main.cpp)
+            apply_pid_output_to_motors(u_hw, motors);
+        } else {
+            apply_open_loop_to_motors(rt.w_cmd, motors);
         }
 
         if ((now_ms - rt.last_print_ms) >= kPrintPeriodMs || got_cmd) {

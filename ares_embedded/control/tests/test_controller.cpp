@@ -21,7 +21,7 @@ namespace {
 
 // ── Plant model (match MATLAB actuation_controller_sim.m) ───────────────────
 constexpr float kTauW    = 0.20f;   // wheel actuator time constant [s]
-constexpr float kKAct    = 220.0f;  // deg/s per unit
+constexpr float kKAct    = 220.0f;  // deg/s per unit of u (DC gain ≈ kKAct * u)
 constexpr float kTEnd    = 10.0f;
 constexpr float kTauGoal = 0.12f;   // smooth transition time for profiles
 
@@ -29,6 +29,20 @@ constexpr float kTauGoal = 0.12f;   // smooth transition time for profiles
 constexpr float kMeasNoiseStd    = 2.0f;   // wheel encoder noise σ [deg/s]
 constexpr float kProcessNoiseStd = 0.5f;   // plant disturbance σ [deg/s]
 constexpr unsigned kRngSeed      = 42u;    // fixed seed for reproducibility
+
+/**
+ * Inner-loop gains for this host simulation only.
+ *
+ * `control::kKp` / `kKi` in config.hpp are currently tiny (on-vehicle / different unit
+ * scaling). With kKAct = 220 deg/s per unit of u, those gains keep |u| ≪ 1 while
+ * w_cmd is hundreds of deg/s, so the plant tops out near ~kKAct*|u| ≈ 100–200 deg/s
+ * regardless of Sugeno — the plot "goal vs meas" gap is gain starvation, not fuzzy
+ * logic. These values match the commented analytical line in config.hpp / MATLAB.
+ */
+constexpr float kSitlKp = 0.0045f;
+constexpr float kSitlKi = 0.0152f;
+constexpr float kSitlKd = 0.0005f;
+constexpr float kSitlKf = 0.0008f;
 
 // ── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -110,8 +124,9 @@ SimLog run_simulation(int test_case, bool use_sugeno, unsigned seed) {
     const float u_limit = control::kWheelSpeedLimitDegPerS / kKAct;
 
     control::InverseKinematics ik;
-    control::WheelPid pid(control::kKp, control::kKi, control::kKd, dt);
+    control::WheelPid          pid(kSitlKp, kSitlKi, kSitlKd, kSitlKf, dt);
     pid.reset();
+    control::SugenoWheelErrorState sugeno_st{};
 
     std::mt19937 rng(seed);
     std::normal_distribution<float> meas_dist(0.0f, kMeasNoiseStd);
@@ -137,16 +152,13 @@ SimLog run_simulation(int test_case, bool use_sugeno, unsigned seed) {
         for (int i = 0; i < control::kNumWheels; ++i)
             w_meas[i] = w_true[i] + meas_dist(rng);
 
-        if (use_sugeno) {
-            float v_meas, psi_meas;
-            wheel_to_body(w_meas, v_meas, psi_meas);
-            auto g = control::sugeno_gains(v_goal - v_meas, psi_goal - psi_meas);
-            pid.set_gains(control::kKp * g.Kp_mult,
-                          control::kKi * g.Ki_mult,
-                          control::kKd * g.Kd_mult, dt);
-        }
-
         ik.compute(v_goal, psi_goal, w_cmd);
+
+        if (use_sugeno) {
+            const auto g = control::sugeno_gains_from_wheel_errors(&sugeno_st, w_cmd, w_meas, dt);
+            pid.set_gains(kSitlKp * g.Kp_mult, kSitlKi * g.Ki_mult, kSitlKd * g.Kd_mult, kSitlKf,
+                          dt);
+        }
         pid.step(w_cmd, w_meas, u_out);
 
         control::Limits::clamp_wheel_commands(u_out, u_out, control::kNumWheels,

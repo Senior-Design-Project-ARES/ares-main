@@ -168,7 +168,7 @@ void run(float axial_vel_m_s, float turning_rate_deg_s,
     control::Limits::clamp_wheel_commands(
         u_hw, u_hw, control::kNumWheels, -control::kOutputLimit,
         control::kOutputLimit);
-        
+
     u_hw[3] = u_hw[2]; // motor mirror hack
     apply_actuator_to_motors(u_hw, motors);
  }

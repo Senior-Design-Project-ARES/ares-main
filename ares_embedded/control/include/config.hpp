@@ -37,10 +37,22 @@ constexpr float kRadiusW4 = 0.15f;
 constexpr float kRearTrack = 0.70f;
 
 /// Sugeno supervisor: enable (1) or disable (0)
-constexpr int kSugenoEnabled = 0;
+constexpr int kSugenoEnabled = 1;
 
-/// Normalization scales for Sugeno (body-level errors)
-constexpr float kVErrorScale = 1.5f;   // [m/s]
-constexpr float kPsiErrorScale = 12.0f; // [deg/s]
+/// LPF time constants for wheel-error split [s]
+constexpr float kSugenoLfTauS = 0.14f; // slightly faster LF envelope
+constexpr float kSugenoHfTauS = 0.028f; // faster HF tracking → snappier D/P from jitter
+
+/// Smaller scales → same physical error maps to larger n → more aggressive scheduling
+constexpr float kSugenoWheelErrLfScale  = 52.0f;
+constexpr float kSugenoWheelErrHfScale  = 2600.0f;
+
+/// After averaging per-wheel Sugeno candidates, clamp shared multipliers (wider = more swing)
+constexpr float kSugenoKpMultLo = 0.52f;
+constexpr float kSugenoKpMultHi = 1.68f;
+constexpr float kSugenoKiMultLo = 0.38f;
+constexpr float kSugenoKiMultHi = 1.58f;
+constexpr float kSugenoKdMultLo = 0.48f;
+constexpr float kSugenoKdMultHi = 1.82f;
 
 } // namespace control
