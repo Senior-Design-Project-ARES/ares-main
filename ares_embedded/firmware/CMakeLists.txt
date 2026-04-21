@@ -107,7 +107,8 @@ add_executable(firmware.elf
     # tests/cmd.cpp
     # tests/uart_echo.cpp
     # tests/controller.cpp
-    main.cpp
+    # main.cpp
+    main_ol.cpp
     ${HAL_SOURCES}
     ${SYSTEM_SOURCES}
     ${ENCODER_SOURCES}
