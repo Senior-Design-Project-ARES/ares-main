@@ -1,6 +1,6 @@
 # ARES Models
 
-This folder contains Simulink model files (.slx) for the ARES project.
+This folder contains Simulink files (.slx), as well as the Matlab (.m) files used for modeling for the ARES project,.
 
 ## Model Files
 - Add your .slx files here

@@ -51,12 +51,12 @@ cat ~/.ssh/id_ed25519.pub
 ### Clone the Repository
 
 ```bash
-git clone https://github.com/<your-org>/<your-repo>.git
+git clone --recurse-submodules git@github.com:Senior-Design-Project-ARES/ares-main.git
 cd <your-repo>
 ```
 
 ### Create a New Branch
-[Please reference this for info on how to config branches](docs/Branching_README.md)
+[Please reference this for info on how to config branches](branching.md)
 _(I worked really hard on that ReadMe pls read it pretty pls I beg you)_
 
 **Create a new branch:**
