@@ -7,5 +7,7 @@
 
 ## Code of Conduct
 
-Please see the [`CODE_OF_CONDUCT.md`](CODE_OF_CONDUCT.md) document.
-
+* You will be judged by your contributions first, and your sense of humor
+  second.
+* If you are blocked, unblock yourself.
+* Nobody owes you anything.

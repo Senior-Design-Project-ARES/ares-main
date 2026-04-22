@@ -56,7 +56,7 @@ cd <your-repo>
 ```
 
 ### Create a New Branch
-[Please reference this for info on how to config branches](docs/Branching_README.md)
+[Please reference this for info on how to config branches](Branching_README.md)
 _(I worked really hard on that ReadMe pls read it pretty pls I beg you)_
 
 **Create a new branch:**

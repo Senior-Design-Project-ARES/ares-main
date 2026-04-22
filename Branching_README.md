@@ -52,7 +52,7 @@ Think: **"merge early, merge often"** — even partial progress can be merged if
 
 ## Tips
 
-- If your branch is dragging on, consider **splitting the task** into smaller, mergeable pieces, and talk to either Vishnu, YuKang, Allison, or Sam.
+- If your branch is dragging on, consider **splitting the task** into smaller, mergeable pieces, and talk to the code owners: Vishnu, YuKang, Allison, or Sam.
 - If you're not sure when or how to merge, **ask** — don't let code rot on a branch.
 
 ---

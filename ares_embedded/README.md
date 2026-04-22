@@ -1,107 +1,85 @@
 # ares_embedded
 
-This is the ares_embedded project - a minimal, clean firmware framework for the STM32H723ZG microcontroller.
+Embedded controls and firmware for ARES on STM32H723ZG, with host-side controller tests and SITL tooling.
 
-## Submodules (required for firmware)
+Author: Tethracross
 
-Firmware depends on **STM32CubeH7** as a submodule at `ares_embedded/firmware/third_party/STM32CubeH7`. That repo also has nested submodules (CMSIS device, HAL driver, etc.), so they must be initialized.
+## Setup
 
-**If you are cloning the repo for the first time**, clone with recursion so submodules are fetched:
-
-```sh
-# From wherever you clone (e.g. ares-main)
-git clone --recurse-submodules <repo-url>
-cd ares-main
-```
-
-**If you already have the repo but are on this branch for the first time**, or you cloned without submodules, run from the **repository root** (the `ares-main` directory):
+From the repository root (`ares-main`), initialize submodules:
 
 ```sh
 git submodule update --init --recursive
 ```
 
-This populates `ares_embedded/firmware/third_party/STM32CubeH7` and its nested submodules. Without this step, the firmware build will fail with missing files.
-
-## Hardware
-
-**Target Board:** NUCLEO-H723ZG
-- **MCU:** STM32H723ZGT6 (Cortex-M7 @ 520 MHz)
-- **Flash:** 1 MB
-- **RAM:** 128 KB + 64 KB ITCM
-- **Peripherals:** GPIO, UART, TIM/PWM, Ethernet
-
-## Firmware Structure
-
-The firmware follows a clean, minimal structure:
-
-```
-firmware/
-├── third_party/          # Submodule: run git submodule update --init --recursive
-│   └── STM32CubeH7/     # Full STM32CubeH7 repo (Drivers/CMSIS, Drivers/STM32H7xx_HAL_Driver, etc.)
-├── Inc/                  # Header files (HAL config)
-├── Src/                  # System files
-├── startup/              # Startup assembly file
-├── linker/               # Linker script
-└── main.cpp             # Main application (Arduino-like)
-```
-
-## Features
-
-- **Minimal HAL:** Only GPIO, UART, TIM/PWM, and Ethernet enabled
-- **No RTOS:** Simple bare-metal execution
-- **Arduino-like API:** `setup()` and `loop()` functions
-- **Clean build:** No examples, BSP, or middleware
-- **Simple workflow:** Almost everything happens in `main.cpp`
-
-## Building and installing
-
-See the [BUILDING](docs/BUILDING.md) document.
-
-## Contributing
-
-See the [CONTRIBUTING](docs/CONTRIBUTING.md) document.
-
-## Code of Conduct
-
-See the [CODE_OF_CONDUCT](docs/CODE_OF_CONDUCT.md) document.
-
-## Running the SITL (Non-Firmware Code)
-
-The SITL runs the controller in simulation on your host machine (no board needed), logs data to CSV, and displays plots.
-
-### One-time setup: Python venv and requirements
-
-From `ares_embedded`:
+Then move into the embedded project:
 
 ```sh
-python3 -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
+cd ares_embedded
 ```
 
-You can use `venv` instead of `.venv` if you prefer; the script looks for both.
+Install/prerequisite instructions:
 
-### Run the pipeline
+- Host build dependencies and ARM toolchain: [Build Instructions](docs/BUILDING.md)
+- SITL Python environment: [Software-In-The-Loop Instructions](docs/SITL.md)
+- Board flashing tools and methods: [Flashing Instructions](firmware/FLASHING.md)
 
-From `ares_embedded`:
+### Host build (control + tests)
 
 ```sh
+cmake -S . -B build
+cmake --build build
+ctest --test-dir build
+```
+
+### Firmware build (cross-compile)
+
+```sh
+cmake -S . -B build-firmware -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/arm-none-eabi.cmake
+cmake --build build-firmware
+```
+
+Flash (if `st-flash` is installed):
+
+```sh
+cmake --build build-firmware --target flash
+```
+
+## Quick scripts (recommended)
+
+From `ares_embedded`, use the bash helpers (install all code dependencies first - clang/cross compiler, st-link, etc.):
+
+```sh
+# Build firmware (and auto-flash if ST target is detected)
+./fw_build.sh
+
+# Run SITL pipeline (build host test, run, log, plot)
 ./run_sitl.sh
 ```
 
-If you get "permission denied", run `bash run_sitl.sh` instead, or once: `chmod +x run_sitl.sh`.
+## Folder intent
 
-This will:
+- `firmware/Drivers`: board-facing driver modules used by firmware (`encoder`, `motor`, `uart`, `ethernet`) with each module's source under `src/` and optional module docs under `docs/`.
+- `firmware/tests`: firmware-side experiment/test entry files (for example keyboard control and UART echo). These are optional app entrypoints you can build instead of the default firmware app.
+- `control/tests`: host-side C++ tests for control logic; these run on your development machine via `ctest`.
 
-1. **Build** the control library and host test.
-2. **Run** the controller test (case 1); it writes a CSV to `logs/`.
-3. **Plot** the log with matplotlib (three figure windows: body velocity/yaw-rate, wheel speeds, XY path).
-4. **Remove** the build directory when done. Log files stay in `logs/`.
+## Choose which firmware `.cpp` gets flashed
 
-To plot an existing log without re-running the test:
+The flashed executable entry file is selected in `firmware/CMakeLists.txt` under `add_executable(firmware.elf ...)`.
 
-```sh
-source .venv/bin/activate # to get inside your virtual env (only do this if you aren't already inside your venv)
-python3 viz/plot_controller_logs.py logs/<log>.csv
-deactivate # to get out of your virtual env
-```
+Right now it is set to:
+
+- `main_ol.cpp` (active - open loop control through keyboard teleop)
+
+To flash a different app, replace `main_ol.cpp` with one of:
+
+- `main.cpp` for the closed-loop UART command flow
+- a file from `firmware/tests` (for example `tests/keyboard.cpp`) when you want test behavior on hardware
+
+After changing it, rebuild with `build-firmware` and re-run the `flash` target.
+
+## Docs
+
+- Build details: [docs/BUILDING.md](docs/BUILDING.md)
+- SITL setup: [docs/SITL.md](docs/SITL.md)
+- Firmware flashing options: [firmware/FLASHING.md](firmware/FLASHING.md)

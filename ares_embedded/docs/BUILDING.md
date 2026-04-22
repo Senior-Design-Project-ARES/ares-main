@@ -93,16 +93,16 @@ cmake -S . -B build-firmware \
 ### Build
 
 ```sh
-cmake --build build-firmware
+cmake --build build
 ```
 
-The output is `build-firmware/firmware/firmware.elf` - a firmware binary suitable for flashing to the NUCLEO-H723ZG board.
+The output is `build/firmware/firmware.elf` - a firmware binary suitable for flashing to the NUCLEO-H723ZG board.
 
 ### Flash to Board
 
 If using mac:
 ```sh
-cmake --build build-firmware --target flash
+cmake --build build --target flash
 ```
 
 This is because of the custom target addition in the firmware `CMakeList.txt`
@@ -115,7 +115,7 @@ add_custom_target(flash
 )
 ```
 
-Or using STM32CubeProgrammer if on Windows and flash `build-firmware/firmware.elf` using the start address of `0x08000000`.
+Or using STM32CubeProgrammer if on Windows and flash `build/firmware.elf` using the start address of `0x08000000`.
 
 ### Firmware Structure
 
