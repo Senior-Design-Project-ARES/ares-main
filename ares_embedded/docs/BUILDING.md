@@ -30,6 +30,8 @@ This builds:
 - The `control` static library
 - Host-side unit tests
 
+You can choose any build folder name (examples below use `build`).
+
 ### Configure
 
 ```sh
@@ -86,23 +88,23 @@ Download from [ARM Developer](https://developer.arm.com/tools-and-software/open-
 ### Configure
 
 ```sh
-cmake -S . -B build-firmware \
+cmake -S . -B <build-name> \
   -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/arm-none-eabi.cmake
 ```
 
 ### Build
 
 ```sh
-cmake --build build
+cmake --build <build-name>
 ```
 
-The output is `build/firmware/firmware.elf` - a firmware binary suitable for flashing to the NUCLEO-H723ZG board.
+The output is `<build-name>/firmware/firmware.elf` - a firmware binary suitable for flashing to the NUCLEO-H723ZG board.
 
 ### Flash to Board
 
 If using mac:
 ```sh
-cmake --build build --target flash
+cmake --build <build-name> --target flash
 ```
 
 This is because of the custom target addition in the firmware `CMakeList.txt`
@@ -115,7 +117,7 @@ add_custom_target(flash
 )
 ```
 
-Or using STM32CubeProgrammer if on Windows and flash `build/firmware.elf` using the start address of `0x08000000`.
+Or using STM32CubeProgrammer if on Windows and flash `<build-name>/firmware/firmware.elf` using the start address of `0x08000000`.
 
 ### Firmware Structure
 

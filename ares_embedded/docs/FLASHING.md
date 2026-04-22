@@ -33,19 +33,21 @@ sudo apt-get install stlink-tools
 
 ## Flashing Methods
 
+In all commands below, replace `build` with your preferred build directory name if needed (for example `<build-name>`).
+
 ### Method 1: OpenOCD (Recommended)
 
 **Location:** Run from `ares_embedded/` directory
 
 ```bash
 # Build the firmware first
-cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/arm-none-eabi.cmake
-cmake --build build
+cmake -S . -B <build-name> -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/arm-none-eabi.cmake
+cmake --build <build-name>
 
 # Flash using OpenOCD
 openocd -f interface/stlink.cfg \
         -f target/stm32h7x.cfg \
-        -c "program build/firmware/firmware.elf verify reset exit"
+        -c "program <build-name>/firmware/firmware.elf verify reset exit"
 ```
 
 **What it does:**
@@ -61,11 +63,11 @@ openocd -f interface/stlink.cfg \
 
 1. Open STM32CubeProgrammer
 2. Click "Connect" (ST-Link should auto-detect)
-3. Click "Open File" → Select `build/firmware/firmware.elf`
+3. Click "Open File" -> Select `<build-name>/firmware/firmware.elf`
 4. Click "Download" (or press F8)
 5. Click "Disconnect"
 
-**Location:** Run STM32CubeProgrammer from anywhere, navigate to `build/firmware/firmware.elf`
+**Location:** Run STM32CubeProgrammer from anywhere, navigate to `<build-name>/firmware/firmware.elf`
 
 ---
 
@@ -75,14 +77,14 @@ openocd -f interface/stlink.cfg \
 
 ```bash
 # Build the firmware first
-cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/arm-none-eabi.cmake
-cmake --build build
+cmake -S . -B <build-name> -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/arm-none-eabi.cmake
+cmake --build <build-name>
 
 # Convert ELF to binary (optional, st-flash can use ELF)
-arm-none-eabi-objcopy -O binary build/firmware/firmware.elf build/firmware/firmware.bin
+arm-none-eabi-objcopy -O binary <build-name>/firmware/firmware.elf <build-name>/firmware/firmware.bin
 
 # Flash the binary
-st-flash write build/firmware/firmware.bin 0x08000000
+st-flash write <build-name>/firmware/firmware.bin 0x08000000
 ```
 
 ---
@@ -93,11 +95,11 @@ st-flash write build/firmware/firmware.bin 0x08000000
 
 ```bash
 # Build the firmware
-cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/arm-none-eabi.cmake
-cmake --build build
+cmake -S . -B <build-name> -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/arm-none-eabi.cmake
+cmake --build <build-name>
 
 # Convert to binary
-arm-none-eabi-objcopy -O binary -S build/firmware/firmware.elf build/firmware/firmware.bin
+arm-none-eabi-objcopy -O binary -S <build-name>/firmware/firmware.elf <build-name>/firmware/firmware.bin
 
 # The NUCLEO board appears as a USB drive when connected
 # Simply drag firmware.bin to the NUCLEO drive
@@ -127,7 +129,7 @@ After flashing, you should see:
 **Flash fails:**
 - Make sure no other program is using the ST-Link (close STM32CubeIDE, etc.)
 - Try disconnecting and reconnecting the board
-- Check that `firmware.elf` exists in `build/firmware/`
+- Check that `firmware.elf` exists in `<build-name>/firmware/`
 
 **LEDs don't blink:**
 - Verify the firmware was flashed successfully
@@ -142,8 +144,8 @@ After flashing, you should see:
 
 ```bash
 # Build and flash in one go (using OpenOCD)
-cmake -S . -B build -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/arm-none-eabi.cmake && \
-cmake --build build && \
+cmake -S . -B <build-name> -DCMAKE_TOOLCHAIN_FILE=cmake/toolchains/arm-none-eabi.cmake && \
+cmake --build <build-name> && \
 openocd -f interface/stlink.cfg -f target/stm32h7x.cfg \
-        -c "program build/firmware/firmware.elf verify reset exit"
+        -c "program <build-name>/firmware/firmware.elf verify reset exit"
 ```
