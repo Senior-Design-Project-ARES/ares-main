@@ -1,41 +1,110 @@
 # ARES Main
 
-ARES (Autonomous Rover Exploration System) - A ROS2 Humble-based autonomous rover system with LIDAR mapping, path planning, and VRPN tracking.
+ARES, or Autonomous Rover Exploration System, is a ROS 2 Humble-based autonomous rover system for multi-rover exploration and target searching. This repository contains the main ROS 2 packages for LIDAR mapping, searching and path planning, guidance coordination, path tracking, target recognition, and VRPN-based localization.
 
-## Installation & Setup
+## Repository Overview
+
+This repository contains the ROS 2 packages used by the ARES rover system, including:
+ 
+* RPLIDAR ROS 2 driver
+* LIDAR mapping using the RPLIDAR A2M12
+* Searching and planning using frontier-based exploration and RRT path planning
+* Guidance-level coordination for planning, execution, stopping, and target approach behavior
+* Path tracking and STM32 command interface
+* AprilTag-based target recognition
+* VRPN-based rover localization
+
+## Hardware Overview
+
+The guidance-side rover hardware includes:
+
+* NVIDIA Jetson Orin Nano
+* RPLIDAR A2M12
+* STM32H723ZG
+* 3 cameras
+
+## Hardware Setup
+
+Follow this startup order when running the system on the real rover:
+
+1. Make sure the Jetson Orin Nano is **not connected** to the STM32H723ZG before powering on the Jetson. The Jetson may not turn on correctly if the STM32 is already connected.
+2. Make sure the cameras are **not connected** to the Jetson during startup. The camera-port assignment is not currently handled automatically, so the system may not correctly identify the left, middle, and right cameras if they are connected in the wrong order.
+3. Power on the Jetson Orin Nano.
+4. Connect to the Jetson through SSH, or use a monitor and keyboard if they are available.
+5. Connect the STM32H723ZG.
+6. Connect the cameras in the required order:
+
+   1. Left camera
+   2. Middle camera
+   3. Right camera
+
+This order helps ensure that the cameras are assigned to the expected ports.
+
+## Installation and Setup
 
 ### Prerequisites
-- **OS:** Ubuntu 22.04 (or find other OS instructions [here](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html))
 
-### 1. Install ROS2 Humble
-Follow the [official ROS2 Humble installation guide](https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html) for Ubuntu 22.04.
+* **OS:** Ubuntu 22.04
+  Other ROS 2 Humble installation options can be found in the official ROS 2 documentation.
 
-**Important:** Install the **Desktop install** (not Base install) and ensure you get the dev tools, as they are needed to build this project.
+### 1. Install ROS 2 Humble
+
+Follow the official ROS 2 Humble installation guide for Ubuntu 22.04:
+
+```text
+https://docs.ros.org/en/humble/Installation/Ubuntu-Install-Debs.html
+```
+
+Install the **Desktop** version, not the Base version. The development tools are needed to build this project.
 
 ### 2. Install Dependencies
+
 ```bash
+sudo apt-get update
 sudo apt-get install ros-humble-vrpn
 sudo apt-get install ros-humble-cartographer-ros
 sudo apt-get install python3-colcon-common-extensions
 ```
 
 ### 3. Build the Project
+
+From the root of the ROS 2 workspace, run:
+
 ```bash
 source /opt/ros/humble/setup.bash
-colcon build 
+colcon build
 ```
 
 ### 4. Source the Project
+
+After building, source the workspace:
+
 ```bash
-source install/local_setup.bash
+source install/setup.bash
 ```
 
+To avoid sourcing the workspace manually every time, you can add the following line to your `~/.bashrc`:
+
+```bash
+source ~/ares_main/install/setup.bash
+```
+
+Change `~/ares_main` to the actual path of your workspace if needed.
+
 ### 5. Launch the Rover System
+
+Launch the full rover system using:
+
 ```bash
 ros2 launch coordinator coordinator.launch.py
 ```
 
+## Notes
 
+* This repository is intended for ROS 2 Humble on Ubuntu 22.04.
+* The real rover setup depends on correct hardware connection order, especially for the STM32 and cameras.
+* If the target recognition node is not running or no target is detected, the rover will continue autonomous exploration.
+* This repository was developed as part of the ARES multi-rover autonomous exploration system.
 
 ---
 ## Intro to Github
